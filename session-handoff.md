@@ -4,30 +4,30 @@ Fill this at session end for large sessions; keep it current otherwise.
 
 ## Current Objective
 
-- Goal: feat-007 (M3.1 observability, redaction, feedback API, evaluation corpus).
-- Current status: feat-001 to feat-006 passing (feat-006 at 404b264); no feature active.
+- Goal: feat-008 (M4.1 three-specialist comparison against the single-workflow baseline).
+- Current status: feat-001 to feat-007 passing (feat-007 at 5242686); no feature active.
 - Branch / commit: main.
 
 ## Completed This Session
 
-- [x] feat-006 (M2.2) execution registry, crash/ambiguity recovery, Postgres checkpoints, approval pause and resume
-- [x] D-010 recorded; arch-105 widened to tool_executions
+- [x] feat-007 (M3.1) redacted tracing, feedback API, 50-case evaluation corpus (50/50 in mock mode)
+- [x] Workflow reads now go through the gateway (fixed a viewer access gap); D-011 recorded
 
 ## Verification Evidence
 
 | Check | Command | Result | Notes |
 |---|---|---|---|
-| Feature gate | `npm run verify-feature -- feat-006` | PASS, 5/5 layers | trail in `.harness/trails/` |
-| Full check | `npm run check` | PASS, 54 offline tests | integration: 88 tests in layer 5 |
-| Mutation spot-check | reference lookup / lease / approval interrupt | 2, 1 and 4 failures | all restored |
+| Feature gate | `npm run verify-feature -- feat-007` | PASS, 5/5 layers | trail in `.harness/trails/` |
+| Full check | `npm run check` | PASS, 70 offline tests | integration: 94 tests in layer 5 |
+| Eval corpus | `python -m agentops_evals run` | 50/50 | mutated expectations all fail |
 
 ## Files Changed
 
-- See `progress/008-2026-11-19.md`.
+- See `progress/009-2026-11-19.md`.
 
 ## Decisions Made
 
-- D-010 execution registry, external-style ticket service, Postgres checkpoints, approval pause.
+- D-011 redacted tracing, one tool path through the gateway, demo-token feedback, versioned evaluation corpus.
 
 ## Blockers / Risks
 
@@ -42,4 +42,4 @@ Fill this at session end for large sessions; keep it current otherwise.
 
 ## Recommended Next Step
 
-- Activate feat-007 and write the redaction canary and evaluation-corpus tests first; consider routing the workflow's read tools through the gateway beforehand.
+- Activate feat-008: define the specialist roles as an experiment and compare them with the baseline on the corpus before changing the default design.
