@@ -29,6 +29,10 @@ The full product architecture — trust boundaries, graph units, typed state, LL
 
 These directories are created by the feature that first needs them, not up front.
 
+## First Workflow (D-008)
+
+`packages/agents` holds one LangGraph graph: `validate_request → plan → authorize_tools → execute_tools → synthesize_report → output_policy → finalize`. The model only proposes tool calls; `agentops_agents.policy` allows or denies each one (allowlist, strict argument schema, tenant and user taken from the run) and drops report findings whose citations were not in the model's context. Limits on LLM calls, tool calls, graph steps and wall time end the run with an explicit status. `packages/retrieval` embeds chunks with a deterministic hashing embedder and searches only the documents the user may read.
+
 ## Data Isolation (D-007)
 
 - Tenant tables use PostgreSQL row-level security keyed on `app.tenant_id`, set per transaction by the typed functions in `agentops_data.access`; with no tenant set, a query returns no rows.

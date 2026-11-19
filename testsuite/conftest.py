@@ -102,10 +102,13 @@ def seeded_db(admin_dsn: str) -> str:
 
     from agentops_data.migrations import apply_migrations
     from agentops_data.seed import seed_dataset
+    from agentops_retrieval.embedding import HashingEmbedder
+    from agentops_retrieval.indexing import index_chunks
 
     with psycopg.connect(admin_dsn) as conn:
         apply_migrations(conn)
         seed_dataset(conn, DATASET_DIR)
+        index_chunks(conn, HashingEmbedder())
     return admin_dsn
 
 
@@ -127,5 +130,8 @@ def isolate_settings_env(monkeypatch: pytest.MonkeyPatch) -> None:
         "MAX_REQUESTS_PER_DEMO_USER",
         "DATABASE_URL",
         "LANGFUSE_ENABLED",
+        # LangChain/LangSmith tracing would export run data; it stays off in tests.
+        "LANGSMITH_TRACING",
+        "LANGCHAIN_TRACING_V2",
     ):
         monkeypatch.delenv(name, raising=False)

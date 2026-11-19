@@ -1,0 +1,32 @@
+{
+  "run_id": "run-sample-q3-declines",
+  "turns": [
+    {
+      "tool_calls": [
+        {
+          "id": "call-1",
+          "name": "get_sales_summary",
+          "arguments": {"from_quarter": "2026-Q2", "to_quarter": "2026-Q3", "top_n": 3}
+        },
+        {
+          "id": "call-2",
+          "name": "search_approved_documents",
+          "arguments": {"query": "company policy on returns and pricing in 2026-Q3", "k": 4}
+        },
+        {
+          "id": "call-3",
+          "name": "run_sql",
+          "arguments": {"sql": "SELECT * FROM business_sales"}
+        },
+        {
+          "id": "call-4",
+          "name": "search_approved_documents",
+          "arguments": {"query": "board notes", "k": 2, "tenant_id": "demo-b"}
+        }
+      ]
+    },
+    {
+      "text": "{\"summary\": \"Revenue fell from 56,000.00 in 2026-Q2 to 47,500.00 in 2026-Q3. The three largest declines were Trail Running Shoes in EMEA, Rain Jacket in NA and Camping Stove in NA. Proposed follow-up: review the EMEA receipt rule and the NA rain jacket price exception.\", \"findings\": [{\"claim\": \"Trail Running Shoes in EMEA fell from 10,000.00 to 6,000.00 (-4,000.00), the quarter EMEA started requiring a receipt for every return.\", \"citations\": [\"sales:demo-a:101:EMEA:2026-Q2\", \"sales:demo-a:101:EMEA:2026-Q3\", \"doc-a-returns-policy#1\"]}, {\"claim\": \"Rain Jacket in NA fell from 9,000.00 to 6,000.00 (-3,000.00), the quarter NA raised rain jacket prices by 15 percent without committee approval.\", \"citations\": [\"sales:demo-a:102:NA:2026-Q2\", \"sales:demo-a:102:NA:2026-Q3\", \"doc-a-pricing-guidelines#1\"]}, {\"claim\": \"Camping Stove in NA fell from 7,000.00 to 5,000.00 (-2,000.00); the documents available to this user do not explain the decline.\", \"citations\": [\"sales:demo-a:103:NA:2026-Q2\", \"sales:demo-a:103:NA:2026-Q3\"]}, {\"claim\": \"The board decided to close two NA camping-stove stockists.\", \"citations\": [\"doc-a-board-notes#0\"]}]}"
+    }
+  ]
+}

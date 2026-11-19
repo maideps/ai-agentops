@@ -8,6 +8,7 @@ requires-python = ">=3.13,<3.14"
 dependencies = [
     "fastapi>=0.115",
     "jsonschema>=4.23",
+    "langgraph>=1.0",
     "litellm>=1.83",
     "psycopg[binary]>=3.2",
     "pydantic>=2.9",
@@ -34,6 +35,8 @@ packages = [
     "packages/core/agentops_core",
     "packages/llm/agentops_llm",
     "packages/data/agentops_data",
+    "packages/retrieval/agentops_retrieval",
+    "packages/agents/agentops_agents",
 ]
 
 [tool.ruff]
@@ -50,7 +53,15 @@ select = ["E", "W", "F", "I", "B", "UP", "S", "BLE", "SIM", "RUF", "N", "ANN"]
 exclude = ["*.md"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["agentops_api", "agentops_core", "agentops_data", "agentops_llm", "testsuite"]
+known-first-party = [
+    "agentops_agents",
+    "agentops_api",
+    "agentops_core",
+    "agentops_data",
+    "agentops_llm",
+    "agentops_retrieval",
+    "testsuite",
+]
 
 [tool.ruff.lint.per-file-ignores]
 "testsuite/**/*.py" = ["S101", "ANN401"]
@@ -65,9 +76,18 @@ files = [
     "packages/core/agentops_core",
     "packages/llm/agentops_llm",
     "packages/data/agentops_data",
+    "packages/retrieval/agentops_retrieval",
+    "packages/agents/agentops_agents",
     "testsuite",
 ]
-mypy_path = ["apps/api", "packages/core", "packages/llm", "packages/data"]
+mypy_path = [
+    "apps/api",
+    "packages/core",
+    "packages/llm",
+    "packages/data",
+    "packages/retrieval",
+    "packages/agents",
+]
 explicit_package_bases = true
 
 [tool.pytest.ini_options]

@@ -7,6 +7,8 @@ import pytest
 
 from agentops_data.migrations import apply_migrations
 from agentops_data.seed import seed_dataset
+from agentops_retrieval.embedding import HashingEmbedder
+from agentops_retrieval.indexing import index_chunks
 from testsuite.conftest import DATASET_DIR
 
 pytestmark = pytest.mark.integration
@@ -44,6 +46,8 @@ def test_seed_is_deterministic(seeded_db: str) -> None:
         before = _fingerprint(conn)
         summary = seed_dataset(conn, DATASET_DIR)
         after = _fingerprint(conn)
+        # Re-seeding replaces the chunks; restore the session fixture's embeddings (seeded_db).
+        index_chunks(conn, HashingEmbedder())
 
     assert before == after
     assert (summary.tenants, summary.users, summary.sales_rows, summary.documents) == (2, 4, 64, 6)

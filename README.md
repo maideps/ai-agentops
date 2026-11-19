@@ -13,7 +13,7 @@ A provider-agnostic, security-first agentic AI platform (portfolio project). It 
 
 ## Status
 
-Early stage (feat-001 M0.1, feat-002 M0.2 and feat-003 M1.1 done). What works today:
+Early stage (M0.1, M0.2, M1.1 and M1.2 done: feat-001 to feat-004). What works today:
 
 - A FastAPI service with two endpoints: GET /health/live returns `{"status": "ok"}` and GET /health/ready returns `{"status": "ready", "checks": {}}` (no dependencies yet).
 - Settings from environment variables with `LLM_MODE=mock` and `ENABLE_LIVE_LLM=false` by default; `hosted_free`/`live_paid` refuse to start without `ENABLE_LIVE_LLM=true`. Provider keys in the environment never switch the mode.
@@ -30,7 +30,13 @@ Early stage (feat-001 M0.1, feat-002 M0.2 and feat-003 M1.1 done). What works to
   - Typed reads in `agentops_data.access`: `revenue_by_quarter`, `quarterly_sales`, `documents_for_user` and `document_chunks`, filtered by the user's role (viewer sees public documents, analyst public and internal, admin everything).
   - GET /health/ready checks the database when `DATABASE_URL` is set and answers 503 `not_ready` when it is unreachable.
 
-There is no agent workflow or UI yet; see the roadmap.
+- The first end-to-end workflow (feat-004, M1.2), run from the command line in mock mode: one LangGraph graph takes the sample task, plans tool calls with the scripted mock model, lets policy allow or deny each call, reads the sales declines and the documents the user may see, and returns a JSON run detail with a cited report.
+  - For `demo-a`'s analyst it reports the three largest 2026-Q2→Q3 declines (Trail Running Shoes EMEA −4,000, Rain Jacket NA −3,000, Camping Stove NA −2,000), citing sales records and policy passages.
+  - The run detail records each policy decision: a non-allowlisted tool, a tool call carrying another tenant's id, and a finding that cites a restricted document are all denied.
+  - It abstains when the requested quarters have no data, and ends with an explicit status when an LLM-call, tool-call, step or time limit is reached.
+  - Document retrieval uses a deterministic offline embedding (word hashing), so runs are reproducible; the sample run is recorded in `fixtures/replays/`.
+
+There is no HTTP endpoint for runs, no approved write action and no UI yet; see the roadmap.
 
 ## Quick Start
 
@@ -42,6 +48,9 @@ docker compose up -d --wait postgres                       # PostgreSQL + pgvect
 export DATABASE_URL=postgresql://agentops:change-me@127.0.0.1:55432/agentops
 uv run python -m agentops_data migrate                     # create the schema
 uv run python -m agentops_data seed                        # load datasets/synthetic
+uv run python -m agentops_retrieval index                  # embed chunks (after every seed)
+export ANALYTICS_DATABASE_URL=postgresql://agentops_analytics:change-me-analytics@127.0.0.1:55432/agentops
+uv run python -m agentops_agents run --run-id run-sample-q3-declines --tenant demo-a --user user-a-analyst "Analyze quarterly sales and explain the three largest declines"
 uv run uvicorn agentops_api.app:create_app --factory       # serve the API on http://127.0.0.1:8000
 curl http://127.0.0.1:8000/health/ready
 npm run check                                              # lint, types, offline tests, harness checks

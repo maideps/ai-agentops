@@ -218,7 +218,8 @@
     ".env.example",
     "docker-compose.yml",
     "infra/",
-    "datasets/"
+    "datasets/",
+    "fixtures/"
   ],
   "optionalComponents": [
     {

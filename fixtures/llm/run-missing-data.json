@@ -1,0 +1,19 @@
+{
+  "run_id": "run-missing-data",
+  "turns": [
+    {
+      "tool_calls": [
+        {
+          "id": "call-1",
+          "name": "get_sales_summary",
+          "arguments": {"from_quarter": "2025-Q3", "to_quarter": "2025-Q4", "top_n": 3}
+        },
+        {
+          "id": "call-2",
+          "name": "search_approved_documents",
+          "arguments": {"query": "sales decline causes 2025-Q4", "k": 3}
+        }
+      ]
+    }
+  ]
+}

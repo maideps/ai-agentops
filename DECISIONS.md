@@ -125,3 +125,26 @@ This file records significant architectural decisions, their context, alternativ
 **Consequences:**
 - Positive: a query without a tenant scope returns nothing; writes through the analytics login fail on privileges, whatever SQL is sent.
 - Negative / limits: the analytics login can still `set_config('app.tenant_id', ...)` itself if it can run arbitrary SQL, so RLS limits a scoped connection, not a hostile one; the typed functions and the tool gateway (feat-005) remain required. The init script runs only on a fresh volume: after changing it, recreate with `docker compose down -v`. The least-privilege application role for writes arrives with the first write path (feat-005/006).
+
+### D-008: First workflow: one bounded LangGraph graph, offline hashing embeddings
+
+**Date:** 2026-11-19
+**Status:** accepted
+**Context:** feat-004 (M1.2) needs one task to go from authorized sales data and document evidence to a cited report, reproducibly in mock mode, with no network, GPU or paid API, and with visible policy decisions and limits.
+**Decision:**
+- **Graph:** one LangGraph `StateGraph` with 7 nodes: `validate_request → plan → authorize_tools → execute_tools → synthesize_report → output_policy → finalize`. Any node may set a terminal status (`rejected`, `abstained`, `budget_exhausted`, `timed_out`, `failed`) and route to `finalize`. No specialist agents yet (M4.1 compares them against this baseline). No checkpointer yet (feat-006).
+- **Limits (FR-011):** LLM calls and tool calls are counted in state and checked before each call; the deadline is checked before every node; LangGraph's `recursion_limit` is the step limit. Each exhaustion ends the run with its own error code (`MAX_LLM_CALLS`, `MAX_TOOL_CALLS`, `MAX_RUN_SECONDS`, `MAX_GRAPH_STEPS`).
+- **Policy, not the model, decides:** tool calls pass an allowlist and strict argument schemas (`extra="forbid"`, so a smuggled `tenant_id` is denied); tenant and user always come from the run's principal. After synthesis, findings citing anything not in the model's context are dropped (`UNSUPPORTED_CITATION`). Every decision is recorded with `POLICY_VERSION`.
+- **Abstention (FR-012):** no sales rows for the requested quarters → `NO_SALES_DATA` without a synthesis call; no evidence → `NO_EVIDENCE`; no finding left after the citation check → `NO_SUPPORTED_FINDINGS`.
+- **Context budget:** verified sales evidence first, then documents by relevance, up to `max_context_tokens` (word-count estimate); dropped ids are recorded.
+- **Embeddings:** `HashingEmbedder` (feature hashing of word tokens, 256 dimensions, blake2b) behind an `Embedder` protocol, stored in `document_chunks.embedding` with its `embedding_model`. Deterministic and offline, but lexical, not semantic. Retrieval filters by tenant and role inside the ranking query.
+- **Run detail:** `RunDetail` is the sanitized result (report, analytics, evidence, context window, policy decisions, errors, call and token counts, trace id). The trace id is a correlation id for now; OpenTelemetry spans arrive in feat-007. The sample run is recorded in `fixtures/replays/` and the test fails if a run stops reproducing it.
+- **Mock model:** scripted per run id from `fixtures/llm/`; a run id without a script fails with `PROVIDER_UNAVAILABLE`.
+- **LangSmith** (installed with LangGraph) traces only when `LANGSMITH_TRACING` is set; tests clear it and the network guard would block it.
+**Alternatives considered:**
+- A local sentence-embedding model (ONNX) — Deferred: a model download, slower CI, and nothing to gain on a 13-chunk synthetic corpus.
+- Provider embeddings through LiteLLM — Rejected for mock mode: needs network and keys.
+- Three specialist agents now — Rejected by the handoff: measure the single workflow first.
+**Consequences:**
+- Positive: the whole slice runs offline and deterministically; every policy and limit path has a test.
+- Negative: hashing retrieval only matches shared words; the mock script is tied to run ids; database calls are synchronous psycopg run in worker threads; there is no HTTP endpoint for runs yet (`python -m agentops_agents run` is the entry point).

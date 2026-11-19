@@ -59,6 +59,21 @@ class Chunk:
     text_sha256: str
 
 
+@dataclass(frozen=True)
+class RetrievedChunk:
+    id: str
+    document_id: str
+    document_title: str
+    source_uri: str
+    chunk_index: int
+    text: str
+    text_sha256: str
+    distance: float
+
+
+MAX_RETRIEVAL_K = 20
+
+
 def _require(pattern: re.Pattern[str], value: str, what: str) -> str:
     if not pattern.fullmatch(value):
         msg = f"invalid {what}: {value[:40]!r}"
@@ -145,3 +160,45 @@ def document_chunks(
             (document_id, tenant_id),
         ).fetchall()
     return [Chunk(*row) for row in rows]
+
+
+def nearest_chunks(
+    conn: psycopg.Connection,
+    tenant_id: str,
+    user_id: str,
+    *,
+    query_vector: str,
+    embedding_model: str,
+    k: int,
+) -> list[RetrievedChunk]:
+    """The ``k`` chunks closest to ``query_vector`` (a pgvector literal) among documents the
+    user may read. The access filter is part of the query, so forbidden chunks are never
+    candidates (FR-003: filter before exposing results)."""
+    if not 1 <= k <= MAX_RETRIEVAL_K:
+        msg = f"k must be between 1 and {MAX_RETRIEVAL_K}"
+        raise ValueError(msg)
+    with _tenant_scope(conn, tenant_id):
+        labels = _allowed_labels(conn, tenant_id, user_id)
+        rows = conn.execute(
+            "SELECT c.id, c.document_id, d.title, d.source_uri, c.chunk_index, c.text,"
+            " c.text_sha256, c.embedding <=> %s::vector AS distance"
+            " FROM document_chunks c JOIN documents d ON d.id = c.document_id"
+            " WHERE c.tenant_id = %s AND d.tenant_id = %s AND d.access_label = ANY(%s)"
+            " AND c.embedding_model = %s"
+            " ORDER BY distance, c.id LIMIT %s",
+            (query_vector, tenant_id, tenant_id, labels, embedding_model, k),
+        ).fetchall()
+    return [RetrievedChunk(*row) for row in rows]
+
+
+def principal_role(conn: psycopg.Connection, tenant_id: str, user_id: str) -> str:
+    """The user's role in the tenant; ``UnknownPrincipalError`` for anyone else."""
+    _require(_IDENTIFIER, user_id, "user id")
+    with _tenant_scope(conn, tenant_id):
+        row = conn.execute(
+            "SELECT role_id FROM users WHERE id = %s AND tenant_id = %s", (user_id, tenant_id)
+        ).fetchone()
+    if row is None:
+        msg = f"user {user_id!r} is not a member of tenant {tenant_id!r}"
+        raise UnknownPrincipalError(msg)
+    return str(row[0])
