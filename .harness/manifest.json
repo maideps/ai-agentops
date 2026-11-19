@@ -219,7 +219,8 @@
     "docker-compose.yml",
     "infra/",
     "datasets/",
-    "fixtures/"
+    "fixtures/",
+    "benchmarks/"
   ],
   "optionalComponents": [
     {

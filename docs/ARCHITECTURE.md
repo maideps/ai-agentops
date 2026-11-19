@@ -33,6 +33,10 @@ These directories are created by the feature that first needs them, not up front
 
 `packages/tools` holds the typed read tools, the `ToolGateway` and the first-party MCP server. The gateway is the only place that decides: tool allowlist, the principal's role permissions, strict arguments, and for the sandbox write an approval bound to principal, run, tool, policy version and the hash of the exact arguments, consumed in the same transaction as the write. Every decision goes to the append-only `policy_events` table. The MCP server is built per principal and run by the trusted backend and only forwards calls to the gateway.
 
+## Orchestrations (D-012)
+
+The default run is the single workflow. An experimental `specialists` orchestration replaces its plan/authorize/execute steps with two subgraphs, Research (document search only) and Data Analyst (sales summary only), followed by a deterministic `aggregate_evidence` step; reporting, citation policy, approvals and limits are shared. The benchmark in `benchmarks/orchestration/v1/` keeps the single workflow as the default.
+
 ## Tracing and Evaluation (D-011)
 
 `packages/telemetry` configures OpenTelemetry with every exporter behind a redaction layer; spans carry ids, counts and codes, never prompt or document text, and share the run's trace id. The workflow reads only through the tool gateway, so role permissions and the policy log cover every tool call. `packages/evals` runs the versioned corpus in `datasets/evals/` in mock mode and records dataset version, git commit, model, prompt version and policy version.

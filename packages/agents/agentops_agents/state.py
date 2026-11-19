@@ -127,6 +127,7 @@ class AgentRunState(TypedDict, total=False):
     abstain_reason: str | None
     thread_id: str
     propose_followup: bool
+    sales_executed: bool
     proposed_action: dict[str, object] | None
     approval_decision: bool | None
     action_result: dict[str, object] | None

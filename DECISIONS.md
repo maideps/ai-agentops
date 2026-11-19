@@ -206,3 +206,20 @@ This file records significant architectural decisions, their context, alternativ
 **Consequences:**
 - Positive: 50/50 cases pass in mock mode in CI; changing any of eleven sampled expectations makes its case fail with a precise reason; a failing case's trace id finds its spans.
 - Negative / limits: the corpus measures the platform's enforcement and plumbing with scripted model turns, not model quality; hosted-model evaluation is opt-in work for later. Hashing retrieval makes multi-source expectations depend on lexical overlap. The demo token is not authentication for a public deployment. Feedback is not linked to stored runs.
+
+### D-012: Specialist roles stay an experiment; the single workflow remains the default
+
+**Date:** 2026-11-19
+**Status:** accepted
+**Context:** M4.1 asks whether Research, Data Analyst and Reporting roles improve outcomes over the measured single-workflow baseline, on the same golden dataset, keeping the simpler design unless the specialists measurably win (FR-016, NFR-006, NFR-008).
+**Decision:**
+- **Specialists as subgraphs** (`RunDependencies.orchestration = "specialists"`): a Research subgraph and a Data Analyst subgraph each plan with their own model call and prompt, restricted to one tool (document search vs. sales summary), then authorize and execute through the same policy and tool gateway. A deterministic `aggregate_evidence` node applies the abstention rules once both have contributed; Reporting is the existing synthesis and citation policy. The default is `"single"`.
+- **Benchmark** (`agentops_evals.benchmark`, `python -m agentops_evals benchmark`): every workflow case of `evals-v1.0.0` (42) runs under both orchestrations; specialist scripts are derived mechanically from the baseline scripts so both see the same model intent. Scored on outcome expectations (call-count limits are reported, not scored, since they are what is compared). Results go to `benchmarks/orchestration/v1/results-mock.json` plus `REPORT.md`, with benchmark and dataset versions, commit, mode, model, prompt versions per orchestration, sample size, per-case rows and limitations.
+- **Decision rule:** adopt the specialists only if they reach strictly more expected outcomes; ties and losses keep the simpler design.
+- **Result (mock mode, 42 cases):** both reached 42/42 expected outcomes and the same supported-finding rate; the specialists cost about one more model call per run (2.74 vs 1.81) and more tokens (230 vs 191 estimated). The single workflow stays the default.
+**Alternatives considered:**
+- Separate autonomous agents with their own loops — Rejected for Phase 1 (spec 1.2: no autonomous delegation); subgraphs keep one bounded, checkpointed graph.
+- A hosted-model run now — Not done: it needs an explicit opt-in, a registered live model and a budget cap (D-005); the report states that no hosted-model numbers exist.
+**Consequences:**
+- Positive: the comparison is reproducible (all non-timing fields identical across runs) and the decision is recorded with its evidence.
+- Negative / limits: mock mode cannot show quality differences between orchestrations; a specialist advantage, if any, would only appear with real model replies. Latency is local and machine-dependent.
