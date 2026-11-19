@@ -1,0 +1,315 @@
+{
+  "features": [
+    {
+      "id": "feat-001",
+      "name": "M0.1 Environment and application skeleton",
+      "behavior": "A fresh checkout installs with `uv sync` and runs the test suite with no API keys and no network. A FastAPI app factory serves GET /health/live -> 200 {status: ok} and GET /health/ready -> 200 with a dependency status map (no dependencies yet). Settings load from environment with LLM_MODE=mock and ENABLE_LIVE_LLM=false as defaults; .env.example matches handoff section 6. Logs are structured JSON and never print environment values. Ruff, mypy (strict, apps/ and packages/) and pytest with markers integration/live are configured in pyproject.toml; package.json lint/typecheck/test scripts chain the uv commands; CI installs uv and runs npm run check without secrets. Requirements: FR-001 (partial: health), NFR-009, NFR-010.",
+      "verification": "Acceptance tests hit both health endpoints through the app factory; a test asserts LLM_MODE defaults to mock; a socket-blocking fixture proves no outbound network during tests. Report exact uv, Python and package versions in the session note.",
+      "dependencies": [],
+      "layers": [
+        {
+          "label": "Layer 1: Harness and architecture checks",
+          "cmd": "npm run lint && npm run check-arch && npm run typecheck",
+          "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
+        },
+        {
+          "label": "Layer 2: Python static checks",
+          "cmd": "uv run ruff check . && uv run ruff format --check . && uv run mypy",
+          "repair": "Fix Ruff findings (or run uv run ruff format .) and mypy errors, then rerun."
+        },
+        {
+          "label": "Layer 3: Acceptance tests feat-001",
+          "cmd": "uv run pytest testsuite/acceptance/feat_001 -q",
+          "repair": "Fix the code until the declared behavior holds; a test that contradicts the behavior is fixed in the same commit."
+        },
+        {
+          "label": "Layer 4: Default regression suite (no network, no Docker)",
+          "cmd": "uv run pytest testsuite -q -m \"not live and not integration\"",
+          "repair": "Fix the regression this feature introduced; do not mark tests skipped to pass."
+        }
+      ]
+    },
+    {
+      "id": "feat-002",
+      "name": "M0.2 Synthetic data and persistence",
+      "behavior": "docker compose starts PostgreSQL with pgvector and a healthcheck. Migrations create tenants, users, roles, business_sales, documents and document_chunks with tenant scope and stable ids/hashes for citations. A deterministic seed loads two synthetic tenants (demo-a, demo-b) and local fixture documents. Analytics run through a read-only database role and an ACL-restricted query function. Requirements: FR-003 (data side), FR-004, NFR-010.",
+      "verification": "Integration tests: seeded queries return the expected synthetic totals; tenant demo-a cannot read any demo-b row or document; an INSERT/UPDATE/DELETE/DROP through the read-only role is rejected by Postgres privileges.",
+      "dependencies": [
+        "feat-001"
+      ],
+      "layers": [
+        {
+          "label": "Layer 1: Harness and architecture checks",
+          "cmd": "npm run lint && npm run check-arch && npm run typecheck",
+          "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
+        },
+        {
+          "label": "Layer 2: Python static checks",
+          "cmd": "uv run ruff check . && uv run ruff format --check . && uv run mypy",
+          "repair": "Fix Ruff findings (or run uv run ruff format .) and mypy errors, then rerun."
+        },
+        {
+          "label": "Layer 3: Acceptance tests feat-002",
+          "cmd": "uv run pytest testsuite/acceptance/feat_002 -q",
+          "repair": "Fix the code until the declared behavior holds; a test that contradicts the behavior is fixed in the same commit."
+        },
+        {
+          "label": "Layer 4: Default regression suite (no network, no Docker)",
+          "cmd": "uv run pytest testsuite -q -m \"not live and not integration\"",
+          "repair": "Fix the regression this feature introduced; do not mark tests skipped to pass."
+        },
+        {
+          "label": "Layer 5: Integration suite (local Postgres)",
+          "cmd": "docker compose up -d --wait postgres && uv run pytest testsuite -q -m \"integration and not live\"",
+          "repair": "Start Docker, check the compose healthcheck and migrations, fix failing integration tests and rerun."
+        }
+      ]
+    },
+    {
+      "id": "feat-003",
+      "name": "M1.1 Model provider port and mock",
+      "behavior": "packages/core defines ModelRequest/ModelResponse and an LLMProvider protocol with generate() and capabilities(). MockLLMProvider returns deterministic fixture responses keyed by test case. A typed capability registry rejects unsupported model capabilities before execution with MODEL_CAPABILITY_UNSUPPORTED. LiteLLMProvider in packages/llm normalizes tool calls, structured output, usage fields and errors (RATE_LIMITED, AUTH_FAILED, TIMEOUT, CAPABILITY_UNSUPPORTED, PROVIDER_UNAVAILABLE, BUDGET_EXCEEDED) and is never selected unless LLM_MODE and ENABLE_LIVE_LLM opt in. Requirements: FR-009, FR-010, NFR-009.",
+      "verification": "A shared contract suite runs against the mock and a stubbed LiteLLM adapter; capability rejection happens before any provider call; the test run proves no provider network access.",
+      "dependencies": [
+        "feat-001"
+      ],
+      "layers": [
+        {
+          "label": "Layer 1: Harness and architecture checks",
+          "cmd": "npm run lint && npm run check-arch && npm run typecheck",
+          "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
+        },
+        {
+          "label": "Layer 2: Python static checks",
+          "cmd": "uv run ruff check . && uv run ruff format --check . && uv run mypy",
+          "repair": "Fix Ruff findings (or run uv run ruff format .) and mypy errors, then rerun."
+        },
+        {
+          "label": "Layer 3: Acceptance tests feat-003",
+          "cmd": "uv run pytest testsuite/acceptance/feat_003 -q",
+          "repair": "Fix the code until the declared behavior holds; a test that contradicts the behavior is fixed in the same commit."
+        },
+        {
+          "label": "Layer 4: Default regression suite (no network, no Docker)",
+          "cmd": "uv run pytest testsuite -q -m \"not live and not integration\"",
+          "repair": "Fix the regression this feature introduced; do not mark tests skipped to pass."
+        }
+      ]
+    },
+    {
+      "id": "feat-004",
+      "name": "M1.2 First vertical-slice graph",
+      "behavior": "One LangGraph workflow (6-8 nodes, typed AgentRunState, bounded steps, calls, time and context budget) takes the sample task, calls a typed read-only sales tool and a permission-filtered retrieval tool, and returns a schema-valid report whose claims cite source ids. A missing-data task abstains. At least one policy rejection is recorded in the run detail with its trace id. No three-agent split yet. Requirements: FR-002, FR-003, FR-011, FR-012, NFR-002, NFR-005.",
+      "verification": "Deterministic end-to-end run in mock mode reproduces the expected metrics and citations (recorded as a replay fixture); abstention and policy-rejection cases pass; budget exhaustion ends in an explicit terminal status.",
+      "dependencies": [
+        "feat-002",
+        "feat-003"
+      ],
+      "layers": [
+        {
+          "label": "Layer 1: Harness and architecture checks",
+          "cmd": "npm run lint && npm run check-arch && npm run typecheck",
+          "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
+        },
+        {
+          "label": "Layer 2: Python static checks",
+          "cmd": "uv run ruff check . && uv run ruff format --check . && uv run mypy",
+          "repair": "Fix Ruff findings (or run uv run ruff format .) and mypy errors, then rerun."
+        },
+        {
+          "label": "Layer 3: Acceptance tests feat-004",
+          "cmd": "uv run pytest testsuite/acceptance/feat_004 -q",
+          "repair": "Fix the code until the declared behavior holds; a test that contradicts the behavior is fixed in the same commit."
+        },
+        {
+          "label": "Layer 4: Default regression suite (no network, no Docker)",
+          "cmd": "uv run pytest testsuite -q -m \"not live and not integration\"",
+          "repair": "Fix the regression this feature introduced; do not mark tests skipped to pass."
+        },
+        {
+          "label": "Layer 5: Integration suite (local Postgres)",
+          "cmd": "docker compose up -d --wait postgres && uv run pytest testsuite -q -m \"integration and not live\"",
+          "repair": "Start Docker, check the compose healthcheck and migrations, fix failing integration tests and rerun."
+        }
+      ]
+    },
+    {
+      "id": "feat-005",
+      "name": "M2.1 MCP server and policy gateway",
+      "behavior": "A first-party MCP server exposes get_sales_summary, search_approved_documents and get_issue_details (read) and create_followup_ticket (sandbox write) with JSON-schema contracts. A separate server-side tool gateway enforces allowlist, principal/tenant scope, argument validation and a policy decision log. Writes need an approval bound to principal, action-payload hash, policy version, expiry and run. Requirements: FR-005, FR-006, NFR-001, NFR-002.",
+      "verification": "A benign approved write commits one sandbox ticket; denied, expired, mutated and replayed approvals and malicious model tool calls (including crafted tenant args and prompt-injected documents) are rejected with no write; every decision is logged.",
+      "dependencies": [
+        "feat-004"
+      ],
+      "layers": [
+        {
+          "label": "Layer 1: Harness and architecture checks",
+          "cmd": "npm run lint && npm run check-arch && npm run typecheck",
+          "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
+        },
+        {
+          "label": "Layer 2: Python static checks",
+          "cmd": "uv run ruff check . && uv run ruff format --check . && uv run mypy",
+          "repair": "Fix Ruff findings (or run uv run ruff format .) and mypy errors, then rerun."
+        },
+        {
+          "label": "Layer 3: Acceptance tests feat-005",
+          "cmd": "uv run pytest testsuite/acceptance/feat_005 -q",
+          "repair": "Fix the code until the declared behavior holds; a test that contradicts the behavior is fixed in the same commit."
+        },
+        {
+          "label": "Layer 4: Default regression suite (no network, no Docker)",
+          "cmd": "uv run pytest testsuite -q -m \"not live and not integration\"",
+          "repair": "Fix the regression this feature introduced; do not mark tests skipped to pass."
+        },
+        {
+          "label": "Layer 5: Integration suite (local Postgres)",
+          "cmd": "docker compose up -d --wait postgres && uv run pytest testsuite -q -m \"integration and not live\"",
+          "repair": "Start Docker, check the compose healthcheck and migrations, fix failing integration tests and rerun."
+        }
+      ]
+    },
+    {
+      "id": "feat-006",
+      "name": "M2.2 Idempotency and fault recovery",
+      "behavior": "Runs checkpoint to Postgres and resume after process restart with the same thread_id. A tool_executions registry with UNIQUE (tenant_id, tool_name, idempotency_key) reserves and claims each write atomically through reserved -> executing -> succeeded/failed/uncertain; uncertain outcomes reconcile by deterministic external reference before any retry. The docs state this is not a universal exactly-once guarantee. Requirements: FR-007, FR-008, NFR-003.",
+      "verification": "Concurrent retries of the same approved action create exactly one sandbox ticket; an injected crash after external commit but before acknowledgment restarts into one recorded operation; an ambiguous result is reconciled; HITL approval survives an API restart.",
+      "dependencies": [
+        "feat-005"
+      ],
+      "layers": [
+        {
+          "label": "Layer 1: Harness and architecture checks",
+          "cmd": "npm run lint && npm run check-arch && npm run typecheck",
+          "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
+        },
+        {
+          "label": "Layer 2: Python static checks",
+          "cmd": "uv run ruff check . && uv run ruff format --check . && uv run mypy",
+          "repair": "Fix Ruff findings (or run uv run ruff format .) and mypy errors, then rerun."
+        },
+        {
+          "label": "Layer 3: Acceptance tests feat-006",
+          "cmd": "uv run pytest testsuite/acceptance/feat_006 -q",
+          "repair": "Fix the code until the declared behavior holds; a test that contradicts the behavior is fixed in the same commit."
+        },
+        {
+          "label": "Layer 4: Default regression suite (no network, no Docker)",
+          "cmd": "uv run pytest testsuite -q -m \"not live and not integration\"",
+          "repair": "Fix the regression this feature introduced; do not mark tests skipped to pass."
+        },
+        {
+          "label": "Layer 5: Integration suite (local Postgres)",
+          "cmd": "docker compose up -d --wait postgres && uv run pytest testsuite -q -m \"integration and not live\"",
+          "repair": "Start Docker, check the compose healthcheck and migrations, fix failing integration tests and rerun."
+        }
+      ]
+    },
+    {
+      "id": "feat-007",
+      "name": "M3.1 Observability, security evaluation and feedback",
+      "behavior": "OpenTelemetry spans follow the spec taxonomy with optional Langfuse export that needs no key in tests; secrets and PII are redacted before export. POST /v1/runs/{run_id}/feedback persists thumbs up/down. A versioned 50-case evaluation corpus covers normal, negative, access, guardrail, reliability and budget cases, and every eval output records dataset_version, git_sha, model and prompt_version. Requirements: FR-013, FR-014, NFR-002, NFR-004, NFR-006, NFR-007.",
+      "verification": "Exported telemetry contains no canary secret; the eval harness runs all 50 cases in mock mode in CI; a deliberately failing case is traceable to its trace id and is kept as a regression test.",
+      "dependencies": [
+        "feat-006"
+      ],
+      "layers": [
+        {
+          "label": "Layer 1: Harness and architecture checks",
+          "cmd": "npm run lint && npm run check-arch && npm run typecheck",
+          "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
+        },
+        {
+          "label": "Layer 2: Python static checks",
+          "cmd": "uv run ruff check . && uv run ruff format --check . && uv run mypy",
+          "repair": "Fix Ruff findings (or run uv run ruff format .) and mypy errors, then rerun."
+        },
+        {
+          "label": "Layer 3: Acceptance tests feat-007",
+          "cmd": "uv run pytest testsuite/acceptance/feat_007 -q",
+          "repair": "Fix the code until the declared behavior holds; a test that contradicts the behavior is fixed in the same commit."
+        },
+        {
+          "label": "Layer 4: Default regression suite (no network, no Docker)",
+          "cmd": "uv run pytest testsuite -q -m \"not live and not integration\"",
+          "repair": "Fix the regression this feature introduced; do not mark tests skipped to pass."
+        },
+        {
+          "label": "Layer 5: Integration suite (local Postgres)",
+          "cmd": "docker compose up -d --wait postgres && uv run pytest testsuite -q -m \"integration and not live\"",
+          "repair": "Start Docker, check the compose healthcheck and migrations, fix failing integration tests and rerun."
+        }
+      ]
+    },
+    {
+      "id": "feat-008",
+      "name": "M4.1 Three-specialist comparison",
+      "behavior": "Research, Data Analyst and Reporting roles are introduced as subgraphs only after the single-workflow baseline is measured, and both run on the same golden dataset. A benchmark report compares task success, citation accuracy, tool calls, tokens, latency and cost with dataset, model, sample size and limitations. The simpler orchestration is kept unless the specialists measurably win. Requirements: FR-016, NFR-006, NFR-008.",
+      "verification": "The comparison runs reproducibly in mock mode and writes a versioned results file; any hosted-model numbers come from an explicitly opted-in, budget-capped live run and are labeled as such.",
+      "dependencies": [
+        "feat-007"
+      ],
+      "layers": [
+        {
+          "label": "Layer 1: Harness and architecture checks",
+          "cmd": "npm run lint && npm run check-arch && npm run typecheck",
+          "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
+        },
+        {
+          "label": "Layer 2: Python static checks",
+          "cmd": "uv run ruff check . && uv run ruff format --check . && uv run mypy",
+          "repair": "Fix Ruff findings (or run uv run ruff format .) and mypy errors, then rerun."
+        },
+        {
+          "label": "Layer 3: Acceptance tests feat-008",
+          "cmd": "uv run pytest testsuite/acceptance/feat_008 -q",
+          "repair": "Fix the code until the declared behavior holds; a test that contradicts the behavior is fixed in the same commit."
+        },
+        {
+          "label": "Layer 4: Default regression suite (no network, no Docker)",
+          "cmd": "uv run pytest testsuite -q -m \"not live and not integration\"",
+          "repair": "Fix the regression this feature introduced; do not mark tests skipped to pass."
+        }
+      ]
+    },
+    {
+      "id": "feat-009",
+      "name": "M5.1 Demo and portfolio evidence",
+      "behavior": "A Next.js replay-first UI in apps/web lets a visitor explore recorded synthetic runs (report, citations, policy decisions, approvals, trace ids) with no provider credentials, no quota and the backend asleep. Optional live mode is authenticated and capped. Docker Compose docs, deployment checklist, ADRs, threat model, known limitations and runbook let a reviewer reproduce the key tests. Requirements: FR-013, FR-015.",
+      "verification": "Playwright end-to-end tests run the replay UI with network to model providers blocked and capture screenshots of each replay view as gate evidence; documented reproduction commands are executed in the session note.",
+      "dependencies": [
+        "feat-008"
+      ],
+      "layers": [
+        {
+          "label": "Layer 1: Harness and architecture checks",
+          "cmd": "npm run lint && npm run check-arch && npm run typecheck",
+          "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
+        },
+        {
+          "label": "Layer 2: Python static checks",
+          "cmd": "uv run ruff check . && uv run ruff format --check . && uv run mypy",
+          "repair": "Fix Ruff findings (or run uv run ruff format .) and mypy errors, then rerun."
+        },
+        {
+          "label": "Layer 3: Acceptance tests feat-009",
+          "cmd": "uv run pytest testsuite/acceptance/feat_009 -q",
+          "repair": "Fix the code until the declared behavior holds; a test that contradicts the behavior is fixed in the same commit."
+        },
+        {
+          "label": "Layer 4: Default regression suite (no network, no Docker)",
+          "cmd": "uv run pytest testsuite -q -m \"not live and not integration\"",
+          "repair": "Fix the regression this feature introduced; do not mark tests skipped to pass."
+        },
+        {
+          "label": "Layer 5: Replay UI end-to-end",
+          "cmd": "npm --prefix apps/web run e2e",
+          "repair": "Fix the failing replay view, open the captured screenshots and compare them with the declared behavior, then rerun.",
+          "captures": [
+            "apps/web/test-results/shots/**/*.png"
+          ]
+        }
+      ]
+    }
+  ]
+}
