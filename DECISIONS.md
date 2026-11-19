@@ -148,3 +148,23 @@ This file records significant architectural decisions, their context, alternativ
 **Consequences:**
 - Positive: the whole slice runs offline and deterministically; every policy and limit path has a test.
 - Negative: hashing retrieval only matches shared words; the mock script is tied to run ids; database calls are synchronous psycopg run in worker threads; there is no HTTP endpoint for runs yet (`python -m agentops_agents run` is the entry point).
+
+### D-009: Tool gateway, approval binding and a principal-bound MCP server
+
+**Date:** 2026-11-19
+**Status:** accepted
+**Context:** FR-005/FR-006 need a first-party MCP server with read tools and one sandbox write, authorization enforced server-side (not by MCP or the model), and writes that require an approval bound to principal, action-payload hash, policy version, expiry and run.
+**Decision:**
+- **`ToolGateway` (`packages/tools`) is the only decision point.** Order of checks: tool allowlisted → well-formed run id → principal exists in the tenant → role has the tool's permission (`role_permissions`: `sales:read`, `docs:read`, `issues:read`, `tickets:write`) → arguments valid against a strict model (`extra="forbid"`). Every outcome is written to the append-only `policy_events` table, denials in their own committed transaction.
+- **Approval binding.** `request_approval` stores the SHA-256 of canonical JSON over tool, tenant, principal, run, policy version and arguments, with an expiry (15 minutes by default, database clock). Only the requesting principal can approve or reject it, for the same run. `invoke` with an approval locks the row (`SELECT … FOR UPDATE`), checks principal, run, tool, status, expiry, policy version and hash, then marks it consumed and inserts the ticket in the same transaction. One approval writes at most one ticket; a second use fails with `APPROVAL_ALREADY_USED`. The ticket id is derived from the approval id (`SBX-…`).
+- **MCP server (MCP Python SDK 2.x `MCPServer`)** is built per principal and run by the trusted backend (`build_server(gateway, ctx)`, or `python -m agentops_tools serve` over stdio). Tool parameters never include identity; every call is forwarded to the gateway, and denials become MCP tool errors carrying the reason code.
+- **Least privilege.** New login `agentops_app` (group `agentops_app_rw`): `SELECT`/`INSERT` on approvals, tickets and the policy log, `UPDATE` only of approval status columns, no `DELETE` anywhere. Row-level security `FOR ALL` policies make the same tenant check the `WITH CHECK` for writes. arch-105 forbids writes to approvals or tickets outside the gateway.
+- **Prompt injection.** A synthetic `demo-b` document carries an injection payload. Tests show retrieval returns it as data, and that each step a model obeying it would take is refused (smuggled tenant id, write without approval). This tests the enforcement, not the model's resistance.
+- **Read tools moved** from `agentops_agents` to `agentops_tools.read_tools`, so the workflow and the gateway share one implementation and `agentops_tools` never imports the workflow. `POLICY_VERSION` moved to `agentops_core.policy`.
+**Alternatives considered:**
+- Principal as a tool argument — Rejected: the model could set it.
+- Approval checks inside the MCP server — Rejected: MCP is the transport; the gateway must hold even if MCP is bypassed.
+- An approval-free "low-risk write" path — Rejected for Phase 1: every external write needs approval.
+**Consequences:**
+- Positive: forged, pending, rejected, expired, mutated, replayed, other-principal, other-run, other-tenant and stale-policy approvals all fail closed with no write, and each attempt is logged.
+- Negative / limits: the feat-004 workflow still calls its read tools directly (typed and tenant-scoped, but not logged in `policy_events`) and does not yet propose tickets; routing it through the gateway with an approval interrupt comes with checkpointing in feat-006. Atomicity here relies on the ticket store being the same database; an external ticket system needs the idempotency registry and reconciliation of feat-006. There is no HTTP approval endpoint yet. Existing development databases need the new roles created once (the init script only runs on a fresh volume).

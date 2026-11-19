@@ -33,7 +33,7 @@ from agentops_agents.state import (
     SalesAnalytics,
     TaskRequest,
 )
-from agentops_agents.tools import READ_TOOLS, ToolContext, ToolSpec
+from agentops_agents.tools import READ_TOOLS, ToolSpec
 from agentops_core.llm import (
     LLMError,
     LLMErrorCode,
@@ -47,6 +47,7 @@ from agentops_core.llm import (
 from agentops_data.access import UnknownPrincipalError, principal_role
 from agentops_llm.mock import approx_tokens
 from agentops_retrieval.embedding import Embedder
+from agentops_tools.read_tools import ToolContext
 
 logger = logging.getLogger("agentops.agents")
 

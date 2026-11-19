@@ -35,4 +35,4 @@ def test_seeded_data_is_unchanged_after_write_attempts(seeded_db: str) -> None:
         counts = conn.execute(
             "SELECT (SELECT count(*) FROM business_sales), (SELECT count(*) FROM documents)"
         ).fetchone()
-    assert counts == (64, 6)
+    assert counts == (64, 7)

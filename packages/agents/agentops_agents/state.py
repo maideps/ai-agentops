@@ -1,12 +1,16 @@
 """Typed run state, limits, report schema and the run detail returned to callers."""
 
-from decimal import Decimal
 from enum import StrEnum
 from typing import Literal, TypedDict
 
 from pydantic import BaseModel, ConfigDict, Field
 
-POLICY_VERSION = "2026-11-19.1"
+from agentops_core.policy import POLICY_VERSION as POLICY_VERSION
+
+# Result types live with the tools; re-exported for the run detail's callers.
+from agentops_tools.read_tools import DeclineRow as DeclineRow
+from agentops_tools.read_tools import Evidence as Evidence
+from agentops_tools.read_tools import SalesAnalytics as SalesAnalytics
 
 
 class _Model(BaseModel):
@@ -48,31 +52,6 @@ class Finding(_Model):
 class Report(_Model):
     summary: str = Field(min_length=1, max_length=2000)
     findings: list[Finding] = Field(max_length=10)
-
-
-class DeclineRow(_Model):
-    product_id: int
-    product_name: str
-    region: str
-    from_revenue: Decimal
-    to_revenue: Decimal
-    change: Decimal
-    citations: list[str]
-
-
-class SalesAnalytics(_Model):
-    from_quarter: str
-    to_quarter: str
-    total_from: Decimal
-    total_to: Decimal
-    declines: list[DeclineRow]
-
-
-class Evidence(_Model):
-    id: str
-    kind: Literal["sales", "document"]
-    source_uri: str
-    text: str
 
 
 class PolicyDecision(_Model):

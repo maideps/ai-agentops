@@ -8,6 +8,7 @@ services:
       POSTGRES_USER: agentops
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
       ANALYTICS_DB_PASSWORD: ${ANALYTICS_DB_PASSWORD:-change-me-analytics}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:-change-me-app}
     ports:
       # Localhost only; 55432 avoids clashing with a locally installed PostgreSQL on 5432.
       - "127.0.0.1:55432:5432"

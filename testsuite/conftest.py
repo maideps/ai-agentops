@@ -96,6 +96,15 @@ def analytics_dsn() -> str:
 
 
 @pytest.fixture(scope="session")
+def app_dsn() -> str:
+    """The tool gateway's least-privilege login (reads plus approvals, tickets, policy log)."""
+    return os.environ.get(
+        "AGENTOPS_TEST_APP_URL",
+        "postgresql://agentops_app:change-me-app@127.0.0.1:55432/agentops_test",
+    )
+
+
+@pytest.fixture(scope="session")
 def seeded_db(admin_dsn: str) -> str:
     """Migrate and seed agentops_test once per session; returns the admin DSN."""
     import psycopg

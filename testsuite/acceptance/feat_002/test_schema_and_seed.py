@@ -50,7 +50,7 @@ def test_seed_is_deterministic(seeded_db: str) -> None:
         index_chunks(conn, HashingEmbedder())
 
     assert before == after
-    assert (summary.tenants, summary.users, summary.sales_rows, summary.documents) == (2, 4, 64, 6)
+    assert (summary.tenants, summary.users, summary.sales_rows, summary.documents) == (2, 4, 64, 7)
     assert summary.chunks > summary.documents
 
 

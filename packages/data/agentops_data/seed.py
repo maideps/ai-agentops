@@ -40,10 +40,16 @@ def seed_dataset(conn: psycopg.Connection, dataset_dir: Path) -> SeedSummary:
     chunk_count = 0
     with conn.transaction():
         for table in (
+            # Runtime rows of the tool gateway reference seeded tenants and users.
+            "sandbox_tickets",
+            "approvals",
+            "policy_events",
+            "issues",
             "document_chunks",
             "documents",
             "business_sales",
             "users",
+            "role_permissions",
             "role_document_access",
             "roles",
             "tenants",
@@ -62,6 +68,10 @@ def seed_dataset(conn: psycopg.Connection, dataset_dir: Path) -> SeedSummary:
             cur.executemany(
                 "INSERT INTO role_document_access (role_id, access_label) VALUES (%s, %s)",
                 [(r["id"], label) for r in directory["roles"] for label in r["access_labels"]],
+            )
+            cur.executemany(
+                "INSERT INTO role_permissions (role_id, permission) VALUES (%s, %s)",
+                [(r["id"], perm) for r in directory["roles"] for perm in r["permissions"]],
             )
             cur.executemany(
                 "INSERT INTO users (id, tenant_id, display_name, role_id) VALUES (%s, %s, %s, %s)",
@@ -85,6 +95,14 @@ def seed_dataset(conn: psycopg.Connection, dataset_dir: Path) -> SeedSummary:
                         int(row["units"]),
                     )
                     for row in sales
+                ],
+            )
+            cur.executemany(
+                "INSERT INTO issues (id, tenant_id, title, body, state, labels)"
+                " VALUES (%s, %s, %s, %s, %s, %s)",
+                [
+                    (i["id"], i["tenant_id"], i["title"], i["body"], i["state"], i["labels"])
+                    for i in directory.get("issues", [])
                 ],
             )
             for document in directory["documents"]:

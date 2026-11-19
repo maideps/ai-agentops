@@ -29,6 +29,10 @@ The full product architecture — trust boundaries, graph units, typed state, LL
 
 These directories are created by the feature that first needs them, not up front.
 
+## Tool Gateway and MCP (D-009)
+
+`packages/tools` holds the typed read tools, the `ToolGateway` and the first-party MCP server. The gateway is the only place that decides: tool allowlist, the principal's role permissions, strict arguments, and for the sandbox write an approval bound to principal, run, tool, policy version and the hash of the exact arguments, consumed in the same transaction as the write. Every decision goes to the append-only `policy_events` table. The MCP server is built per principal and run by the trusted backend and only forwards calls to the gateway.
+
 ## First Workflow (D-008)
 
 `packages/agents` holds one LangGraph graph: `validate_request → plan → authorize_tools → execute_tools → synthesize_report → output_policy → finalize`. The model only proposes tool calls; `agentops_agents.policy` allows or denies each one (allowlist, strict argument schema, tenant and user taken from the run) and drops report findings whose citations were not in the model's context. Limits on LLM calls, tool calls, graph steps and wall time end the run with an explicit status. `packages/retrieval` embeds chunks with a deterministic hashing embedder and searches only the documents the user may read.
@@ -49,6 +53,7 @@ Product rules live in `.harness/arch-rules.json` (ids `arch-101` and up) and run
 | arch-102 | Spawning processes (`subprocess`, `os.system`, `os.popen`, `os.exec*`, `os.spawn*`, asyncio subprocesses) in product code |
 | arch-103 | Bare `except:` and single-line swallowed exceptions (`except …: pass`); Ruff `S110`/`BLE001`/`E722` cover the multi-line form |
 | arch-104 | Provider or Langfuse API key patterns in tracked product files and config |
+| arch-105 | Writes to `approvals` or `sandbox_tickets` anywhere but the tool gateway |
 
 Add a rule whenever review catches a mistake a pattern can describe.
 

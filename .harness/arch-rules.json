@@ -144,6 +144,23 @@
       "what": "A string that looks like an OpenAI/Anthropic, Google, Groq or Langfuse key is committed.",
       "why": "Keys must never be in the repository, fixtures or CI config (spec 5.2, NFR-004).",
       "fix": "Remove it, rotate the key, and read it from the environment or a server secret; canary values in tests must use an obviously fake format such as CANARY-SECRET-0001."
+    },
+    {
+      "id": "arch-105",
+      "kind": "forbid",
+      "description": "Only the tool gateway writes approvals and sandbox tickets",
+      "pattern": "\\b(INSERT\\s+INTO|UPDATE|DELETE\\s+FROM)\\s+(approvals|sandbox_tickets)\\b",
+      "paths": [
+        "apps/**/*.py",
+        "packages/**/*.py"
+      ],
+      "allow": [
+        "packages/tools/agentops_tools/gateway.py",
+        "packages/data/agentops_data/seed.py"
+      ],
+      "what": "Code outside the tool gateway writes to approvals or sandbox_tickets.",
+      "why": "Every external write must pass the gateway's allowlist, permission, approval-binding and logging checks (FR-006, NFR-001); a second write path would bypass them.",
+      "fix": "Call ToolGateway.request_approval / decide / invoke instead of writing these tables directly."
     }
   ]
 }

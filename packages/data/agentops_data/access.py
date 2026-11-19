@@ -202,3 +202,31 @@ def principal_role(conn: psycopg.Connection, tenant_id: str, user_id: str) -> st
         msg = f"user {user_id!r} is not a member of tenant {tenant_id!r}"
         raise UnknownPrincipalError(msg)
     return str(row[0])
+
+
+@dataclass(frozen=True)
+class Issue:
+    id: str
+    title: str
+    body: str
+    state: str
+    labels: list[str]
+
+
+def issue_by_id(conn: psycopg.Connection, tenant_id: str, issue_id: str) -> Issue | None:
+    """A seeded issue of the tenant, or ``None`` (missing and other-tenant look the same)."""
+    with _tenant_scope(conn, tenant_id):
+        row = conn.execute(
+            "SELECT id, title, body, state, labels FROM issues WHERE id = %s AND tenant_id = %s",
+            (issue_id, tenant_id),
+        ).fetchone()
+    return Issue(*row) if row else None
+
+
+def role_permissions(conn: psycopg.Connection, role_id: str) -> frozenset[str]:
+    """Permissions (``area:read|write``) granted to a role."""
+    with conn.transaction():
+        rows = conn.execute(
+            "SELECT permission FROM role_permissions WHERE role_id = %s", (role_id,)
+        ).fetchall()
+    return frozenset(str(permission) for (permission,) in rows)

@@ -13,7 +13,7 @@ A provider-agnostic, security-first agentic AI platform (portfolio project). It 
 
 ## Status
 
-Early stage (M0.1, M0.2, M1.1 and M1.2 done: feat-001 to feat-004). What works today:
+Early stage (M0.1 to M2.1 done: feat-001 to feat-005). What works today:
 
 - A FastAPI service with two endpoints: GET /health/live returns `{"status": "ok"}` and GET /health/ready returns `{"status": "ready", "checks": {}}` (no dependencies yet).
 - Settings from environment variables with `LLM_MODE=mock` and `ENABLE_LIVE_LLM=false` by default; `hosted_free`/`live_paid` refuse to start without `ENABLE_LIVE_LLM=true`. Provider keys in the environment never switch the mode.
@@ -36,7 +36,12 @@ Early stage (M0.1, M0.2, M1.1 and M1.2 done: feat-001 to feat-004). What works t
   - It abstains when the requested quarters have no data, and ends with an explicit status when an LLM-call, tool-call, step or time limit is reached.
   - Document retrieval uses a deterministic offline embedding (word hashing), so runs are reproducible; the sample run is recorded in `fixtures/replays/`.
 
-There is no HTTP endpoint for runs, no approved write action and no UI yet; see the roadmap.
+- A first-party MCP server and tool gateway (feat-005, M2.1): `get_sales_summary`, `search_approved_documents`, `get_issue_details` and the sandbox write `create_followup_ticket`, served over stdio by `python -m agentops_tools serve` for one principal and run.
+  - The gateway checks every call: allowlisted tool, the user's role permissions (a viewer cannot read sales), strict arguments with no tenant or user fields, and records each decision in an append-only policy log.
+  - A ticket is written only with an approval of that exact ticket by the same user for the same run, under the current policy version and before it expires (15 minutes); the approval is used up by the write. Forged, pending, rejected, expired, changed, replayed or borrowed approvals write nothing.
+  - A synthetic `demo-b` document contains a prompt-injection payload; it is returned as ordinary data, and the actions it asks for are refused.
+
+There is no HTTP endpoint for runs or approvals, the workflow does not propose tickets yet, and there is no UI; see the roadmap.
 
 ## Quick Start
 
@@ -51,13 +56,15 @@ uv run python -m agentops_data seed                        # load datasets/synth
 uv run python -m agentops_retrieval index                  # embed chunks (after every seed)
 export ANALYTICS_DATABASE_URL=postgresql://agentops_analytics:change-me-analytics@127.0.0.1:55432/agentops
 uv run python -m agentops_agents run --run-id run-sample-q3-declines --tenant demo-a --user user-a-analyst "Analyze quarterly sales and explain the three largest declines"
+export APP_DATABASE_URL=postgresql://agentops_app:change-me-app@127.0.0.1:55432/agentops
+uv run python -m agentops_tools serve --tenant demo-a --user user-a-analyst --run-id run-1   # MCP over stdio
 uv run uvicorn agentops_api.app:create_app --factory       # serve the API on http://127.0.0.1:8000
 curl http://127.0.0.1:8000/health/ready
 npm run check                                              # lint, types, offline tests, harness checks
 uv run pytest testsuite -q -m integration                  # tests against the local database
 ```
 
-The compose file uses throwaway local passwords (`POSTGRES_PASSWORD`, `ANALYTICS_DB_PASSWORD` override them). Database roles are created only when the data volume is first created; after changing `infra/postgres/init/`, recreate it with `docker compose down -v`.
+The compose file uses throwaway local passwords (`POSTGRES_PASSWORD`, `ANALYTICS_DB_PASSWORD`, `APP_DB_PASSWORD` override them). Database roles are created only when the data volume is first created; after changing `infra/postgres/init/`, recreate it with `docker compose down -v`.
 
 Settings come from environment variables only; copy `.env.example` to `.env` and pass it with `--env-file .env` to use a file. Do not run `./init.sh` yet: it would install into the system Python (D-004 in `DECISIONS.md`).
 
