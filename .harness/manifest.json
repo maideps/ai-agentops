@@ -211,7 +211,11 @@
   "productRoots": [
     "apps/",
     "packages/",
-    "testsuite/"
+    "testsuite/",
+    "pyproject.toml",
+    "uv.lock",
+    ".python-version",
+    ".env.example"
   ],
   "optionalComponents": [
     {

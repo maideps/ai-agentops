@@ -54,9 +54,23 @@ This file records significant architectural decisions, their context, alternativ
 **Date:** 2026-11-19
 **Status:** accepted
 **Context:** The harness's Python stack detection runs global `ruff`/`mypy`/`pytest` and hard-codes `mypy src/`; this project uses a uv virtualenv and `apps/` + `packages/`. The harness's `npm run lint`/`test` scripts check harness state only.
-**Decision:** Each feature in `feature_list.json` declares its own layers: (1) harness checks `npm run lint && npm run check-arch && npm run typecheck`; (2) Python static checks `uv run ruff check . && uv run ruff format --check . && uv run mypy`; (3) the feature's acceptance tests; (4) the default regression suite; plus an integration layer for features that need Postgres. feat-001 also chains the uv commands into the `package.json` `lint`/`typecheck`/`test` scripts so `npm run check` and CI run them.
+**Decision:** Each feature in `feature_list.json` declares its own layers: (1) harness checks `node scripts/framework-check.mjs lint && npm run check-arch && node scripts/framework-check.mjs typecheck` (called directly, because the npm `lint`/`typecheck` scripts also run the Python checks of layer 2); (2) Python static checks `uv run ruff check . && uv run ruff format --check . && uv run mypy`; (3) the feature's acceptance tests; (4) the default regression suite; plus an integration layer for features that need Postgres. feat-001 also chains the uv commands into the `package.json` `lint`/`typecheck`/`test` scripts so `npm run check` and CI run them.
 **Alternatives considered:**
 - Rely on stack detection — Rejected: SKIPs inside a uv venv and checks a non-existent `src/`.
 **Consequences:**
 - Positive: the gate runs exactly the project's commands; nothing depends on an activated venv.
 - Negative: layer commands are repeated across features; changing one means updating several declarations (and re-verifying, since `checksHash` changes).
+
+### D-004: Do not run `./init.sh` or `npm run setup` until the harness supports uv
+
+**Date:** 2026-11-19
+**Status:** accepted (temporary)
+**Context:** Once `pyproject.toml` exists, the harness detects a Python stack and its install step is `pip install -e ".[dev]"`; `./init.sh` and `npm run setup` run it with whatever Python is on PATH, outside the uv virtualenv, and init.sh's verification chain runs the global `python -m pytest`. Those files are harness CORE and must not be edited here.
+**Decision:** Until the framework learns uv (detect `uv.lock`, install with `uv sync --locked`, run layers with `uv run`), sessions start with `uv sync` and `node scripts/framework-check.mjs brief` instead of `./init.sh`, and run `node scripts/framework-check.mjs selftest` when the harness self-tests are needed. CI installs with `astral-sh/setup-uv` and `uv sync --locked` instead of `npm run setup`.
+**Alternatives considered:**
+- Edit `init.sh`/`stack-detect.mjs` locally — Rejected: CORE files are overwritten by `harness-upgrade`.
+- Move `pyproject.toml` out of the root so the harness sees a node stack — Rejected: fights uv's project discovery and every tool's config lookup.
+**Consequences:**
+- Positive: nothing installs into the system Python.
+- Negative: the harness's documented startup (`./init.sh`) is skipped; `AGENTS.md` still tells agents to run it, so `docs/STANDARDS.md` overrides it explicitly.
+- Reversal: once an upstream harness release handles uv, run `harness-upgrade`, confirm `./init.sh` uses `uv sync`, and mark this decision superseded.

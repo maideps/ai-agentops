@@ -4,11 +4,17 @@ on:
   push:
   pull_request:
 
+# No secrets are used: tests run in LLM_MODE=mock with the network guard on.
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
     env:
       CW_SKIP_ADOPTION_MATRIX: "1"
+      LLM_MODE: mock
+      ENABLE_LIVE_LLM: "false"
     steps:
       - uses: actions/checkout@v4
 
@@ -16,8 +22,13 @@ jobs:
         with:
           node-version-file: .nvmrc
 
-      - name: Install and set up project
-        run: npm run setup --if-present
+      # Not `npm run setup`: the harness would pip-install into the system Python (D-004).
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.13.9"
+
+      - name: Install Python dependencies from the lockfile
+        run: uv sync --locked
 
       - name: Verify project
         run: npm run check

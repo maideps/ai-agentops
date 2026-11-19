@@ -13,16 +13,27 @@ A provider-agnostic, security-first agentic AI platform (portfolio project). It 
 
 ## Status
 
-**Not implemented yet.** The repository holds the specification and the development harness; no application code exists and no feature has passed verification. Nothing below claims a working capability until its feature passes `npm run verify-feature`.
+Early skeleton (feat-001, M0.1). What works today:
+
+- A FastAPI service with two endpoints: GET /health/live returns `{"status": "ok"}` and GET /health/ready returns `{"status": "ready", "checks": {}}` (no dependencies yet).
+- Settings from environment variables with `LLM_MODE=mock` and `ENABLE_LIVE_LLM=false` by default; `hosted_free`/`live_paid` refuse to start without `ENABLE_LIVE_LLM=true`. Provider keys in the environment never switch the mode.
+- JSON logs for the app's own events (uvicorn's access log is still plain text).
+- A keyless, offline test suite: tests cannot open non-loopback connections or DNS lookups.
+
+There is no agent workflow, database, model provider or UI yet; see the roadmap.
 
 ## Quick Start
 
-Prerequisites today: Node.js ≥ 18 and Git (Git Bash on Windows for `./init.sh`). From feat-001 on: Python and [uv](https://docs.astral.sh/uv/); from feat-002: Docker.
+Prerequisites: Python 3.13, [uv](https://docs.astral.sh/uv/), Node.js ≥ 18 (development harness) and Git. Docker is needed from feat-002.
 
 ```bash
-./init.sh          # check the environment and print the session brief
-npm run check      # run every verification layer
+uv sync                                                    # install dependencies into .venv
+uv run uvicorn agentops_api.app:create_app --factory       # serve the API on http://127.0.0.1:8000
+curl http://127.0.0.1:8000/health/live
+npm run check                                              # lint, types, tests and harness checks
 ```
+
+Settings come from environment variables only; copy `.env.example` to `.env` and pass it with `--env-file .env` to use a file. Do not run `./init.sh` yet: it would install into the system Python (D-004 in `DECISIONS.md`).
 
 ## Usage
 

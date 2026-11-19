@@ -9,7 +9,7 @@
       "layers": [
         {
           "label": "Layer 1: Harness and architecture checks",
-          "cmd": "npm run lint && npm run check-arch && npm run typecheck",
+          "cmd": "node scripts/framework-check.mjs lint && npm run check-arch && node scripts/framework-check.mjs typecheck",
           "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
         },
         {
@@ -40,7 +40,7 @@
       "layers": [
         {
           "label": "Layer 1: Harness and architecture checks",
-          "cmd": "npm run lint && npm run check-arch && npm run typecheck",
+          "cmd": "node scripts/framework-check.mjs lint && npm run check-arch && node scripts/framework-check.mjs typecheck",
           "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
         },
         {
@@ -76,7 +76,7 @@
       "layers": [
         {
           "label": "Layer 1: Harness and architecture checks",
-          "cmd": "npm run lint && npm run check-arch && npm run typecheck",
+          "cmd": "node scripts/framework-check.mjs lint && npm run check-arch && node scripts/framework-check.mjs typecheck",
           "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
         },
         {
@@ -108,7 +108,7 @@
       "layers": [
         {
           "label": "Layer 1: Harness and architecture checks",
-          "cmd": "npm run lint && npm run check-arch && npm run typecheck",
+          "cmd": "node scripts/framework-check.mjs lint && npm run check-arch && node scripts/framework-check.mjs typecheck",
           "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
         },
         {
@@ -144,7 +144,7 @@
       "layers": [
         {
           "label": "Layer 1: Harness and architecture checks",
-          "cmd": "npm run lint && npm run check-arch && npm run typecheck",
+          "cmd": "node scripts/framework-check.mjs lint && npm run check-arch && node scripts/framework-check.mjs typecheck",
           "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
         },
         {
@@ -180,7 +180,7 @@
       "layers": [
         {
           "label": "Layer 1: Harness and architecture checks",
-          "cmd": "npm run lint && npm run check-arch && npm run typecheck",
+          "cmd": "node scripts/framework-check.mjs lint && npm run check-arch && node scripts/framework-check.mjs typecheck",
           "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
         },
         {
@@ -216,7 +216,7 @@
       "layers": [
         {
           "label": "Layer 1: Harness and architecture checks",
-          "cmd": "npm run lint && npm run check-arch && npm run typecheck",
+          "cmd": "node scripts/framework-check.mjs lint && npm run check-arch && node scripts/framework-check.mjs typecheck",
           "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
         },
         {
@@ -252,7 +252,7 @@
       "layers": [
         {
           "label": "Layer 1: Harness and architecture checks",
-          "cmd": "npm run lint && npm run check-arch && npm run typecheck",
+          "cmd": "node scripts/framework-check.mjs lint && npm run check-arch && node scripts/framework-check.mjs typecheck",
           "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
         },
         {
@@ -283,7 +283,7 @@
       "layers": [
         {
           "label": "Layer 1: Harness and architecture checks",
-          "cmd": "npm run lint && npm run check-arch && npm run typecheck",
+          "cmd": "node scripts/framework-check.mjs lint && npm run check-arch && node scripts/framework-check.mjs typecheck",
           "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
         },
         {

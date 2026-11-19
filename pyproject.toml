@@ -1,0 +1,63 @@
+[project]
+name = "agentops-ai"
+version = "0.1.0"
+description = "AgentOps AI: a mock-first, provider-agnostic, security-first agentic AI platform"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "fastapi>=0.115",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "uvicorn>=0.32",
+]
+
+[dependency-groups]
+dev = [
+    "httpx2>=2.16.2",
+    "mypy>=1.13",
+    "pytest>=8.3",
+    "ruff>=0.8",
+]
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["apps/api/agentops_api"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+extend-exclude = ["templates", "scripts", "tests", "skills"]
+
+[tool.ruff.lint]
+# S110/BLE001/E722 back arch-103 (swallowed and blind exceptions).
+select = ["E", "W", "F", "I", "B", "UP", "S", "BLE", "SIM", "RUF", "N", "ANN"]
+
+[tool.ruff.format]
+# Code blocks in the specs are illustrative; ruff 0.17 would reformat them.
+exclude = ["*.md"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["agentops_api", "testsuite"]
+
+[tool.ruff.lint.per-file-ignores]
+"testsuite/**/*.py" = ["S101", "ANN401"]
+
+[tool.mypy]
+strict = true
+plugins = ["pydantic.mypy"]
+files = ["apps/api/agentops_api", "testsuite"]
+mypy_path = "apps/api"
+explicit_package_bases = true
+
+[tool.pytest.ini_options]
+testpaths = ["testsuite"]
+pythonpath = ["."]
+addopts = ["--import-mode=importlib", "--strict-markers"]
+markers = [
+    "integration: needs local PostgreSQL from docker compose",
+    "live: calls a real model provider; never in default CI",
+]

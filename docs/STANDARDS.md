@@ -17,6 +17,18 @@ Each rule names what enforces it today. "Review" means only a human or the `revi
 - **Honest claims.** Code is typed, testable and versioned. No unverified claims about benchmarks, safety or security; targets in the spec are proposals, not results. *Enforced by: verify-feature evidence, `readme-review` skill.*
 - **No unapproved actions.** Use official, version-matched documentation. Do not run destructive commands, provision cloud infrastructure, connect accounts or install from `curl | bash` without explicit owner approval. *Enforced by: review; Claude Code permission prompts.*
 
+## Session Start (overrides `./init.sh` for now, D-004)
+
+**Do not run `./init.sh` or `npm run setup`**: with this Python project they would `pip install` into the system Python. Start each session with:
+
+```bash
+uv sync                                     # install from uv.lock into .venv
+node scripts/framework-check.mjs brief      # the session brief init.sh would print
+npm run check                               # full verification
+```
+
+Run `node scripts/framework-check.mjs selftest` when the harness self-tests are needed (for example after `harness-upgrade`).
+
 ## Sequence for Every Feature
 
 Runs inside the harness loop in `AGENTS.md` (activate → implement → commit → `verify-feature` → session note):
@@ -36,7 +48,7 @@ One working task: synthetic sales + evidence → grounded report → authorized 
 - **Python** (version pinned in `.python-version` from feat-001) with **uv** for reproducible dependencies (`uv.lock` committed).
 - **FastAPI + Pydantic** for the API; typed Python throughout.
 - **Ruff** for lint and format (`uv run ruff check .`, `uv run ruff format --check .`). Enable at least `E`, `F`, `I`, `B`, `UP`, `S110`, `BLE001`, `E722` so swallowed and blind exceptions fail lint alongside arch-103.
-- **mypy** in strict mode over `apps/` and `packages/` (`uv run mypy`, targets configured in `pyproject.toml`).
+- **mypy** in strict mode over product code and `testsuite/` (`uv run mypy`, targets in `[tool.mypy] files`; add each new package there).
 - **pytest** (`uv run pytest`) with markers `integration` (needs local Postgres), `live` (real provider; never in default CI).
 - **Node.js ≥ 18** only for the harness runtime, and later the Next.js UI in `apps/web/`.
 - **Docker Compose** for local PostgreSQL + pgvector (from feat-002).
