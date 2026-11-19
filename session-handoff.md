@@ -4,34 +4,34 @@ Fill this at session end for large sessions; keep it current otherwise.
 
 ## Current Objective
 
-- Goal: feat-005 (M2.1 MCP server, policy gateway, approval binding, sandbox ticket write).
-- Current status: feat-001 to feat-004 passing (feat-004 at 4362028); no feature active.
+- Goal: feat-006 (M2.2 Postgres checkpointing, execution registry, crash recovery, reconciliation).
+- Current status: feat-001 to feat-005 passing (feat-005 at b35f75d); no feature active.
 - Branch / commit: main.
 
 ## Completed This Session
 
-- [x] feat-004 (M1.2) first workflow: bounded LangGraph graph, tool and citation policy, offline retrieval, recorded replay
-- [x] D-008 (workflow and embedding design) recorded
+- [x] feat-005 (M2.1) tool gateway, approval binding, sandbox ticket write, principal-bound MCP server (stdio)
+- [x] D-009 recorded; arch-105 (only the gateway writes approvals/tickets)
 
 ## Verification Evidence
 
 | Check | Command | Result | Notes |
 |---|---|---|---|
-| Feature gate | `npm run verify-feature -- feat-004` | PASS, 5/5 layers | trail in `.harness/trails/` |
-| Full check | `npm run check` | PASS, 54 offline tests | integration: 46 tests in layer 5 |
-| Mutation spot-check | citations / LLM budget / retrieval ACL | 4, 1 and 6+6 failures | all restored |
+| Feature gate | `npm run verify-feature -- feat-005` | PASS, 5/5 layers | trail in `.harness/trails/` |
+| Full check | `npm run check` | PASS, 54 offline tests | integration: 77 tests in layer 5 |
+| Mutation spot-check | hash / permission / write expiry / write principal | 1 failure each | all restored |
 
 ## Files Changed
 
-- See `progress/005-2026-11-19.md`.
+- See `progress/006-2026-11-19.md`.
 
 ## Decisions Made
 
-- D-008 first workflow: bounded LangGraph graph, policy-owned decisions, offline hashing embeddings.
+- D-009 tool gateway, approval binding, principal-bound MCP server, least-privilege app login.
 
 ## Blockers / Risks
 
-- `./init.sh` unusable (D-004; upstream #63/#64). Docker Desktop must be running for feature layers 3 and 5. LiteLLM Gemini/Groq tokenizer download on first live call (D-005). LICENSE unconfirmed. CI not run yet (no remote).
+- `./init.sh` unusable (D-004; upstream #63/#64). Docker Desktop must be running for feature layers 3 and 5. LiteLLM Gemini/Groq tokenizer download on first live call (D-005). Dev databases from before session 006 need the agentops_app roles (D-009). LICENSE unconfirmed. CI not run yet (no remote).
 
 ## Next Session Startup
 
@@ -42,4 +42,4 @@ Fill this at session end for large sessions; keep it current otherwise.
 
 ## Recommended Next Step
 
-- Activate feat-005 and write the approval-binding tests (forged, expired, mutated, replayed) first.
+- Activate feat-006 and write the concurrent-retry and crash-after-commit tests first.
