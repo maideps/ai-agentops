@@ -1,4 +1,4 @@
-# AgentOps AI — Architecture and Requirements Specification
+# AI AgentOps — Architecture and Requirements Specification
 
 **Version:** 3.0 (design specification)  
 **Date:** 2026-11-19  
@@ -366,7 +366,7 @@ Use stable problem details for errors (`code`, `message`, `request_id`) without 
 ### 11.3 Repository
 
 ```text
-agentops-ai/
+ai-agentops/
   apps/api/                 # FastAPI endpoints and dependency wiring
   apps/web/                 # Next.js UI and replay views
   packages/core/            # typed domain contracts, policies, state
@@ -455,4 +455,4 @@ The following public sources motivate the design; this document's numerical targ
 - LiteLLM documentation: https://docs.litellm.ai/
 - 6sense Sr. AI Engineer role snapshot: https://job-boards.greenhouse.io/6sense/jobs/8257108
 
-**Document authority:** This specification is the source of truth for requirements. `CLAUDE_CODE_HANDOFF.md` is its execution guide. The PDF is the executive and portfolio blueprint. If they diverge, update this file first, then refresh the others.
+**Document authority:** This specification is the source of truth for requirements. `CLAUDE_CODE_HANDOFF.md` is its execution guide. The executive and portfolio blueprint PDF (v3) is kept outside the repository, in the git-ignored `.base/` folder. If they diverge, update this file first, then refresh the others.

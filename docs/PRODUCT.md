@@ -4,7 +4,7 @@
 
 ## Purpose
 
-AgentOps AI is a portfolio-grade, provider-agnostic, security-first agentic platform. It analyzes synthetic business data, retrieves attributable evidence, and proposes narrowly authorized actions that only run after human approval. It must be measurable, resumable, cheap to test (mock-first, no paid API by default) and demonstrably safe within a documented threat model.
+AI AgentOps is a portfolio-grade, provider-agnostic, security-first agentic platform. It analyzes synthetic business data, retrieves attributable evidence, and proposes narrowly authorized actions that only run after human approval. It must be measurable, resumable, cheap to test (mock-first, no paid API by default) and demonstrably safe within a documented threat model.
 
 ## Primary Users
 

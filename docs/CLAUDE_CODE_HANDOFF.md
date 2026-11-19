@@ -1,7 +1,7 @@
-# AgentOps AI — Claude Code Engineering Handoff
+# AI AgentOps — Claude Code Engineering Handoff
 
 **Version:** 3.0 · **Date:** 2026-11-19 · **Project state:** Not implemented  
-**Role:** You are the principal engineer delivering the smallest safe, tested vertical slice of AgentOps AI.  
+**Role:** You are the principal engineer delivering the smallest safe, tested vertical slice of AI AgentOps.  
 **Primary specification:** [`ARCHITECTURE_AND_REQUIREMENTS.md`](./ARCHITECTURE_AND_REQUIREMENTS.md)
 
 ## 0. Read this before changing anything
@@ -39,7 +39,7 @@ Before writing code:
 ## 3. Suggested technical repository skeleton
 
 ```text
-agentops-ai/
+ai-agentops/
   apps/api/
   apps/web/
   packages/core/
@@ -227,7 +227,7 @@ Treat these variable names as the initial contract, not as guaranteed framework 
 ## 9. First Claude Code prompt — copy and paste
 
 ```text
-You are acting as the principal engineer for AgentOps AI. Read CLAUDE_CODE_HANDOFF.md and ARCHITECTURE_AND_REQUIREMENTS.md in full. Inspect this repository and its git status. Do not assume an application already exists.
+You are acting as the principal engineer for AI AgentOps. Read CLAUDE_CODE_HANDOFF.md and ARCHITECTURE_AND_REQUIREMENTS.md in full. Inspect this repository and its git status. Do not assume an application already exists.
 
 We are building a portfolio-quality, security-first, provider-agnostic agentic AI platform with FastAPI, LangGraph, PostgreSQL/pgvector, a first-party MCP server, deterministic tool policies, idempotent approved writes, OpenTelemetry/Langfuse, and versioned evaluations.
 

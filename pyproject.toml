@@ -1,7 +1,7 @@
 [project]
-name = "agentops-ai"
+name = "ai-agentops"
 version = "0.1.0"
-description = "AgentOps AI: a mock-first, provider-agnostic, security-first agentic AI platform"
+description = "AI AgentOps: a mock-first, provider-agnostic, security-first agentic AI platform"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.13,<3.14"

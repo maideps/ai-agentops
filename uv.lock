@@ -6,7 +6,7 @@ requires-python = "==3.13.*"
 exclude-newer = "2026-11-05T00:00:00Z"
 
 [[package]]
-name = "agentops-ai"
+name = "ai-agentops"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

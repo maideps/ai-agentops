@@ -1,3 +1,3 @@
-"""AgentOps AI HTTP API."""
+"""AI AgentOps HTTP API."""
 
 __version__ = "0.1.0"

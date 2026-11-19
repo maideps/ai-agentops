@@ -20,7 +20,7 @@ def create_app(settings: Settings | None = None, *, log_stream: TextIO | None = 
     settings = settings if settings is not None else Settings()
     configure_logging(settings.log_level, log_stream)
 
-    app = FastAPI(title="AgentOps AI API", version=__version__)
+    app = FastAPI(title="AI AgentOps API", version=__version__)
     app.state.settings = settings
     app.include_router(health_router)
 

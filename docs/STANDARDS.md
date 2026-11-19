@@ -83,5 +83,5 @@ The harness's `npm run lint`/`test`/`typecheck` scripts check harness state only
 ## Documentation Standards
 
 - Update docs in the same commit as the code: README (what the app does now), ADRs (`DECISIONS.md`, expanded in `docs/decisions/` with context, alternatives, decision, consequences, reversal conditions), threat model, test evidence and requirement traceability.
-- `ARCHITECTURE_AND_REQUIREMENTS.md` is the source of truth. If documents diverge, update it first, then the handoff, then the PDF.
+- `ARCHITECTURE_AND_REQUIREMENTS.md` is the source of truth. If documents diverge, update it first, then the handoff, then the blueprint PDF kept locally in `.base/` (not in the repository).
 - Final report of each feature: changed files, commands run, pass/fail evidence, costs/network activity, next ticket.
