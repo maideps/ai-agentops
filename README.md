@@ -51,6 +51,8 @@ Early stage (M0.1 to M4.1 done: feat-001 to feat-008). What works today:
   - POST /v1/runs/{run_id}/feedback stores a thumbs up or down, with an optional comment and evaluation-case id, for the configured demo user (bearer `DEMO_API_TOKEN`); `python -m agentops_data export-feedback --tenant demo-a` exports it.
   - A versioned 50-case evaluation corpus (`datasets/evals/v1`) covering normal, multi-source, missing-evidence, tool-misuse, prompt-injection, access, reliability and budget cases; `python -m agentops_evals run` runs it in mock mode and reports dataset version, git commit, model, prompt version and a trace id per case. All 50 pass. It scores the platform's enforcement with scripted model replies, not model quality.
 
+- An orchestration experiment (feat-008, M4.1): Research, Data Analyst and Reporting roles as LangGraph subgraphs (`orchestration="specialists"`), each limited to its own tool. `python -m agentops_evals benchmark` runs the 42 workflow cases of the evaluation corpus under both designs and writes `benchmarks/orchestration/v1/` (results JSON and `REPORT.md`). In mock mode both reach 42/42 expected outcomes and the specialists need about one more model call per run (2.74 vs 1.81), so the single workflow stays the default. Mock mode cannot compare answer quality; no hosted-model numbers exist yet.
+
 There is no HTTP endpoint for runs or approvals, no command-line entry for pausing and resuming runs, and no UI yet; see the roadmap.
 
 ## Quick Start
