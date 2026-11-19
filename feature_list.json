@@ -50,7 +50,7 @@
         },
         {
           "label": "Layer 3: Acceptance tests feat-002",
-          "cmd": "uv run pytest testsuite/acceptance/feat_002 -q",
+          "cmd": "docker compose up -d --wait postgres && uv run pytest testsuite/acceptance/feat_002 -q",
           "repair": "Fix the code until the declared behavior holds; a test that contradicts the behavior is fixed in the same commit."
         },
         {
@@ -118,7 +118,7 @@
         },
         {
           "label": "Layer 3: Acceptance tests feat-004",
-          "cmd": "uv run pytest testsuite/acceptance/feat_004 -q",
+          "cmd": "docker compose up -d --wait postgres && uv run pytest testsuite/acceptance/feat_004 -q",
           "repair": "Fix the code until the declared behavior holds; a test that contradicts the behavior is fixed in the same commit."
         },
         {
@@ -154,7 +154,7 @@
         },
         {
           "label": "Layer 3: Acceptance tests feat-005",
-          "cmd": "uv run pytest testsuite/acceptance/feat_005 -q",
+          "cmd": "docker compose up -d --wait postgres && uv run pytest testsuite/acceptance/feat_005 -q",
           "repair": "Fix the code until the declared behavior holds; a test that contradicts the behavior is fixed in the same commit."
         },
         {
@@ -190,7 +190,7 @@
         },
         {
           "label": "Layer 3: Acceptance tests feat-006",
-          "cmd": "uv run pytest testsuite/acceptance/feat_006 -q",
+          "cmd": "docker compose up -d --wait postgres && uv run pytest testsuite/acceptance/feat_006 -q",
           "repair": "Fix the code until the declared behavior holds; a test that contradicts the behavior is fixed in the same commit."
         },
         {
@@ -226,7 +226,7 @@
         },
         {
           "label": "Layer 3: Acceptance tests feat-007",
-          "cmd": "uv run pytest testsuite/acceptance/feat_007 -q",
+          "cmd": "docker compose up -d --wait postgres && uv run pytest testsuite/acceptance/feat_007 -q",
           "repair": "Fix the code until the declared behavior holds; a test that contradicts the behavior is fixed in the same commit."
         },
         {

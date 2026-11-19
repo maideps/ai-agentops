@@ -33,5 +33,11 @@ jobs:
       - name: Verify project
         run: npm run check
 
+      # Local throwaway Postgres from docker-compose.yml; the default passwords are fine here.
+      - name: Integration tests (PostgreSQL + pgvector)
+        run: |
+          docker compose up -d --wait postgres
+          uv run pytest testsuite -q -m "integration and not live"
+
       - name: Verify architecture
         run: npm run check-arch

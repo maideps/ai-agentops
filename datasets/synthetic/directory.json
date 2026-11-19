@@ -1,0 +1,25 @@
+{
+  "tenants": [
+    {"id": "demo-a", "name": "Acme Outdoor Retail (synthetic)"},
+    {"id": "demo-b", "name": "Globex Foods (synthetic)"}
+  ],
+  "roles": [
+    {"id": "viewer", "description": "Reads public documents only", "access_labels": ["public"]},
+    {"id": "analyst", "description": "Reads public and internal documents", "access_labels": ["public", "internal"]},
+    {"id": "admin", "description": "Reads every document of its tenant", "access_labels": ["public", "internal", "restricted"]}
+  ],
+  "users": [
+    {"id": "user-a-analyst", "tenant_id": "demo-a", "display_name": "Ana Analyst", "role_id": "analyst"},
+    {"id": "user-a-viewer", "tenant_id": "demo-a", "display_name": "Val Viewer", "role_id": "viewer"},
+    {"id": "user-a-admin", "tenant_id": "demo-a", "display_name": "Ari Admin", "role_id": "admin"},
+    {"id": "user-b-analyst", "tenant_id": "demo-b", "display_name": "Ben Analyst", "role_id": "analyst"}
+  ],
+  "documents": [
+    {"id": "doc-a-returns-policy", "tenant_id": "demo-a", "title": "Returns and refunds policy", "access_label": "internal", "path": "documents/demo-a/returns-policy.md"},
+    {"id": "doc-a-pricing-guidelines", "tenant_id": "demo-a", "title": "Regional pricing guidelines", "access_label": "internal", "path": "documents/demo-a/pricing-guidelines.md"},
+    {"id": "doc-a-press-kit", "tenant_id": "demo-a", "title": "Press kit", "access_label": "public", "path": "documents/demo-a/press-kit.md"},
+    {"id": "doc-a-board-notes", "tenant_id": "demo-a", "title": "Q3 board notes", "access_label": "restricted", "path": "documents/demo-a/board-notes.md"},
+    {"id": "doc-b-supplier-policy", "tenant_id": "demo-b", "title": "Supplier quality policy", "access_label": "internal", "path": "documents/demo-b/supplier-policy.md"},
+    {"id": "doc-b-expansion-plan", "tenant_id": "demo-b", "title": "APAC expansion plan", "access_label": "restricted", "path": "documents/demo-b/expansion-plan.md"}
+  ]
+}

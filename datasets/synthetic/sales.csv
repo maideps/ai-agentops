@@ -1,0 +1,65 @@
+tenant_id,product_id,product_name,region,quarter,revenue,units
+demo-a,101,Trail Running Shoes,EMEA,2026-Q1,10000.00,200
+demo-a,101,Trail Running Shoes,EMEA,2026-Q2,10000.00,200
+demo-a,101,Trail Running Shoes,EMEA,2026-Q3,6000.00,120
+demo-a,101,Trail Running Shoes,EMEA,2026-Q4,6500.00,130
+demo-a,101,Trail Running Shoes,NA,2026-Q1,12000.00,240
+demo-a,101,Trail Running Shoes,NA,2026-Q2,12000.00,240
+demo-a,101,Trail Running Shoes,NA,2026-Q3,12000.00,240
+demo-a,101,Trail Running Shoes,NA,2026-Q4,12000.00,240
+demo-a,102,Rain Jacket,EMEA,2026-Q1,8000.00,160
+demo-a,102,Rain Jacket,EMEA,2026-Q2,8000.00,160
+demo-a,102,Rain Jacket,EMEA,2026-Q3,8000.00,160
+demo-a,102,Rain Jacket,EMEA,2026-Q4,8000.00,160
+demo-a,102,Rain Jacket,NA,2026-Q1,9000.00,180
+demo-a,102,Rain Jacket,NA,2026-Q2,9000.00,180
+demo-a,102,Rain Jacket,NA,2026-Q3,6000.00,120
+demo-a,102,Rain Jacket,NA,2026-Q4,7000.00,140
+demo-a,103,Camping Stove,EMEA,2026-Q1,5000.00,100
+demo-a,103,Camping Stove,EMEA,2026-Q2,5000.00,100
+demo-a,103,Camping Stove,EMEA,2026-Q3,5000.00,100
+demo-a,103,Camping Stove,EMEA,2026-Q4,5000.00,100
+demo-a,103,Camping Stove,NA,2026-Q1,7000.00,140
+demo-a,103,Camping Stove,NA,2026-Q2,7000.00,140
+demo-a,103,Camping Stove,NA,2026-Q3,5000.00,100
+demo-a,103,Camping Stove,NA,2026-Q4,5000.00,100
+demo-a,104,Water Bottle,EMEA,2026-Q1,3000.00,60
+demo-a,104,Water Bottle,EMEA,2026-Q2,3000.00,60
+demo-a,104,Water Bottle,EMEA,2026-Q3,3500.00,70
+demo-a,104,Water Bottle,EMEA,2026-Q4,3500.00,70
+demo-a,104,Water Bottle,NA,2026-Q1,2000.00,40
+demo-a,104,Water Bottle,NA,2026-Q2,2000.00,40
+demo-a,104,Water Bottle,NA,2026-Q3,2000.00,40
+demo-a,104,Water Bottle,NA,2026-Q4,2500.00,50
+demo-b,201,Olive Oil 1L,EMEA,2026-Q1,20000.00,400
+demo-b,201,Olive Oil 1L,EMEA,2026-Q2,20000.00,400
+demo-b,201,Olive Oil 1L,EMEA,2026-Q3,20000.00,400
+demo-b,201,Olive Oil 1L,EMEA,2026-Q4,20000.00,400
+demo-b,201,Olive Oil 1L,APAC,2026-Q1,20000.00,400
+demo-b,201,Olive Oil 1L,APAC,2026-Q2,20000.00,400
+demo-b,201,Olive Oil 1L,APAC,2026-Q3,15000.00,300
+demo-b,201,Olive Oil 1L,APAC,2026-Q4,16000.00,320
+demo-b,202,Pasta 500g,EMEA,2026-Q1,20000.00,400
+demo-b,202,Pasta 500g,EMEA,2026-Q2,20000.00,400
+demo-b,202,Pasta 500g,EMEA,2026-Q3,20000.00,400
+demo-b,202,Pasta 500g,EMEA,2026-Q4,20000.00,400
+demo-b,202,Pasta 500g,APAC,2026-Q1,20000.00,400
+demo-b,202,Pasta 500g,APAC,2026-Q2,20000.00,400
+demo-b,202,Pasta 500g,APAC,2026-Q3,20000.00,400
+demo-b,202,Pasta 500g,APAC,2026-Q4,20000.00,400
+demo-b,203,Tomato Sauce,EMEA,2026-Q1,20000.00,400
+demo-b,203,Tomato Sauce,EMEA,2026-Q2,20000.00,400
+demo-b,203,Tomato Sauce,EMEA,2026-Q3,20000.00,400
+demo-b,203,Tomato Sauce,EMEA,2026-Q4,20000.00,400
+demo-b,203,Tomato Sauce,APAC,2026-Q1,20000.00,400
+demo-b,203,Tomato Sauce,APAC,2026-Q2,20000.00,400
+demo-b,203,Tomato Sauce,APAC,2026-Q3,20000.00,400
+demo-b,203,Tomato Sauce,APAC,2026-Q4,20000.00,400
+demo-b,204,Sparkling Water,EMEA,2026-Q1,20000.00,400
+demo-b,204,Sparkling Water,EMEA,2026-Q2,20000.00,400
+demo-b,204,Sparkling Water,EMEA,2026-Q3,20000.00,400
+demo-b,204,Sparkling Water,EMEA,2026-Q4,20000.00,400
+demo-b,204,Sparkling Water,APAC,2026-Q1,20000.00,400
+demo-b,204,Sparkling Water,APAC,2026-Q2,20000.00,400
+demo-b,204,Sparkling Water,APAC,2026-Q3,20000.00,400
+demo-b,204,Sparkling Water,APAC,2026-Q4,20000.00,400

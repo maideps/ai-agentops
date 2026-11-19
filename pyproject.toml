@@ -9,6 +9,7 @@ dependencies = [
     "fastapi>=0.115",
     "jsonschema>=4.23",
     "litellm>=1.83",
+    "psycopg[binary]>=3.2",
     "pydantic>=2.9",
     "pydantic-settings>=2.6",
     "uvicorn>=0.32",
@@ -32,6 +33,7 @@ packages = [
     "apps/api/agentops_api",
     "packages/core/agentops_core",
     "packages/llm/agentops_llm",
+    "packages/data/agentops_data",
 ]
 
 [tool.ruff]
@@ -48,7 +50,7 @@ select = ["E", "W", "F", "I", "B", "UP", "S", "BLE", "SIM", "RUF", "N", "ANN"]
 exclude = ["*.md"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["agentops_api", "agentops_core", "agentops_llm", "testsuite"]
+known-first-party = ["agentops_api", "agentops_core", "agentops_data", "agentops_llm", "testsuite"]
 
 [tool.ruff.lint.per-file-ignores]
 "testsuite/**/*.py" = ["S101", "ANN401"]
@@ -62,9 +64,10 @@ files = [
     "apps/api/agentops_api",
     "packages/core/agentops_core",
     "packages/llm/agentops_llm",
+    "packages/data/agentops_data",
     "testsuite",
 ]
-mypy_path = ["apps/api", "packages/core", "packages/llm"]
+mypy_path = ["apps/api", "packages/core", "packages/llm", "packages/data"]
 explicit_package_bases = true
 
 [tool.pytest.ini_options]

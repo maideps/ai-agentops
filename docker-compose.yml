@@ -1,0 +1,25 @@
+# Local development only. Passwords default to throwaway values; override them in your shell.
+services:
+  postgres:
+    # pgvector 0.8.0 on PostgreSQL 17, pinned by digest.
+    image: pgvector/pgvector:0.8.0-pg17@sha256:40b404964359299eefdd5f8518facf1886c562848cf4de13b6eaf91cb70c2b87
+    environment:
+      POSTGRES_DB: agentops
+      POSTGRES_USER: agentops
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+      ANALYTICS_DB_PASSWORD: ${ANALYTICS_DB_PASSWORD:-change-me-analytics}
+    ports:
+      # Localhost only; 55432 avoids clashing with a locally installed PostgreSQL on 5432.
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # TCP, not the socket: during first-time init the temporary server listens on the socket only.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U agentops -d agentops_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  pgdata:

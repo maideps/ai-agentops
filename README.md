@@ -13,7 +13,7 @@ A provider-agnostic, security-first agentic AI platform (portfolio project). It 
 
 ## Status
 
-Early stage (feat-001 M0.1 and feat-003 M1.1 done). What works today:
+Early stage (feat-001 M0.1, feat-002 M0.2 and feat-003 M1.1 done). What works today:
 
 - A FastAPI service with two endpoints: GET /health/live returns `{"status": "ok"}` and GET /health/ready returns `{"status": "ready", "checks": {}}` (no dependencies yet).
 - Settings from environment variables with `LLM_MODE=mock` and `ENABLE_LIVE_LLM=false` by default; `hosted_free`/`live_paid` refuse to start without `ENABLE_LIVE_LLM=true`. Provider keys in the environment never switch the mode.
@@ -25,18 +25,30 @@ Early stage (feat-001 M0.1 and feat-003 M1.1 done). What works today:
   - `agentops_llm.litellm_provider.LiteLLMProvider`: LiteLLM SDK adapter that normalizes text, tool calls, usage and errors (`RATE_LIMITED`, `AUTH_FAILED`, `TIMEOUT`, `CAPABILITY_UNSUPPORTED`, `PROVIDER_UNAVAILABLE`, `BUDGET_EXCEEDED`, `INVALID_REQUEST`, `INVALID_RESPONSE`). Its capability registry holds no live models yet, so no live call is possible without registering one.
   - `agentops_llm.selection.select_provider`: mock by default, replay refuses every model call, and hosted or paid modes need `ENABLE_LIVE_LLM=true`.
 
-There is no agent workflow, database or UI yet; see the roadmap.
+- Synthetic data in PostgreSQL 17 + pgvector (feat-002, M0.2), from `datasets/synthetic/`: two tenants (`demo-a`, `demo-b`), four users with viewer/analyst/admin roles, 64 quarterly sales rows and six documents split into 13 citable chunks (`<document-id>#<n>`).
+  - Row-level security keeps each tenant's rows invisible to the other; the read-only analytics login cannot insert, update, delete, truncate, alter or drop anything.
+  - Typed reads in `agentops_data.access`: `revenue_by_quarter`, `quarterly_sales`, `documents_for_user` and `document_chunks`, filtered by the user's role (viewer sees public documents, analyst public and internal, admin everything).
+  - GET /health/ready checks the database when `DATABASE_URL` is set and answers 503 `not_ready` when it is unreachable.
+
+There is no agent workflow or UI yet; see the roadmap.
 
 ## Quick Start
 
-Prerequisites: Python 3.13, [uv](https://docs.astral.sh/uv/), Node.js ≥ 18 (development harness) and Git. Docker is needed from feat-002.
+Prerequisites: Python 3.13, [uv](https://docs.astral.sh/uv/), Docker, Node.js ≥ 18 (development harness) and Git.
 
 ```bash
 uv sync                                                    # install dependencies into .venv
+docker compose up -d --wait postgres                       # PostgreSQL + pgvector on 127.0.0.1:55432
+export DATABASE_URL=postgresql://agentops:change-me@127.0.0.1:55432/agentops
+uv run python -m agentops_data migrate                     # create the schema
+uv run python -m agentops_data seed                        # load datasets/synthetic
 uv run uvicorn agentops_api.app:create_app --factory       # serve the API on http://127.0.0.1:8000
-curl http://127.0.0.1:8000/health/live
-npm run check                                              # lint, types, tests and harness checks
+curl http://127.0.0.1:8000/health/ready
+npm run check                                              # lint, types, offline tests, harness checks
+uv run pytest testsuite -q -m integration                  # tests against the local database
 ```
+
+The compose file uses throwaway local passwords (`POSTGRES_PASSWORD`, `ANALYTICS_DB_PASSWORD` override them). Database roles are created only when the data volume is first created; after changing `infra/postgres/init/`, recreate it with `docker compose down -v`.
 
 Settings come from environment variables only; copy `.env.example` to `.env` and pass it with `--env-file .env` to use a file. Do not run `./init.sh` yet: it would install into the system Python (D-004 in `DECISIONS.md`).
 

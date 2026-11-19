@@ -1,8 +1,10 @@
 """Suite-wide guards: no outbound network outside tests marked ``live``."""
 
 import ipaddress
+import os
 import socket
 from collections.abc import Iterator
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -70,6 +72,41 @@ def block_network(
     monkeypatch.setattr(socket.socket, "connect_ex", guarded_connect_ex)
     monkeypatch.setattr(socket, "getaddrinfo", guarded_getaddrinfo)
     yield
+
+
+# Integration database (docker compose service "postgres", database agentops_test).
+# Defaults match docker-compose.yml; override with the AGENTOPS_TEST_* variables.
+DATASET_DIR = Path(__file__).resolve().parent.parent / "datasets" / "synthetic"
+
+
+@pytest.fixture(scope="session")
+def admin_dsn() -> str:
+    return os.environ.get(
+        "AGENTOPS_TEST_DATABASE_URL",
+        "postgresql://agentops:change-me@127.0.0.1:55432/agentops_test",
+    )
+
+
+@pytest.fixture(scope="session")
+def analytics_dsn() -> str:
+    return os.environ.get(
+        "AGENTOPS_TEST_ANALYTICS_URL",
+        "postgresql://agentops_analytics:change-me-analytics@127.0.0.1:55432/agentops_test",
+    )
+
+
+@pytest.fixture(scope="session")
+def seeded_db(admin_dsn: str) -> str:
+    """Migrate and seed agentops_test once per session; returns the admin DSN."""
+    import psycopg
+
+    from agentops_data.migrations import apply_migrations
+    from agentops_data.seed import seed_dataset
+
+    with psycopg.connect(admin_dsn) as conn:
+        apply_migrations(conn)
+        seed_dataset(conn, DATASET_DIR)
+    return admin_dsn
 
 
 @pytest.fixture(autouse=True)

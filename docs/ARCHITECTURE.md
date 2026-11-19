@@ -16,8 +16,9 @@ The full product architecture — trust boundaries, graph units, typed state, LL
 │                run state, ports)                          │
 ├──────────────────────────────────────────────────────────┤
 │ Infrastructure packages/llm (mock, LiteLLM adapter),      │
-│                packages/retrieval (pgvector), Postgres,   │
-│                packages/telemetry (OTel, Langfuse)        │
+│                packages/data (migrations, seed, typed     │
+│                tenant-scoped reads), Postgres + pgvector, │
+│                packages/retrieval, packages/telemetry     │
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -27,6 +28,12 @@ The full product architecture — trust boundaries, graph units, typed state, LL
 - An LLM response is never an authorization decision: every privileged tool call passes the server-side policy and tool gateway, whatever the MCP server or the model says.
 
 These directories are created by the feature that first needs them, not up front.
+
+## Data Isolation (D-007)
+
+- Tenant tables use PostgreSQL row-level security keyed on `app.tenant_id`, set per transaction by the typed functions in `agentops_data.access`; with no tenant set, a query returns no rows.
+- The analytics login `agentops_analytics` has `SELECT` only (through `agentops_readonly`) and cannot bypass row-level security; the schema owner `agentops` runs migrations and the seed.
+- Documents are filtered by role access label (`role_document_access`); missing and forbidden documents are indistinguishable to the caller.
 
 ## Enforced Rules
 

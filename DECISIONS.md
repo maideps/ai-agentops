@@ -105,3 +105,23 @@ This file records significant architectural decisions, their context, alternativ
 **Consequences:**
 - Positive: a freshly published malicious release cannot enter the lock before the community has had time to catch it.
 - Negative: urgent security fixes need a deliberate date bump; resolved versions lag upstream (for example fastapi 0.162.0, litellm 1.108.0).
+
+### D-007: Tenant isolation with row-level security, a read-only login and typed reads
+
+**Date:** 2026-11-19
+**Status:** accepted
+**Context:** FR-003/FR-004 need tenant-scoped, read-only analytics over synthetic data, enforced by the database and not only by application code, with stable ids for citations.
+**Decision:**
+- **Isolation in two layers.** Tenant tables have row-level security policies on `current_setting('app.tenant_id', true)`; an unset tenant matches no rows. The typed functions in `agentops_data.access` set it per transaction with `set_config(..., true)` and also filter by tenant in SQL. There is no function that accepts SQL text.
+- **Roles.** `agentops` owns the schema and runs migrations and the seed. `agentops_readonly` (NOLOGIN) holds `SELECT` grants only; `agentops_analytics` (LOGIN, NOBYPASSRLS) inherits it. Login roles and passwords come from the compose init script (`infra/postgres/init/`), so migrations never contain credentials.
+- **Document ACL.** `role_document_access` maps roles to access labels (viewer: public; analyst: public + internal; admin: all). A missing and a forbidden document raise the same `DocumentNotAccessibleError`.
+- **Migrations** are plain SQL files in `agentops_data/migrations/`, applied in order, recorded with a SHA-256 checksum; an edited applied file fails with `MigrationDriftError`. No ORM, no Alembic.
+- **Local layout.** Postgres 17 + pgvector 0.8.0 pinned by digest, on `127.0.0.1:55432` (5432 was taken by a locally installed PostgreSQL). Integration tests use a separate `agentops_test` database.
+- **pgvector** is installed now; the embedding column and its dimension are chosen with retrieval in feat-004.
+**Alternatives considered:**
+- `SET ROLE` on the owner connection — Rejected: the session could `RESET ROLE` back to the owner.
+- Application-side tenant filters only — Rejected: one missed `WHERE` leaks across tenants.
+- Alembic — Deferred: no ORM models; SQL files are easier to review.
+**Consequences:**
+- Positive: a query without a tenant scope returns nothing; writes through the analytics login fail on privileges, whatever SQL is sent.
+- Negative / limits: the analytics login can still `set_config('app.tenant_id', ...)` itself if it can run arbitrary SQL, so RLS limits a scoped connection, not a hostile one; the typed functions and the tool gateway (feat-005) remain required. The init script runs only on a fresh volume: after changing it, recreate with `docker compose down -v`. The least-privilege application role for writes arrives with the first write path (feat-005/006).
