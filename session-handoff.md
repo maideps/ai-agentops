@@ -4,42 +4,43 @@ Fill this at session end for large sessions; keep it current otherwise.
 
 ## Current Objective
 
-- Goal: start feat-001 (M0.1, keyless FastAPI skeleton).
-- Current status: harness adopted (session 001); no product code; no feature active or passing.
-- Branch / commit: main, initial commit pending owner approval.
+- Goal: next feature after feat-001: feat-002 (M0.2 Postgres) or feat-003 (M1.1 provider port), which can run in parallel.
+- Current status: feat-001 passing (evidence at commit 2e699f1); no feature active.
+- Branch / commit: main.
 
 ## Completed This Session
 
-- [x] Harness adopted and configured for a Python/uv product (D-001–D-003)
-- [x] Milestones M0.1–M5.1 declared as feat-001–feat-009
-- [x] Product forbid rules arch-101–arch-104, probed against a bad file
+- [x] feat-001 (M0.1) keyless FastAPI skeleton, verified through the gate
+- [x] uv installed; CI switched to uv
+- [x] D-004 recorded: do not run ./init.sh or npm run setup
 
 ## Verification Evidence
 
 | Check | Command | Result | Notes |
 |---|---|---|---|
-| Arch rules probe | `npm run check-arch` with a temporary bad file | arch-101–104 FAIL on the probe as intended | probe removed |
-| Full check | `npm run check` | PASS (e2e, verify-all, quality SKIP: not configured yet) | also `./init.sh`: PASS, harness self-tests pass |
+| Feature gate | `npm run verify-feature -- feat-001` | PASS, 4/4 layers | trail in `.harness/trails/` |
+| Full check | `npm run check` | PASS | e2e, verify-all, quality SKIP (not configured) |
+| Real server | uvicorn on port 8765 + curl | both health endpoints OK | |
 
 ## Files Changed
 
-- See `progress/001-2026-11-19.md`.
+- See `progress/002-2026-11-19.md`.
 
 ## Decisions Made
 
-- D-001 adopt the harness; D-002 product tests in `testsuite/`; D-003 per-feature `uv run` layers.
+- D-003 updated (layer 1 calls harness checks directly); D-004 added (avoid init.sh/setup until the harness supports uv).
 
 ## Blockers / Risks
 
-- uv not installed; Docker CLI present, daemon unchecked; LICENSE (MIT) unconfirmed; CI lacks Python/uv until feat-001.
+- `./init.sh` unusable (D-004). Docker daemon unchecked. LICENSE unconfirmed. CI not run yet (no remote).
 
 ## Next Session Startup
 
-1. Read `AGENTS.md`.
-2. Read `feature_list.json`, `PROGRESS.md`, and the latest note under `progress/`.
-3. Review this handoff and `docs/STANDARDS.md`.
-4. Run the standard verification command before editing.
+1. Read `AGENTS.md`, then `docs/STANDARDS.md` (its Session Start section replaces `./init.sh`).
+2. `uv sync`, then `node scripts/framework-check.mjs brief`.
+3. Read the latest note under `progress/` and this handoff.
+4. Run `npm run check` before editing.
 
 ## Recommended Next Step
 
-- Install uv, then `npm run activate -- feat-001` and write `testsuite/acceptance/feat_001/` first.
+- Decide whether to fix uv support in the framework first; otherwise activate feat-002 or feat-003 and write its acceptance tests first.
