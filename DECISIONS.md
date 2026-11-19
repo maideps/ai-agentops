@@ -73,7 +73,7 @@ This file records significant architectural decisions, their context, alternativ
 **Consequences:**
 - Positive: nothing installs into the system Python.
 - Negative: the harness's documented startup (`./init.sh`) is skipped; `AGENTS.md` still tells agents to run it, so `docs/STANDARDS.md` overrides it explicitly.
-- Reversal: once an upstream harness release handles uv, run `harness-upgrade`, confirm `./init.sh` uses `uv sync`, and mark this decision superseded.
+- Reversal: once an upstream harness release handles uv (maideps/ai-harness-framework#63 and #64), run `harness-upgrade`, confirm `./init.sh` uses `uv sync`, and mark this decision superseded.
 
 ### D-005: LLM port shape, gateway placement and error codes
 
