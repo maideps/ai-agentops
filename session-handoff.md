@@ -4,30 +4,30 @@ Fill this at session end for large sessions; keep it current otherwise.
 
 ## Current Objective
 
-- Goal: feat-008 (M4.1 three-specialist comparison against the single-workflow baseline).
-- Current status: feat-001 to feat-007 passing (feat-007 at 5242686); no feature active.
+- Goal: feat-009 (M5.1 replay-first demo UI and portfolio evidence).
+- Current status: feat-001 to feat-008 passing (feat-008 at faacefa); no feature active.
 - Branch / commit: main.
 
 ## Completed This Session
 
-- [x] feat-007 (M3.1) redacted tracing, feedback API, 50-case evaluation corpus (50/50 in mock mode)
-- [x] Workflow reads now go through the gateway (fixed a viewer access gap); D-011 recorded
+- [x] feat-008 (M4.1) specialist subgraphs and orchestration benchmark: keep the single workflow (42/42 both, 1.81 vs 2.74 model calls)
+- [x] D-012 recorded; results in benchmarks/orchestration/v1 name their code commit
 
 ## Verification Evidence
 
 | Check | Command | Result | Notes |
 |---|---|---|---|
-| Feature gate | `npm run verify-feature -- feat-007` | PASS, 5/5 layers | trail in `.harness/trails/` |
-| Full check | `npm run check` | PASS, 70 offline tests | integration: 94 tests in layer 5 |
-| Eval corpus | `python -m agentops_evals run` | 50/50 | mutated expectations all fail |
+| Feature gate | `npm run verify-feature -- feat-008` | PASS, 4/4 layers | trail in `.harness/trails/` |
+| Full check | `npm run check` | PASS, 71 offline tests | integration: 101 tests |
+| Benchmark | `python -m agentops_evals benchmark` | keep_single_workflow | measured fields reproducible |
 
 ## Files Changed
 
-- See `progress/009-2026-11-19.md`.
+- See `progress/010-2026-11-19.md`.
 
 ## Decisions Made
 
-- D-011 redacted tracing, one tool path through the gateway, demo-token feedback, versioned evaluation corpus.
+- D-012 specialist roles stay an experiment; the single workflow remains the default.
 
 ## Blockers / Risks
 
@@ -42,4 +42,4 @@ Fill this at session end for large sessions; keep it current otherwise.
 
 ## Recommended Next Step
 
-- Activate feat-008: define the specialist roles as an experiment and compare them with the baseline on the corpus before changing the default design.
+- Activate feat-009: settle the replay data format (RunDetail JSON) first, then write the Playwright replay tests before the Next.js UI.
