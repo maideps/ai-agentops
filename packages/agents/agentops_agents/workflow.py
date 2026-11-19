@@ -21,7 +21,7 @@ from langgraph.errors import GraphRecursionError
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command, interrupt
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
 from agentops_agents.policy import authorize_tool_calls, enforce_citations
 from agentops_agents.state import (
@@ -51,8 +51,9 @@ from agentops_core.llm import (
 from agentops_data.access import UnknownPrincipalError, principal_role
 from agentops_llm.mock import approx_tokens
 from agentops_retrieval.embedding import Embedder
+from agentops_telemetry.tracing import span
 from agentops_tools.gateway import CallContext, GatewayDenied, ToolGateway
-from agentops_tools.read_tools import TicketArgs, ToolContext
+from agentops_tools.read_tools import TicketArgs
 
 logger = logging.getLogger("agentops.agents")
 
@@ -135,9 +136,18 @@ class _Run:
                     }
                 },
             )
-            if self.deps.clock() > self.deadline:
-                return _stop(state, RunStatus.TIMED_OUT, "MAX_RUN_SECONDS", "run deadline passed")
-            return await node(state)
+            with span(
+                "agent.node", {"agentops.node": name, "agentops.run_id": state["run_id"]}
+            ) as current:
+                if self.deps.clock() > self.deadline:
+                    current.set_attribute("agentops.outcome", "MAX_RUN_SECONDS")
+                    return _stop(
+                        state, RunStatus.TIMED_OUT, "MAX_RUN_SECONDS", "run deadline passed"
+                    )
+                update = await node(state)
+                if update.get("status"):
+                    current.set_attribute("agentops.status", str(update["status"]))
+                return update
 
         return guarded
 
@@ -148,7 +158,20 @@ class _Run:
         if state.get("llm_calls", 0) >= self.deps.limits.max_llm_calls:
             return _stop(state, RunStatus.BUDGET_EXHAUSTED, "MAX_LLM_CALLS", "LLM call budget used")
         try:
-            return await self.deps.gateway.generate(request)
+            with span(
+                "llm.generate",
+                {
+                    "agentops.run_id": state["run_id"],
+                    "llm.provider": self.deps.llm_provider,
+                    "llm.model": self.deps.llm_model,
+                    "llm.structured_output": request.response_schema is not None,
+                    "llm.tools": len(request.tools),
+                },
+            ) as current:
+                response = await self.deps.gateway.generate(request)
+                current.set_attribute("llm.prompt_tokens", response.prompt_tokens or 0)
+                current.set_attribute("llm.completion_tokens", response.completion_tokens or 0)
+                return response
         except LLMError as exc:
             status = (
                 RunStatus.BUDGET_EXHAUSTED
@@ -169,13 +192,21 @@ class _Run:
 
     # -- nodes ----------------------------------------------------------------------------
     async def validate_request(self, state: AgentRunState) -> dict[str, Any]:
+        """Check the principal; the outcome is the run's first policy decision (NFR-002)."""
+        subject = f"principal:{state['user_id']}"
         try:
             await asyncio.to_thread(principal_role, self.db, state["tenant_id"], state["user_id"])
-        except UnknownPrincipalError:
-            return _stop(state, RunStatus.REJECTED, "UNKNOWN_PRINCIPAL", "unknown user for tenant")
-        except ValueError:
-            return _stop(state, RunStatus.REJECTED, "INVALID_REQUEST", "malformed tenant or user")
-        return {}
+        except (UnknownPrincipalError, ValueError) as error:
+            code = (
+                "UNKNOWN_PRINCIPAL"
+                if isinstance(error, UnknownPrincipalError)
+                else "INVALID_REQUEST"
+            )
+            decision = PolicyDecision(subject=subject, decision="deny", reason_code=code)
+            stop = _stop(state, RunStatus.REJECTED, code, "unknown or malformed principal")
+            return {**stop, "policy_decisions": _decisions(state, [decision])}
+        decision = PolicyDecision(subject=subject, decision="allow", reason_code="KNOWN_PRINCIPAL")
+        return {"policy_decisions": _decisions(state, [decision])}
 
     async def plan(self, state: AgentRunState) -> dict[str, Any]:
         request = ModelRequest(
@@ -198,7 +229,13 @@ class _Run:
 
     async def authorize_tools(self, state: AgentRunState) -> dict[str, Any]:
         calls = [ToolCall.model_validate(call) for call in state.get("proposed_tool_calls", [])]
-        allowed, decisions = authorize_tool_calls(calls, self.deps.tools)
+        with span(
+            "policy.evaluate",
+            {"agentops.run_id": state["run_id"], "agentops.policy": "tool_allowlist"},
+        ) as current:
+            allowed, decisions = authorize_tool_calls(calls, self.deps.tools)
+            current.set_attribute("agentops.allowed", len(allowed))
+            current.set_attribute("agentops.denied", len(decisions) - len(allowed))
         update: dict[str, Any] = {
             "policy_decisions": _decisions(state, decisions),
             "authorized_tool_calls": [
@@ -212,32 +249,50 @@ class _Run:
         return update
 
     async def execute_tools(self, state: AgentRunState) -> dict[str, Any]:
-        ctx = ToolContext(
-            conn=self.db,
-            embedder=self.deps.embedder,
-            tenant_id=state["tenant_id"],
-            user_id=state["user_id"],
-        )
+        """Run each authorized read through the tool gateway, which also applies the user's
+        role permissions and logs the decision (D-011). Gateway denials are recorded."""
+        if self.deps.tool_gateway is None:
+            msg = "the workflow reads through the tool gateway; none was configured"
+            raise RuntimeError(msg)
         evidence: dict[str, Evidence] = {}
         analytics: SalesAnalytics | None = None
-        sales_requested = False
+        sales_executed = False
+        executed = 0
+        denials: list[PolicyDecision] = []
         for call in state.get("authorized_tool_calls", []):
-            spec = self.deps.tools[str(call["name"])]
-            args: BaseModel = spec.args_model.model_validate(call["arguments"])
-            output = await asyncio.to_thread(spec.run, ctx, args)
-            if spec.name == "get_sales_summary":
-                sales_requested = True
-                analytics = output.analytics or analytics
-            for item in output.evidence:
+            name = str(call["name"])
+            try:
+                payload = await asyncio.to_thread(
+                    self.deps.tool_gateway.invoke,
+                    _call_context(state),
+                    name,
+                    cast(dict[str, object], call["arguments"]),
+                )
+            except GatewayDenied as denied:
+                denials.append(
+                    PolicyDecision(
+                        subject=f"tool_call:{call['id']}:{name}",
+                        decision="deny",
+                        reason_code=denied.reason_code,
+                    )
+                )
+                continue
+            executed += 1
+            if name == "get_sales_summary":
+                sales_executed = True
+                if payload.get("analytics"):
+                    analytics = SalesAnalytics.model_validate(payload["analytics"])
+            for raw in payload.get("evidence", []):
+                item = Evidence.model_validate(raw)
                 evidence.setdefault(item.id, item)
 
         update: dict[str, Any] = {
-            "tool_calls_executed": state.get("tool_calls_executed", 0)
-            + len(state.get("authorized_tool_calls", [])),
+            "tool_calls_executed": state.get("tool_calls_executed", 0) + executed,
             "evidence": [item.model_dump() for item in evidence.values()],
             "analytics": analytics.model_dump(mode="json") if analytics else None,
+            "policy_decisions": _decisions(state, denials),
         }
-        if sales_requested and analytics is None:
+        if sales_executed and analytics is None:
             return {
                 **update,
                 "status": RunStatus.ABSTAINED.value,
@@ -307,7 +362,13 @@ class _Run:
     async def output_policy(self, state: AgentRunState) -> dict[str, Any]:
         draft = Report.model_validate(state.get("draft_report"))
         usable = set(ContextWindow.model_validate(state.get("context", {})).included_evidence_ids)
-        report, decisions = enforce_citations(draft, usable)
+        with span(
+            "policy.evaluate",
+            {"agentops.run_id": state["run_id"], "agentops.policy": "citations"},
+        ) as current:
+            report, decisions = enforce_citations(draft, usable)
+            current.set_attribute("agentops.allowed", len(report.findings))
+            current.set_attribute("agentops.denied", len(draft.findings) - len(report.findings))
         update: dict[str, Any] = {"policy_decisions": _decisions(state, decisions)}
         if not report.findings:
             return {
@@ -360,7 +421,15 @@ class _Run:
 
     async def await_approval(self, state: AgentRunState) -> dict[str, Any]:
         """Pause the run (checkpointed) until a human decides; resumes with the decision."""
-        decision = interrupt({"proposed_action": state.get("proposed_action")})
+        proposal = state.get("proposed_action") or {}
+        with span(
+            "approval.wait",
+            {
+                "agentops.run_id": state["run_id"],
+                "agentops.approval_id": str(proposal.get("approval_id", "")),
+            },
+        ):
+            decision = interrupt({"proposed_action": state.get("proposed_action")})
         approved = bool(decision.get("approved")) if isinstance(decision, dict) else False
         return {"approval_decision": approved}
 
@@ -501,15 +570,29 @@ async def _drive(
             final = cast(AgentRunState, (await graph.aget_state(config)).values)
         else:
             final = graph_input
-        try:
-            async for values in graph.astream(graph_input, config=config, stream_mode="values"):
-                # stream_mode="values" yields the full state after each step.
-                final = cast(AgentRunState, values)
-        except GraphRecursionError:
-            stop = _stop(final, RunStatus.BUDGET_EXHAUSTED, "MAX_GRAPH_STEPS", "graph step limit")
-            final = {**final, "status": stop["status"], "errors": stop["errors"]}
-        if deps.checkpointer is not None and not final.get("status"):
-            awaiting = bool((await graph.aget_state(config)).next)
+        with span(
+            "agent.run",
+            {
+                "agentops.run_id": run_id,
+                "agentops.tenant_id": final.get("tenant_id"),
+                "agentops.resumed": isinstance(graph_input, Command),
+            },
+            trace_id=final.get("trace_id"),
+        ) as current:
+            try:
+                async for values in graph.astream(graph_input, config=config, stream_mode="values"):
+                    # stream_mode="values" yields the full state after each step.
+                    final = cast(AgentRunState, values)
+            except GraphRecursionError:
+                stop = _stop(
+                    final, RunStatus.BUDGET_EXHAUSTED, "MAX_GRAPH_STEPS", "graph step limit"
+                )
+                final = {**final, "status": stop["status"], "errors": stop["errors"]}
+            if deps.checkpointer is not None and not final.get("status"):
+                awaiting = bool((await graph.aget_state(config)).next)
+            current.set_attribute(
+                "agentops.status", "awaiting_approval" if awaiting else str(final.get("status"))
+            )
     finally:
         await asyncio.to_thread(conn.close)
     logger.info(

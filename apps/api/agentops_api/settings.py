@@ -28,6 +28,11 @@ class Settings(BaseSettings):
     max_output_tokens: int = Field(default=500, ge=1)
     max_requests_per_demo_user: int = Field(default=5, ge=0)
     database_url: SecretStr | None = None
+    app_database_url: SecretStr | None = None
+    # Phase 1 demo identity for mutations (spec section 9): one bearer token, one user.
+    demo_api_token: SecretStr | None = None
+    demo_tenant_id: str | None = None
+    demo_user_id: str | None = None
     langfuse_enabled: bool = False
 
     @model_validator(mode="after")

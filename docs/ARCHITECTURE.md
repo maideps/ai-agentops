@@ -33,6 +33,10 @@ These directories are created by the feature that first needs them, not up front
 
 `packages/tools` holds the typed read tools, the `ToolGateway` and the first-party MCP server. The gateway is the only place that decides: tool allowlist, the principal's role permissions, strict arguments, and for the sandbox write an approval bound to principal, run, tool, policy version and the hash of the exact arguments, consumed in the same transaction as the write. Every decision goes to the append-only `policy_events` table. The MCP server is built per principal and run by the trusted backend and only forwards calls to the gateway.
 
+## Tracing and Evaluation (D-011)
+
+`packages/telemetry` configures OpenTelemetry with every exporter behind a redaction layer; spans carry ids, counts and codes, never prompt or document text, and share the run's trace id. The workflow reads only through the tool gateway, so role permissions and the policy log cover every tool call. `packages/evals` runs the versioned corpus in `datasets/evals/` in mock mode and records dataset version, git commit, model, prompt version and policy version.
+
 ## Recovery and Resumable Runs (D-010)
 
 Ticket writes go through the `tool_executions` registry: the gateway reserves one execution per approval (consuming the approval in the same transaction), claims it, calls the sandbox ticket service (which commits on its own and is idempotent on the `SBX-…` reference), then records the outcome. `uncertain` and stale `executing` rows are reconciled by reference before any retry. Runs that propose a ticket pause at a LangGraph `interrupt`; their state lives in PostgreSQL checkpoints keyed by `thread-<run_id>`, and `resume_task` continues them in any process.

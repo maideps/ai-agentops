@@ -1,6 +1,7 @@
 """Shared setup for the feat-004 workflow tests: mock model scripts from fixtures/llm."""
 
 import asyncio
+import os
 import time
 from collections.abc import Callable
 from pathlib import Path
@@ -12,6 +13,7 @@ from agentops_agents.workflow import RunDependencies, run_task
 from agentops_core.llm import LLMGateway, ModelCapabilities, ModelRequest, ModelResponse
 from agentops_llm.mock import MOCK_MODEL, MockLLMProvider
 from agentops_retrieval.embedding import HashingEmbedder
+from agentops_tools.gateway import ToolGateway
 
 REPO = Path(__file__).resolve().parents[3]
 LLM_FIXTURES = REPO / "fixtures" / "llm"
@@ -24,6 +26,10 @@ SAMPLE_TASK = (
     "follow-up ticket."
 )
 FIXED_TRACE_ID = "0" * 31 + "1"
+APP_DSN = os.environ.get(
+    "AGENTOPS_TEST_APP_URL",
+    "postgresql://agentops_app:change-me-app@127.0.0.1:55432/agentops_test",
+)
 
 
 class CountingProvider:
@@ -60,6 +66,9 @@ def run(
         llm_model=MOCK_MODEL,
         connect=lambda: psycopg.connect(analytics_dsn),
         embedder=HashingEmbedder(),
+        tool_gateway=ToolGateway(
+            connect=lambda: psycopg.connect(APP_DSN), embedder=HashingEmbedder()
+        ),
         limits=limits or RunLimits(),
         new_trace_id=lambda: FIXED_TRACE_ID,
         clock=clock if clock is not None else time.monotonic,

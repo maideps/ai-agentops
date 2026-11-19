@@ -13,7 +13,7 @@ A provider-agnostic, security-first agentic AI platform (portfolio project). It 
 
 ## Status
 
-Early stage (M0.1 to M2.2 done: feat-001 to feat-006). What works today:
+Early stage (M0.1 to M3.1 done: feat-001 to feat-007). What works today:
 
 - A FastAPI service with two endpoints: GET /health/live returns `{"status": "ok"}` and GET /health/ready returns `{"status": "ready", "checks": {}}` (no dependencies yet).
 - Settings from environment variables with `LLM_MODE=mock` and `ENABLE_LIVE_LLM=false` by default; `hosted_free`/`live_paid` refuse to start without `ENABLE_LIVE_LLM=true`. Provider keys in the environment never switch the mode.
@@ -45,6 +45,12 @@ Early stage (M0.1 to M2.2 done: feat-001 to feat-006). What works today:
   - Every ticket write goes through an execution registry (reserved, executing, then succeeded, failed or uncertain). Concurrent retries of one approval, a crash right after the ticket service commits, and a lost response before or after the commit all end with exactly one ticket; `python -m agentops_tools recover --tenant demo-a` reconciles stuck writes by their ticket reference before retrying. This holds for the sandbox ticket service, which is idempotent on that reference; it is not a universal exactly-once guarantee.
   - A run started with `propose_followup` proposes one follow-up ticket for the largest decline, requests an approval and pauses (`awaiting_approval`). Its state is checkpointed in PostgreSQL, so it can be resumed after a restart; it writes the ticket only if the approval was granted through the gateway, and does not repeat any model or tool call.
 
+- Observability, feedback and evaluation (feat-007, M3.1):
+  - OpenTelemetry spans for the API, each run step, model calls, policy checks, tool calls, retrieval and evaluation cases, all under the run's trace id. Spans carry ids and counts only, and every exporter passes a redaction layer (keys, tokens, URL passwords, e-mail addresses). Export to Langfuse is opt-in (`LANGFUSE_ENABLED=true` plus `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY`).
+  - The workflow's reads now go through the tool gateway too, so role permissions apply to them (a viewer cannot read sales) and every tool call is in the policy log.
+  - POST /v1/runs/{run_id}/feedback stores a thumbs up or down, with an optional comment and evaluation-case id, for the configured demo user (bearer `DEMO_API_TOKEN`); `python -m agentops_data export-feedback --tenant demo-a` exports it.
+  - A versioned 50-case evaluation corpus (`datasets/evals/v1`) covering normal, multi-source, missing-evidence, tool-misuse, prompt-injection, access, reliability and budget cases; `python -m agentops_evals run` runs it in mock mode and reports dataset version, git commit, model, prompt version and a trace id per case. All 50 pass. It scores the platform's enforcement with scripted model replies, not model quality.
+
 There is no HTTP endpoint for runs or approvals, no command-line entry for pausing and resuming runs, and no UI yet; see the roadmap.
 
 ## Quick Start
@@ -63,6 +69,7 @@ export ANALYTICS_DATABASE_URL=postgresql://agentops_analytics:change-me-analytic
 uv run python -m agentops_agents run --run-id run-sample-q3-declines --tenant demo-a --user user-a-analyst "Analyze quarterly sales and explain the three largest declines"
 export APP_DATABASE_URL=postgresql://agentops_app:change-me-app@127.0.0.1:55432/agentops
 uv run python -m agentops_tools serve --tenant demo-a --user user-a-analyst --run-id run-1   # MCP over stdio
+uv run python -m agentops_evals run --out evals-report.json   # 50-case evaluation, mock mode
 uv run uvicorn agentops_api.app:create_app --factory       # serve the API on http://127.0.0.1:8000
 curl http://127.0.0.1:8000/health/ready
 npm run check                                              # lint, types, offline tests, harness checks

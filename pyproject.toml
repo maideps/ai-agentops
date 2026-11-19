@@ -12,6 +12,9 @@ dependencies = [
     "langgraph-checkpoint-postgres>=2.0",
     "litellm>=1.83",
     "mcp>=1.20",
+    "opentelemetry-api>=1.30",
+    "opentelemetry-exporter-otlp-proto-http>=1.30",
+    "opentelemetry-sdk>=1.30",
     "psycopg[binary]>=3.2",
     "pydantic>=2.9",
     "pydantic-settings>=2.6",
@@ -40,6 +43,8 @@ packages = [
     "packages/retrieval/agentops_retrieval",
     "packages/agents/agentops_agents",
     "packages/tools/agentops_tools",
+    "packages/telemetry/agentops_telemetry",
+    "packages/evals/agentops_evals",
 ]
 
 [tool.ruff]
@@ -62,13 +67,17 @@ known-first-party = [
     "agentops_core",
     "agentops_data",
     "agentops_llm",
+    "agentops_evals",
     "agentops_retrieval",
+    "agentops_telemetry",
     "agentops_tools",
     "testsuite",
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "testsuite/**/*.py" = ["S101", "ANN401"]
+# The corpus builder is a data table: long literal lines and free-form tool arguments.
+"datasets/**/*.py" = ["E501", "ANN401"]
 # The LiteLLM adapter handles untyped SDK objects.
 "packages/llm/agentops_llm/{litellm_provider,testing}.py" = ["ANN401"]
 
@@ -83,6 +92,8 @@ files = [
     "packages/retrieval/agentops_retrieval",
     "packages/agents/agentops_agents",
     "packages/tools/agentops_tools",
+    "packages/telemetry/agentops_telemetry",
+    "packages/evals/agentops_evals",
     "testsuite",
 ]
 mypy_path = [
@@ -93,6 +104,8 @@ mypy_path = [
     "packages/retrieval",
     "packages/agents",
     "packages/tools",
+    "packages/telemetry",
+    "packages/evals",
 ]
 explicit_package_bases = true
 

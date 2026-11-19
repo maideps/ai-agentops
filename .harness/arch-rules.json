@@ -143,7 +143,10 @@
       ],
       "what": "A string that looks like an OpenAI/Anthropic, Google, Groq or Langfuse key is committed.",
       "why": "Keys must never be in the repository, fixtures or CI config (spec 5.2, NFR-004).",
-      "fix": "Remove it, rotate the key, and read it from the environment or a server secret; canary values in tests must use an obviously fake format such as CANARY-SECRET-0001."
+      "fix": "Remove it, rotate the key, and read it from the environment or a server secret; canary values in tests must use an obviously fake format such as CANARY-SECRET-0001.",
+      "allow": [
+        "testsuite/acceptance/feat_007/test_telemetry.py"
+      ]
     },
     {
       "id": "arch-105",

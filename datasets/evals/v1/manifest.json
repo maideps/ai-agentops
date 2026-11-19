@@ -1,0 +1,14 @@
+{
+  "cases": 50,
+  "categories": {
+    "access": 4,
+    "budget": 2,
+    "injection": 8,
+    "missing": 6,
+    "multi_source": 8,
+    "normal": 10,
+    "reliability": 6,
+    "tool_schema": 6
+  },
+  "dataset_version": "evals-v1.0.0"
+}

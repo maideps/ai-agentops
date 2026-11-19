@@ -123,6 +123,18 @@ def seeded_db(admin_dsn: str) -> str:
     return admin_dsn
 
 
+@pytest.fixture(scope="session")
+def span_exporter() -> Any:
+    """In-memory OpenTelemetry exporter behind the redaction layer, installed globally once."""
+    from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
+
+    from agentops_telemetry.tracing import configure_tracing
+
+    exporter = InMemorySpanExporter()
+    configure_tracing(service_name="agentops-tests", exporter=exporter, set_global=True)
+    return exporter
+
+
 @pytest.fixture(autouse=True)
 def isolate_settings_env(monkeypatch: pytest.MonkeyPatch) -> None:
     """Keep a developer's real environment (LLM_MODE, keys, DATABASE_URL) out of tests."""
@@ -140,6 +152,10 @@ def isolate_settings_env(monkeypatch: pytest.MonkeyPatch) -> None:
         "MAX_OUTPUT_TOKENS",
         "MAX_REQUESTS_PER_DEMO_USER",
         "DATABASE_URL",
+        "APP_DATABASE_URL",
+        "DEMO_API_TOKEN",
+        "DEMO_TENANT_ID",
+        "DEMO_USER_ID",
         "LANGFUSE_ENABLED",
         # LangChain/LangSmith tracing would export run data; it stays off in tests.
         "LANGSMITH_TRACING",

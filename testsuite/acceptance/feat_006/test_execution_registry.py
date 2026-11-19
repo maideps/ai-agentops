@@ -6,36 +6,15 @@ after or before that commit; recovery reconciles by the deterministic external r
 
 import threading
 from datetime import timedelta
-from typing import Any
 
 import psycopg
 import pytest
 
+from agentops_evals.faults import FaultyTickets, SimulatedCrashError
 from agentops_tools.gateway import CallContext, GatewayDenied, ToolGateway
-from agentops_tools.tickets import SandboxTicketService, TicketOutcomeUnknownError
 from testsuite.acceptance.feat_005.helpers import TICKET, context, gateway, tickets_for_run
 
 pytestmark = pytest.mark.integration
-
-
-class SimulatedCrashError(BaseException):
-    """Stands in for the process dying: not an Exception, so nothing in the gateway catches it."""
-
-
-class FaultyTickets(SandboxTicketService):
-    def __init__(self, app_dsn: str, fault: str) -> None:
-        super().__init__(lambda: psycopg.connect(app_dsn))
-        self.fault = fault
-
-    def create(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
-        if self.fault == "timeout_before_commit":
-            raise TicketOutcomeUnknownError("timed out before the service answered")
-        result = super().create(*args, **kwargs)
-        if self.fault == "crash_after_commit":
-            raise SimulatedCrashError
-        if self.fault == "timeout_after_commit":
-            raise TicketOutcomeUnknownError("connection lost after the request was sent")
-        return result
 
 
 def _approved(gw: ToolGateway, ctx: CallContext) -> str:
@@ -92,7 +71,7 @@ def test_crash_after_external_commit_recovers_into_one_operation(
     crashing = ToolGateway(
         connect=lambda: psycopg.connect(app_dsn),
         embedder=gateway(app_dsn)._embedder,
-        tickets=FaultyTickets(app_dsn, "crash_after_commit"),
+        tickets=FaultyTickets(lambda: psycopg.connect(app_dsn), "crash_after_commit"),
     )
 
     with pytest.raises(SimulatedCrashError):
@@ -133,7 +112,7 @@ def test_ambiguous_outcome_is_reconciled_before_any_retry(
     flaky = ToolGateway(
         connect=lambda: psycopg.connect(app_dsn),
         embedder=gateway(app_dsn)._embedder,
-        tickets=FaultyTickets(app_dsn, fault),
+        tickets=FaultyTickets(lambda: psycopg.connect(app_dsn), fault),
     )
 
     with pytest.raises(GatewayDenied) as raised:
@@ -156,7 +135,7 @@ def test_recovery_leaves_fresh_in_flight_executions_alone(
     crashing = ToolGateway(
         connect=lambda: psycopg.connect(app_dsn),
         embedder=gateway(app_dsn)._embedder,
-        tickets=FaultyTickets(app_dsn, "crash_after_commit"),
+        tickets=FaultyTickets(lambda: psycopg.connect(app_dsn), "crash_after_commit"),
     )
     with pytest.raises(SimulatedCrashError):
         crashing.invoke(ctx, "create_followup_ticket", TICKET, approval_id=approval_id)

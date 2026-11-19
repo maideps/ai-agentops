@@ -132,6 +132,12 @@
     {
       "decision": "allow",
       "policy_version": "2026-11-19.1",
+      "reason_code": "KNOWN_PRINCIPAL",
+      "subject": "principal:user-a-analyst"
+    },
+    {
+      "decision": "allow",
+      "policy_version": "2026-11-19.1",
       "reason_code": "ALLOWLISTED",
       "subject": "tool_call:call-1:get_sales_summary"
     },

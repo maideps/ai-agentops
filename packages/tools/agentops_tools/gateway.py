@@ -26,6 +26,7 @@ from pydantic import BaseModel, ValidationError
 from agentops_core.policy import POLICY_VERSION
 from agentops_data.access import UnknownPrincipalError, principal_role, role_permissions
 from agentops_retrieval.embedding import Embedder
+from agentops_telemetry.tracing import span
 from agentops_tools.read_tools import (
     TOOL_ARGUMENT_MODELS,
     IssueNotFoundError,
@@ -134,12 +135,25 @@ class ToolGateway:
         arguments: Mapping[str, object],
         approval_id: str | None = None,
     ) -> dict[str, Any]:
+        attrs = {
+            "agentops.tool": tool_name,
+            "agentops.run_id": ctx.run_id,
+            "agentops.tenant_id": ctx.tenant_id,
+        }
         with self._session() as conn:
             try:
-                args = self._authorize(conn, ctx, tool_name, arguments)
-                if tool_name in WRITE_TOOLS:
-                    return self._write_ticket(conn, ctx, tool_name, args, approval_id)
-                result = self._run_read(conn, ctx, tool_name, args)
+                with span("tool.authorize", attrs) as authz:
+                    try:
+                        args = self._authorize(conn, ctx, tool_name, arguments)
+                    except GatewayDenied as denied:
+                        authz.set_attribute("agentops.decision", "deny")
+                        authz.set_attribute("agentops.reason_code", denied.reason_code)
+                        raise
+                    authz.set_attribute("agentops.decision", "allow")
+                with span("tool.execute", {**attrs, "agentops.write": tool_name in WRITE_TOOLS}):
+                    if tool_name in WRITE_TOOLS:
+                        return self._write_ticket(conn, ctx, tool_name, args, approval_id)
+                    result = self._run_read(conn, ctx, tool_name, args)
             except GatewayDenied as denied:
                 self._log(conn, ctx, "tool_call", tool_name, "deny", denied.reason_code)
                 raise
@@ -435,30 +449,44 @@ class ToolGateway:
                     (tenant_id, stale_after),
                 ).fetchall()
             for execution_id, run_id, reference in rows:
-                found = self._tickets.lookup(tenant_id=tenant_id, reference=reference)
-                if found is not None:
-                    with self._tenant(conn, tenant_id):
-                        conn.execute(
-                            "UPDATE tool_executions SET status = 'succeeded', result_json = %s,"
-                            " error_code = NULL, updated_at = now()"
-                            " WHERE id = %s AND status IN ('executing', 'uncertain')",
-                            (Jsonb(found), execution_id),
-                        )
-                    results.append(RecoveryResult(str(execution_id), run_id, "reconciled_found"))
-                    continue
-                with self._tenant(conn, tenant_id):
-                    conn.execute(
-                        "UPDATE tool_executions SET status = 'uncertain', updated_at = now()"
-                        " WHERE id = %s AND status = 'executing'",
-                        (execution_id,),
-                    )
-                try:
-                    self._execute(conn, tenant_id, execution_id)
-                    outcome = "reconciled_retried"
-                except GatewayDenied as denied:
-                    outcome = f"retry_{denied.reason_code.lower()}"
+                with span(
+                    "tool.reconcile",
+                    {
+                        "agentops.tenant_id": tenant_id,
+                        "agentops.run_id": run_id,
+                        "agentops.execution_id": str(execution_id),
+                    },
+                ) as current:
+                    outcome = self._reconcile(conn, tenant_id, execution_id, reference)
+                    current.set_attribute("agentops.outcome", outcome)
                 results.append(RecoveryResult(str(execution_id), run_id, outcome))
         return results
+
+    def _reconcile(
+        self, conn: psycopg.Connection, tenant_id: str, execution_id: uuid.UUID, reference: str
+    ) -> str:
+        """Look the reference up first; retry under the same reference only if absent."""
+        found = self._tickets.lookup(tenant_id=tenant_id, reference=reference)
+        if found is not None:
+            with self._tenant(conn, tenant_id):
+                conn.execute(
+                    "UPDATE tool_executions SET status = 'succeeded', result_json = %s,"
+                    " error_code = NULL, updated_at = now()"
+                    " WHERE id = %s AND status IN ('executing', 'uncertain')",
+                    (Jsonb(found), execution_id),
+                )
+            return "reconciled_found"
+        with self._tenant(conn, tenant_id):
+            conn.execute(
+                "UPDATE tool_executions SET status = 'uncertain', updated_at = now()"
+                " WHERE id = %s AND status = 'executing'",
+                (execution_id,),
+            )
+        try:
+            self._execute(conn, tenant_id, execution_id)
+        except GatewayDenied as denied:
+            return f"retry_{denied.reason_code.lower()}"
+        return "reconciled_retried"
 
     # -- plumbing ---------------------------------------------------------------------------
     def _session(self) -> psycopg.Connection:

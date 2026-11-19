@@ -5,7 +5,8 @@
         --tenant demo-a --user user-a-analyst "Analyze quarterly sales ..."
 
 Uses the scripted mock model from ``fixtures/llm/`` (keyed by run id) and the read-only
-analytics login in ANALYTICS_DATABASE_URL. No hosted model is ever called from here.
+analytics login in ANALYTICS_DATABASE_URL; tool reads go through the gateway login in
+APP_DATABASE_URL. No hosted model is ever called from here.
 """
 
 import argparse
@@ -22,6 +23,7 @@ from agentops_agents.workflow import RunDependencies, run_task
 from agentops_core.llm import LLMGateway
 from agentops_llm.mock import MOCK_MODEL, MockLLMProvider
 from agentops_retrieval.embedding import HashingEmbedder
+from agentops_tools.gateway import ToolGateway
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -45,8 +47,9 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("run needs task_text, --run-id, --tenant and --user")
 
     url = os.environ.get("ANALYTICS_DATABASE_URL")
-    if not url:
-        print("ANALYTICS_DATABASE_URL is not set", file=sys.stderr)
+    app_url = os.environ.get("APP_DATABASE_URL")
+    if not url or not app_url:
+        print("ANALYTICS_DATABASE_URL and APP_DATABASE_URL must be set", file=sys.stderr)
         return 2
     provider = MockLLMProvider.from_directory(args.fixtures)
     deps = RunDependencies(
@@ -55,6 +58,9 @@ def main(argv: list[str] | None = None) -> int:
         llm_model=MOCK_MODEL,
         connect=lambda: psycopg.connect(url),
         embedder=HashingEmbedder(),
+        tool_gateway=ToolGateway(
+            connect=lambda: psycopg.connect(app_url), embedder=HashingEmbedder()
+        ),
     )
     request = TaskRequest(
         run_id=args.run_id, tenant_id=args.tenant, user_id=args.user, task_text=args.task_text
