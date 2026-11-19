@@ -13,7 +13,7 @@ A provider-agnostic, security-first agentic AI platform (portfolio project). It 
 
 ## Status
 
-Early stage (M0.1 to M2.1 done: feat-001 to feat-005). What works today:
+Early stage (M0.1 to M2.2 done: feat-001 to feat-006). What works today:
 
 - A FastAPI service with two endpoints: GET /health/live returns `{"status": "ok"}` and GET /health/ready returns `{"status": "ready", "checks": {}}` (no dependencies yet).
 - Settings from environment variables with `LLM_MODE=mock` and `ENABLE_LIVE_LLM=false` by default; `hosted_free`/`live_paid` refuse to start without `ENABLE_LIVE_LLM=true`. Provider keys in the environment never switch the mode.
@@ -41,7 +41,11 @@ Early stage (M0.1 to M2.1 done: feat-001 to feat-005). What works today:
   - A ticket is written only with an approval of that exact ticket by the same user for the same run, under the current policy version and before it expires (15 minutes); the approval is used up by the write. Forged, pending, rejected, expired, changed, replayed or borrowed approvals write nothing.
   - A synthetic `demo-b` document contains a prompt-injection payload; it is returned as ordinary data, and the actions it asks for are refused.
 
-There is no HTTP endpoint for runs or approvals, the workflow does not propose tickets yet, and there is no UI; see the roadmap.
+- Recovery and resumable runs (feat-006, M2.2):
+  - Every ticket write goes through an execution registry (reserved, executing, then succeeded, failed or uncertain). Concurrent retries of one approval, a crash right after the ticket service commits, and a lost response before or after the commit all end with exactly one ticket; `python -m agentops_tools recover --tenant demo-a` reconciles stuck writes by their ticket reference before retrying. This holds for the sandbox ticket service, which is idempotent on that reference; it is not a universal exactly-once guarantee.
+  - A run started with `propose_followup` proposes one follow-up ticket for the largest decline, requests an approval and pauses (`awaiting_approval`). Its state is checkpointed in PostgreSQL, so it can be resumed after a restart; it writes the ticket only if the approval was granted through the gateway, and does not repeat any model or tool call.
+
+There is no HTTP endpoint for runs or approvals, no command-line entry for pausing and resuming runs, and no UI yet; see the roadmap.
 
 ## Quick Start
 
@@ -54,6 +58,7 @@ export DATABASE_URL=postgresql://agentops:change-me@127.0.0.1:55432/agentops
 uv run python -m agentops_data migrate                     # create the schema
 uv run python -m agentops_data seed                        # load datasets/synthetic
 uv run python -m agentops_retrieval index                  # embed chunks (after every seed)
+uv run python -m agentops_agents setup-checkpoints         # run checkpoint tables (schema owner)
 export ANALYTICS_DATABASE_URL=postgresql://agentops_analytics:change-me-analytics@127.0.0.1:55432/agentops
 uv run python -m agentops_agents run --run-id run-sample-q3-declines --tenant demo-a --user user-a-analyst "Analyze quarterly sales and explain the three largest declines"
 export APP_DATABASE_URL=postgresql://agentops_app:change-me-app@127.0.0.1:55432/agentops

@@ -6,6 +6,7 @@ Database calls are synchronous psycopg and run in worker threads.
 """
 
 import asyncio
+import itertools
 import logging
 import time
 import uuid
@@ -14,9 +15,12 @@ from dataclasses import dataclass, field
 from typing import Any, Protocol, cast
 
 import psycopg
+from langchain_core.runnables import RunnableConfig
+from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.errors import GraphRecursionError
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
+from langgraph.types import Command, interrupt
 from pydantic import BaseModel, ValidationError
 
 from agentops_agents.policy import authorize_tool_calls, enforce_citations
@@ -47,7 +51,8 @@ from agentops_core.llm import (
 from agentops_data.access import UnknownPrincipalError, principal_role
 from agentops_llm.mock import approx_tokens
 from agentops_retrieval.embedding import Embedder
-from agentops_tools.read_tools import ToolContext
+from agentops_tools.gateway import CallContext, GatewayDenied, ToolGateway
+from agentops_tools.read_tools import TicketArgs, ToolContext
 
 logger = logging.getLogger("agentops.agents")
 
@@ -88,6 +93,9 @@ class RunDependencies:
     clock: Callable[[], float] = time.monotonic
     new_trace_id: Callable[[], str] = _new_trace_id
     tools: Mapping[str, ToolSpec] = field(default_factory=lambda: dict(READ_TOOLS))
+    # Needed only to propose and execute the follow-up ticket (approval pause and resume).
+    tool_gateway: ToolGateway | None = None
+    checkpointer: BaseCheckpointSaver[Any] | None = None
 
 
 def _stop(state: AgentRunState, status: RunStatus, code: str, message: str) -> dict[str, Any]:
@@ -100,10 +108,19 @@ def _decisions(state: AgentRunState, new: list[PolicyDecision]) -> list[dict[str
 
 
 class _Run:
-    def __init__(self, deps: RunDependencies, conn: psycopg.Connection, deadline: float) -> None:
+    def __init__(
+        self, deps: RunDependencies, conn: psycopg.Connection | None, deadline: float
+    ) -> None:
         self.deps = deps
         self.conn = conn
         self.deadline = deadline
+
+    @property
+    def db(self) -> psycopg.Connection:
+        if self.conn is None:
+            msg = "this graph was built without a database connection"
+            raise RuntimeError(msg)
+        return self.conn
 
     # -- guards ---------------------------------------------------------------------------
     def _guard(self, name: str, node: Node) -> Node:
@@ -153,7 +170,7 @@ class _Run:
     # -- nodes ----------------------------------------------------------------------------
     async def validate_request(self, state: AgentRunState) -> dict[str, Any]:
         try:
-            await asyncio.to_thread(principal_role, self.conn, state["tenant_id"], state["user_id"])
+            await asyncio.to_thread(principal_role, self.db, state["tenant_id"], state["user_id"])
         except UnknownPrincipalError:
             return _stop(state, RunStatus.REJECTED, "UNKNOWN_PRINCIPAL", "unknown user for tenant")
         except ValueError:
@@ -196,7 +213,7 @@ class _Run:
 
     async def execute_tools(self, state: AgentRunState) -> dict[str, Any]:
         ctx = ToolContext(
-            conn=self.conn,
+            conn=self.db,
             embedder=self.deps.embedder,
             tenant_id=state["tenant_id"],
             user_id=state["user_id"],
@@ -300,6 +317,72 @@ class _Run:
             }
         return {**update, "report": report.model_dump()}
 
+    async def propose_action(self, state: AgentRunState) -> dict[str, Any]:
+        """Ask the gateway for an approval of one follow-up ticket for the largest decline."""
+        analytics_raw = state.get("analytics")
+        report_raw = state.get("report")
+        if not analytics_raw or not report_raw or self.deps.tool_gateway is None:
+            return {}
+        analytics = SalesAnalytics.model_validate(analytics_raw)
+        if not analytics.declines:
+            return {}
+        top = analytics.declines[0]
+        ticket = TicketArgs(
+            title=(
+                f"Investigate {top.product_name} {top.region} revenue decline"
+                f" ({analytics.from_quarter} to {analytics.to_quarter})"
+            )[:120],
+            description=Report.model_validate(report_raw).summary[:2000],
+            priority="high",
+            product_id=top.product_id,
+        )
+        arguments = ticket.model_dump(mode="json")
+        try:
+            request = await asyncio.to_thread(
+                self.deps.tool_gateway.request_approval,
+                _call_context(state),
+                FOLLOWUP_TOOL,
+                arguments,
+            )
+        except GatewayDenied as denied:
+            error = RunError(code=denied.reason_code, message=str(denied)).model_dump()
+            return {"errors": [*state.get("errors", []), error]}
+        return {
+            "proposed_action": {
+                "tool": FOLLOWUP_TOOL,
+                "arguments": arguments,
+                "approval_id": request.approval_id,
+                "action_hash": request.action_hash,
+                "policy_version": request.policy_version,
+                "expires_at": request.expires_at.isoformat(),
+            }
+        }
+
+    async def await_approval(self, state: AgentRunState) -> dict[str, Any]:
+        """Pause the run (checkpointed) until a human decides; resumes with the decision."""
+        decision = interrupt({"proposed_action": state.get("proposed_action")})
+        approved = bool(decision.get("approved")) if isinstance(decision, dict) else False
+        return {"approval_decision": approved}
+
+    async def execute_action(self, state: AgentRunState) -> dict[str, Any]:
+        """Run the approved write through the gateway, which re-checks the approval itself:
+        the resume value alone cannot authorize anything."""
+        proposal = state.get("proposed_action")
+        if not state.get("approval_decision") or not proposal or self.deps.tool_gateway is None:
+            return {}
+        try:
+            result = await asyncio.to_thread(
+                self.deps.tool_gateway.invoke,
+                _call_context(state),
+                str(proposal["tool"]),
+                cast(dict[str, object], proposal["arguments"]),
+                str(proposal["approval_id"]),
+            )
+        except GatewayDenied as denied:
+            error = RunError(code=denied.reason_code, message=str(denied)).model_dump()
+            return {"errors": [*state.get("errors", []), error]}
+        return {"action_result": result}
+
     async def finalize(self, state: AgentRunState) -> dict[str, Any]:
         if state.get("status"):
             return {}
@@ -315,35 +398,72 @@ class _Run:
             ("synthesize_report", self.synthesize_report),
             ("output_policy", self.output_policy),
         ]
+        action: list[tuple[str, Node]] = [
+            ("propose_action", self.propose_action),
+            ("await_approval", self.await_approval),
+            ("execute_action", self.execute_action),
+        ]
         graph = StateGraph(AgentRunState)
-        for name, node in order:
+        for name, node in [*order, *action]:
             graph.add_node(name, self._guard(name, node))
         graph.add_node("finalize", self.finalize)
         graph.add_edge(START, order[0][0])
-        for (name, _), (following, _) in zip(
-            order, [*order[1:], ("finalize", self.finalize)], strict=True
-        ):
+        for (name, _), (following, _) in itertools.pairwise(order):
             graph.add_conditional_edges(
                 name,
                 lambda state, nxt=following: "finalize" if state.get("status") else nxt,
-                [following, "finalize"] if following != "finalize" else ["finalize"],
+                [following, "finalize"],
             )
+        graph.add_conditional_edges(
+            "output_policy",
+            lambda state: (
+                "finalize"
+                if state.get("status") or not state.get("propose_followup")
+                else "propose_action"
+            ),
+            ["propose_action", "finalize"],
+        )
+        graph.add_conditional_edges(
+            "propose_action",
+            lambda state: "await_approval" if state.get("proposed_action") else "finalize",
+            ["await_approval", "finalize"],
+        )
+        graph.add_edge("await_approval", "execute_action")
+        graph.add_edge("execute_action", "finalize")
         graph.add_edge("finalize", END)
-        return graph.compile()
+        return graph.compile(checkpointer=self.deps.checkpointer)
 
 
-def _detail(
-    state: AgentRunState, request: TaskRequest, trace_id: str, deps: RunDependencies
-) -> RunDetail:
+FOLLOWUP_TOOL = "create_followup_ticket"
+
+
+def thread_id_for(run_id: str) -> str:
+    """The checkpoint thread of a run: derived, but distinct from the run id (spec 2.3)."""
+    return f"thread-{run_id}"
+
+
+def _call_context(state: AgentRunState) -> CallContext:
+    return CallContext(
+        tenant_id=state["tenant_id"], user_id=state["user_id"], run_id=state["run_id"]
+    )
+
+
+def _detail(state: AgentRunState, deps: RunDependencies, *, awaiting: bool) -> RunDetail:
     analytics = state.get("analytics")
     report = state.get("report")
+    status = (
+        RunStatus.AWAITING_APPROVAL
+        if awaiting
+        else RunStatus(state.get("status", RunStatus.FAILED.value))
+    )
     return RunDetail(
-        run_id=request.run_id,
-        trace_id=trace_id,
-        tenant_id=request.tenant_id,
-        user_id=request.user_id,
-        task_text=request.task_text,
-        status=RunStatus(state.get("status", RunStatus.FAILED.value)),
+        run_id=state["run_id"],
+        thread_id=state["thread_id"],
+        trace_id=state["trace_id"],
+        tenant_id=state["tenant_id"],
+        user_id=state["user_id"],
+        task_text=state["task_text"],
+        status=status,
         abstain_reason=state.get("abstain_reason"),
         report=Report.model_validate(report) if report else None,
         analytics=SalesAnalytics.model_validate(analytics) if analytics else None,
@@ -359,18 +479,65 @@ def _detail(
         tool_calls_executed=state.get("tool_calls_executed", 0),
         prompt_tokens=state.get("prompt_tokens", 0),
         completion_tokens=state.get("completion_tokens", 0),
+        proposed_action=cast(dict[str, Any] | None, state.get("proposed_action")),
+        action_result=cast(dict[str, Any] | None, state.get("action_result")),
     )
 
 
+async def _drive(
+    deps: RunDependencies, graph_input: AgentRunState | Command[Any], run_id: str
+) -> RunDetail:
+    """Stream the graph to a terminal state or an approval pause; return the run detail."""
+    config: RunnableConfig = {
+        "configurable": {"thread_id": thread_id_for(run_id)},
+        "recursion_limit": deps.limits.max_graph_steps,
+    }
+    deadline = deps.clock() + deps.limits.max_run_seconds  # per invocation, also on resume
+    conn = await asyncio.to_thread(deps.connect)
+    awaiting = False
+    try:
+        graph = _Run(deps, conn, deadline).build()
+        if isinstance(graph_input, Command):
+            final = cast(AgentRunState, (await graph.aget_state(config)).values)
+        else:
+            final = graph_input
+        try:
+            async for values in graph.astream(graph_input, config=config, stream_mode="values"):
+                # stream_mode="values" yields the full state after each step.
+                final = cast(AgentRunState, values)
+        except GraphRecursionError:
+            stop = _stop(final, RunStatus.BUDGET_EXHAUSTED, "MAX_GRAPH_STEPS", "graph step limit")
+            final = {**final, "status": stop["status"], "errors": stop["errors"]}
+        if deps.checkpointer is not None and not final.get("status"):
+            awaiting = bool((await graph.aget_state(config)).next)
+    finally:
+        await asyncio.to_thread(conn.close)
+    logger.info(
+        "run.awaiting_approval" if awaiting else "run.finished",
+        extra={
+            "fields": {
+                "run_id": run_id,
+                "trace_id": final.get("trace_id"),
+                "status": final.get("status"),
+            }
+        },
+    )
+    return _detail(final, deps, awaiting=awaiting)
+
+
 async def run_task(request: TaskRequest, deps: RunDependencies) -> RunDetail:
-    """Run one task to a terminal status and return its sanitized run detail."""
-    trace_id = deps.new_trace_id()
+    """Run one task to a terminal status, or to awaiting_approval if it proposes a ticket."""
+    if request.propose_followup and (deps.checkpointer is None or deps.tool_gateway is None):
+        msg = "propose_followup needs a checkpointer and a tool gateway"
+        raise ValueError(msg)
     initial: AgentRunState = {
         "run_id": request.run_id,
-        "trace_id": trace_id,
+        "thread_id": thread_id_for(request.run_id),
+        "trace_id": deps.new_trace_id(),
         "tenant_id": request.tenant_id,
         "user_id": request.user_id,
         "task_text": request.task_text,
+        "propose_followup": request.propose_followup,
         "llm_calls": 0,
         "tool_calls_executed": 0,
         "prompt_tokens": 0,
@@ -378,32 +545,23 @@ async def run_task(request: TaskRequest, deps: RunDependencies) -> RunDetail:
         "policy_decisions": [],
         "errors": [],
     }
-    deadline = deps.clock() + deps.limits.max_run_seconds
-    conn = await asyncio.to_thread(deps.connect)
-    final: AgentRunState = initial
-    try:
-        graph = _Run(deps, conn, deadline).build()
-        try:
-            async for values in graph.astream(
-                initial,
-                config={"recursion_limit": deps.limits.max_graph_steps},
-                stream_mode="values",
-            ):
-                # stream_mode="values" yields the full state after each step.
-                final = cast(AgentRunState, values)
-        except GraphRecursionError:
-            stop = _stop(final, RunStatus.BUDGET_EXHAUSTED, "MAX_GRAPH_STEPS", "graph step limit")
-            final = {**final, "status": stop["status"], "errors": stop["errors"]}
-    finally:
-        await asyncio.to_thread(conn.close)
-    logger.info(
-        "run.finished",
-        extra={
-            "fields": {
-                "run_id": request.run_id,
-                "trace_id": trace_id,
-                "status": final.get("status"),
-            }
-        },
-    )
-    return _detail(final, request, trace_id, deps)
+    return await _drive(deps, initial, request.run_id)
+
+
+async def resume_task(run_id: str, deps: RunDependencies, *, approved: bool) -> RunDetail:
+    """Resume a run paused for approval, possibly in a new process (same thread id).
+
+    The approved flag only says whether to attempt the write; the gateway still requires
+    the approval to have been granted through ToolGateway.decide.
+    """
+    if deps.checkpointer is None:
+        msg = "resuming needs a checkpointer"
+        raise ValueError(msg)
+    config: RunnableConfig = {"configurable": {"thread_id": thread_id_for(run_id)}}
+    # Building the graph opens no connection; it is only used to read the checkpoint.
+    graph = _Run(deps, None, 0.0).build()
+    snapshot = await graph.aget_state(config)
+    if not snapshot.values or not snapshot.next:
+        msg = f"run {run_id!r} is not awaiting approval"
+        raise LookupError(msg)
+    return await _drive(deps, Command(resume={"approved": approved}), run_id)

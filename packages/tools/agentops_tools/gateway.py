@@ -20,6 +20,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 import psycopg
+from psycopg.types.json import Jsonb
 from pydantic import BaseModel, ValidationError
 
 from agentops_core.policy import POLICY_VERSION
@@ -34,6 +35,11 @@ from agentops_tools.read_tools import (
     get_issue_details,
     get_sales_summary,
     search_approved_documents,
+)
+from agentops_tools.tickets import (
+    SandboxTicketService,
+    TicketOutcomeUnknownError,
+    TicketRejectedError,
 )
 
 REQUIRED_PERMISSION: dict[str, str] = {
@@ -67,6 +73,13 @@ class ApprovalRequest:
     action_hash: str
     expires_at: datetime
     policy_version: str
+
+
+@dataclass(frozen=True)
+class RecoveryResult:
+    execution_id: str
+    run_id: str
+    outcome: str
 
 
 class GatewayDenied(Exception):  # noqa: N818 - a decision, not a fault
@@ -105,11 +118,13 @@ class ToolGateway:
         embedder: Embedder,
         policy_version: str = POLICY_VERSION,
         approval_ttl: timedelta = timedelta(minutes=15),
+        tickets: SandboxTicketService | None = None,
     ) -> None:
         self._connect = connect
         self._embedder = embedder
         self.policy_version = policy_version
         self._approval_ttl = approval_ttl
+        self._tickets = tickets if tickets is not None else SandboxTicketService(connect)
 
     # -- public API -------------------------------------------------------------------------
     def invoke(
@@ -307,38 +322,157 @@ class ToolGateway:
             if digest != approved_hash:
                 raise GatewayDenied("APPROVAL_ACTION_MISMATCH")
 
+            # Reserve the one execution this approval allows, and consume the approval, in the
+            # same transaction. The idempotency key is server-derived: the model cannot set it.
+            execution_id = uuid.uuid4()
+            reserved = conn.execute(
+                "INSERT INTO tool_executions (id, tenant_id, run_id, principal_id, tool_name,"
+                " idempotency_key, action_hash, approval_id, status, external_reference,"
+                " request_json)"
+                " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'reserved', %s, %s)"
+                " ON CONFLICT (tenant_id, tool_name, idempotency_key) DO NOTHING RETURNING id",
+                (
+                    execution_id,
+                    ctx.tenant_id,
+                    ctx.run_id,
+                    ctx.user_id,
+                    tool_name,
+                    f"approval:{key}",
+                    digest,
+                    key,
+                    ticket_reference(str(key)),
+                    Jsonb(args.model_dump(mode="json")),
+                ),
+            ).fetchone()
+            if reserved is None:
+                raise GatewayDenied("APPROVAL_ALREADY_USED")
             conn.execute(
                 "UPDATE approvals SET status = 'consumed', consumed_at = now()"
                 " WHERE id = %s AND status = 'approved'",
                 (key,),
             )
-            ticket_id = ticket_reference(str(key))
-            conn.execute(
-                "INSERT INTO sandbox_tickets (id, tenant_id, approval_id, run_id, created_by,"
-                " title, description, priority, product_id)"
-                " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                (
-                    ticket_id,
-                    ctx.tenant_id,
-                    key,
-                    ctx.run_id,
-                    ctx.user_id,
-                    args.title,
-                    args.description,
-                    args.priority,
-                    args.product_id,
-                ),
-            )
             self._insert_event(
                 conn, ctx, "tool_call", tool_name, "allow", "APPROVAL_VERIFIED", digest, key
             )
-        return {"ticket_id": ticket_id, "status": "created", "approval_id": str(key)}
+        result = self._execute(conn, ctx.tenant_id, execution_id)
+        return {**result, "approval_id": str(key)}
+
+    def _execute(
+        self, conn: psycopg.Connection, tenant_id: str, execution_id: uuid.UUID
+    ) -> dict[str, Any]:
+        """Claim a reserved or reconciled execution, call the ticket service, record the outcome.
+
+        A crash between the service's commit and the final update leaves the row ``executing``;
+        ``recover_executions`` resolves it by external reference.
+        """
+        with self._tenant(conn, tenant_id):
+            claimed = conn.execute(
+                "UPDATE tool_executions SET status = 'executing',"
+                " attempt_count = attempt_count + 1, updated_at = now()"
+                " WHERE id = %s AND status IN ('reserved', 'uncertain')"
+                " RETURNING run_id, principal_id, approval_id, external_reference, request_json",
+                (execution_id,),
+            ).fetchone()
+        if claimed is None:
+            raise GatewayDenied("EXECUTION_IN_PROGRESS")
+        run_id, principal_id, approval, reference, request = claimed
+        try:
+            result = self._tickets.create(
+                tenant_id=tenant_id,
+                reference=reference,
+                approval_id=str(approval),
+                run_id=run_id,
+                created_by=principal_id,
+                ticket=request,
+            )
+        except TicketOutcomeUnknownError:
+            self._finish(conn, tenant_id, execution_id, "uncertain", error_code="OUTCOME_UNKNOWN")
+            raise GatewayDenied(
+                "EXECUTION_UNCERTAIN", "outcome unknown; reconcile before retrying"
+            ) from None
+        except TicketRejectedError as rejected:
+            self._finish(conn, tenant_id, execution_id, "failed", error_code=rejected.code)
+            raise GatewayDenied("EXECUTION_FAILED", rejected.code) from None
+        self._finish(conn, tenant_id, execution_id, "succeeded", result=result)
+        return result
+
+    def _finish(
+        self,
+        conn: psycopg.Connection,
+        tenant_id: str,
+        execution_id: uuid.UUID,
+        status: str,
+        *,
+        result: dict[str, Any] | None = None,
+        error_code: str | None = None,
+    ) -> None:
+        with self._tenant(conn, tenant_id):
+            conn.execute(
+                "UPDATE tool_executions SET status = %s, result_json = %s, error_code = %s,"
+                " updated_at = now() WHERE id = %s AND status = 'executing'",
+                (status, Jsonb(result) if result is not None else None, error_code, execution_id),
+            )
+
+    def recover_executions(
+        self, tenant_id: str, *, stale_after: timedelta = timedelta(minutes=5)
+    ) -> list[RecoveryResult]:
+        """Resolve ``uncertain`` executions and ``executing`` ones idle for ``stale_after``.
+
+        Each is first looked up by its external reference: found means it already happened
+        (``reconciled_found``); not found means it is safe to run again under the same
+        reference (``reconciled_retried``). Run by an operator or a scheduled job, never by the
+        model. This is at-most-once for this ticket service, not a universal exactly-once
+        guarantee: it relies on the service being idempotent and queryable by reference.
+        """
+        results: list[RecoveryResult] = []
+        with self._session() as conn:
+            with self._tenant(conn, tenant_id):
+                rows = conn.execute(
+                    "SELECT id, run_id, external_reference FROM tool_executions"
+                    " WHERE tenant_id = %s AND (status = 'uncertain'"
+                    " OR (status = 'executing' AND updated_at <= now() - %s))"
+                    " ORDER BY created_at",
+                    (tenant_id, stale_after),
+                ).fetchall()
+            for execution_id, run_id, reference in rows:
+                found = self._tickets.lookup(tenant_id=tenant_id, reference=reference)
+                if found is not None:
+                    with self._tenant(conn, tenant_id):
+                        conn.execute(
+                            "UPDATE tool_executions SET status = 'succeeded', result_json = %s,"
+                            " error_code = NULL, updated_at = now()"
+                            " WHERE id = %s AND status IN ('executing', 'uncertain')",
+                            (Jsonb(found), execution_id),
+                        )
+                    results.append(RecoveryResult(str(execution_id), run_id, "reconciled_found"))
+                    continue
+                with self._tenant(conn, tenant_id):
+                    conn.execute(
+                        "UPDATE tool_executions SET status = 'uncertain', updated_at = now()"
+                        " WHERE id = %s AND status = 'executing'",
+                        (execution_id,),
+                    )
+                try:
+                    self._execute(conn, tenant_id, execution_id)
+                    outcome = "reconciled_retried"
+                except GatewayDenied as denied:
+                    outcome = f"retry_{denied.reason_code.lower()}"
+                results.append(RecoveryResult(str(execution_id), run_id, outcome))
+        return results
 
     # -- plumbing ---------------------------------------------------------------------------
     def _session(self) -> psycopg.Connection:
         conn = self._connect()
         conn.autocommit = True  # every unit of work below is an explicit transaction
         return conn
+
+    @staticmethod
+    @contextmanager
+    def _tenant(conn: psycopg.Connection, tenant_id: str) -> Iterator[None]:
+        """A transaction scoped to a tenant, for system work without a calling principal."""
+        with conn.transaction():
+            conn.execute("SELECT set_config('app.tenant_id', %s, true)", (tenant_id,))
+            yield
 
     @staticmethod
     @contextmanager

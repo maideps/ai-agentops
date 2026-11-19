@@ -109,6 +109,7 @@ def seeded_db(admin_dsn: str) -> str:
     """Migrate and seed agentops_test once per session; returns the admin DSN."""
     import psycopg
 
+    from agentops_agents.checkpoints import setup_checkpoints
     from agentops_data.migrations import apply_migrations
     from agentops_data.seed import seed_dataset
     from agentops_retrieval.embedding import HashingEmbedder
@@ -118,6 +119,7 @@ def seeded_db(admin_dsn: str) -> str:
         apply_migrations(conn)
         seed_dataset(conn, DATASET_DIR)
         index_chunks(conn, HashingEmbedder())
+    setup_checkpoints(admin_dsn)
     return admin_dsn
 
 

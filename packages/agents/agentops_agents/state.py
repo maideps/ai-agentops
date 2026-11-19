@@ -1,7 +1,7 @@
 """Typed run state, limits, report schema and the run detail returned to callers."""
 
 from enum import StrEnum
-from typing import Literal, TypedDict
+from typing import Any, Literal, TypedDict
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -24,6 +24,7 @@ class RunStatus(StrEnum):
     BUDGET_EXHAUSTED = "budget_exhausted"
     TIMED_OUT = "timed_out"
     FAILED = "failed"
+    AWAITING_APPROVAL = "awaiting_approval"
 
 
 class RunLimits(_Model):
@@ -42,6 +43,8 @@ class TaskRequest(_Model):
     tenant_id: str
     user_id: str
     task_text: str = Field(min_length=1, max_length=2000)
+    # Propose a follow-up ticket and pause for human approval (needs a checkpointer).
+    propose_followup: bool = False
 
 
 class Finding(_Model):
@@ -76,6 +79,7 @@ class RunDetail(_Model):
     """Sanitized result of one run: what was asked, decided, used and produced (FR-013 seed)."""
 
     run_id: str
+    thread_id: str
     trace_id: str
     tenant_id: str
     user_id: str
@@ -94,6 +98,8 @@ class RunDetail(_Model):
     tool_calls_executed: int = 0
     prompt_tokens: int = 0
     completion_tokens: int = 0
+    proposed_action: dict[str, Any] | None = None
+    action_result: dict[str, Any] | None = None
 
 
 class AgentRunState(TypedDict, total=False):
@@ -119,3 +125,8 @@ class AgentRunState(TypedDict, total=False):
     completion_tokens: int
     status: str
     abstain_reason: str | None
+    thread_id: str
+    propose_followup: bool
+    proposed_action: dict[str, object] | None
+    approval_decision: bool | None
+    action_result: dict[str, object] | None

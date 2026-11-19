@@ -23,6 +23,7 @@ Each rule names what enforces it today. "Review" means only a human or the `revi
 
 ```bash
 uv sync                                     # install from uv.lock into .venv
+docker compose up -d --wait postgres         # Docker Desktop must be running
 node scripts/framework-check.mjs brief      # the session brief init.sh would print
 npm run check                               # full verification
 ```
