@@ -5,7 +5,7 @@ Fill this at session end for large sessions; keep it current otherwise.
 ## Current Objective
 
 - Goal: feat-006 (M2.2 Postgres checkpointing, execution registry, crash recovery, reconciliation).
-- Current status: feat-001 to feat-005 passing (feat-005 at b35f75d); no feature active.
+- Current status: feat-001 to feat-005 passing (feat-005 at 92c0ea6); no feature active.
 - Branch / commit: main.
 
 ## Completed This Session
@@ -23,7 +23,7 @@ Fill this at session end for large sessions; keep it current otherwise.
 
 ## Files Changed
 
-- See `progress/006-2026-11-19.md`.
+- See `progress/006-2026-11-19.md` (feat-005) and `progress/007-2026-11-19.md` (history rewrite).
 
 ## Decisions Made
 
@@ -31,7 +31,7 @@ Fill this at session end for large sessions; keep it current otherwise.
 
 ## Blockers / Risks
 
-- `./init.sh` unusable (D-004; upstream #63/#64). Docker Desktop must be running for feature layers 3 and 5. LiteLLM Gemini/Groq tokenizer download on first live call (D-005). Dev databases from before session 006 need the agentops_app roles (D-009). LICENSE unconfirmed. CI not run yet (no remote).
+- `./init.sh` unusable (D-004; upstream #63/#64). Docker Desktop must be running for feature layers 3 and 5. LiteLLM Gemini/Groq tokenizer download on first live call (D-005). Dev databases from before session 006 need the agentops_app roles (D-009). LICENSE unconfirmed. CI runs on GitHub (private repo maideps/ai-agentops); its actions still target the deprecated Node 20 runtime. History was rewritten in session 007 (blueprint PDF removed, single author); pre-rewrite commits may stay reachable on GitHub by SHA until its garbage collection.
 
 ## Next Session Startup
 
