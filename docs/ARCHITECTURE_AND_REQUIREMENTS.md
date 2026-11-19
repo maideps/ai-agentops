@@ -188,6 +188,8 @@ class ModelResponse(BaseModel):
 
 Implement an `LLMProvider` protocol with `generate(request)` and `capabilities(model)`. `MockLLMProvider` returns deterministic responses keyed by fixture/test case. `LiteLLMProvider` adapts actual LiteLLM responses, including tool-call normalization, structured-output validation, errors, and usage fields. Avoid claiming universal capability: validate model+provider combinations (tool calling, JSON schema, streaming, maximum context, token usage reporting). Phase 1 should use at most one real API provider in continuous development; provider contract tests must be isolated from paid usage.
 
+**As implemented (feat-003, D-005):** messages are typed (`Message`), the request also carries `tools: list[ToolDefinition]` and replaces `response_schema_name` with `response_schema: ResponseSchema` (name + JSON Schema), and the port is `async generate(request, model)`. The `LLMGateway` in `packages/core` checks capabilities before any provider call and validates structured output for every provider. Error codes: `MODEL_CAPABILITY_UNSUPPORTED` for the pre-execution registry check (FR-010), the six provider codes of 5.2, plus `INVALID_REQUEST` and `INVALID_RESPONSE`.
+
 ### 5.2 API key handling
 
 Credentials live in environment/server secrets, never in UI or Git. The demo must never ask arbitrary visitors to paste an API key into an untrusted public form. If bring-your-own-key becomes a feature later, it requires a full scoped secret storage / revocation and threat-model design. Independent provider adapter errors are typed: `RATE_LIMITED`, `AUTH_FAILED`, `TIMEOUT`, `CAPABILITY_UNSUPPORTED`, `PROVIDER_UNAVAILABLE`, `BUDGET_EXCEEDED`.

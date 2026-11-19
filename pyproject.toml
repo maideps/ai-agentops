@@ -7,6 +7,8 @@ license = "MIT"
 requires-python = ">=3.13,<3.14"
 dependencies = [
     "fastapi>=0.115",
+    "jsonschema>=4.23",
+    "litellm>=1.83",
     "pydantic>=2.9",
     "pydantic-settings>=2.6",
     "uvicorn>=0.32",
@@ -14,10 +16,11 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "httpx2>=2.16.2",
+    "httpx2>=2.16",
     "mypy>=1.13",
     "pytest>=8.3",
     "ruff>=0.8",
+    "types-jsonschema>=4.26.0.20261006",
 ]
 
 [build-system]
@@ -25,7 +28,11 @@ requires = ["hatchling>=1.25"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["apps/api/agentops_api"]
+packages = [
+    "apps/api/agentops_api",
+    "packages/core/agentops_core",
+    "packages/llm/agentops_llm",
+]
 
 [tool.ruff]
 line-length = 100
@@ -41,23 +48,39 @@ select = ["E", "W", "F", "I", "B", "UP", "S", "BLE", "SIM", "RUF", "N", "ANN"]
 exclude = ["*.md"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["agentops_api", "testsuite"]
+known-first-party = ["agentops_api", "agentops_core", "agentops_llm", "testsuite"]
 
 [tool.ruff.lint.per-file-ignores]
 "testsuite/**/*.py" = ["S101", "ANN401"]
+# The LiteLLM adapter handles untyped SDK objects.
+"packages/llm/agentops_llm/{litellm_provider,testing}.py" = ["ANN401"]
 
 [tool.mypy]
 strict = true
 plugins = ["pydantic.mypy"]
-files = ["apps/api/agentops_api", "testsuite"]
-mypy_path = "apps/api"
+files = [
+    "apps/api/agentops_api",
+    "packages/core/agentops_core",
+    "packages/llm/agentops_llm",
+    "testsuite",
+]
+mypy_path = ["apps/api", "packages/core", "packages/llm"]
 explicit_package_bases = true
 
 [tool.pytest.ini_options]
 testpaths = ["testsuite"]
 pythonpath = ["."]
 addopts = ["--import-mode=importlib", "--strict-markers"]
+filterwarnings = [
+    # LiteLLM's own TypedDicts; not our code.
+    "ignore:Items? .* on TypedDict class .* (is|are) using the `ReadOnly` qualifier:UserWarning",
+]
 markers = [
     "integration: needs local PostgreSQL from docker compose",
     "live: calls a real model provider; never in default CI",
 ]
+
+[tool.uv]
+# Supply-chain cooldown (D-006): resolve only releases at least ~14 days old.
+# Move this date forward deliberately when upgrading dependencies.
+exclude-newer = "2026-11-05T00:00:00Z"

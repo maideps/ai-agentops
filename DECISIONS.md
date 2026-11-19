@@ -74,3 +74,34 @@ This file records significant architectural decisions, their context, alternativ
 - Positive: nothing installs into the system Python.
 - Negative: the harness's documented startup (`./init.sh`) is skipped; `AGENTS.md` still tells agents to run it, so `docs/STANDARDS.md` overrides it explicitly.
 - Reversal: once an upstream harness release handles uv, run `harness-upgrade`, confirm `./init.sh` uses `uv sync`, and mark this decision superseded.
+
+### D-005: LLM port shape, gateway placement and error codes
+
+**Date:** 2026-11-19
+**Status:** accepted
+**Context:** Spec 5.1 proposes `ModelRequest` with untyped messages and a `response_schema_name`, and two names for the capability error (`MODEL_CAPABILITY_UNSUPPORTED` in FR-010, `CAPABILITY_UNSUPPORTED` in 5.2). Tool calling and JSON-schema output need the tool definitions and the schema itself, not only a name.
+**Decision:**
+- Typed `Message`, `ToolDefinition`, `ResponseSchema` (name + JSON Schema) in `packages/core`; the port is `async generate(request, model)` plus `capabilities(model)`.
+- `LLMGateway` (core) runs the capability check before every provider call and validates structured output with JSON Schema (Draft 2020-12) for every provider, so adapters cannot drift.
+- `MODEL_CAPABILITY_UNSUPPORTED` = our registry refused before execution; `CAPABILITY_UNSUPPORTED` = the provider refused a parameter. Added `INVALID_REQUEST` (provider 400/404) and `INVALID_RESPONSE` (unparseable tool arguments or schema-violating output). Error messages carry only the exception type, never provider text, and are raised `from None` so provider messages are not chained into logs.
+- The capability registry denies unknown models. It holds only the mock model today; a live model is registered only after a live smoke test confirms its capabilities.
+- The mock is scripted per `run_id` (turns returned in order), loadable from JSON files.
+**Alternatives considered:**
+- Keep `response_schema_name` with a server-side schema registry — Deferred: no schemas exist yet; the name is kept inside `ResponseSchema`.
+- Validate structured output inside each adapter — Rejected: duplicated logic, and the mock could pass what LiteLLM fails.
+**Consequences:**
+- Positive: one contract suite runs unchanged against the mock and the LiteLLM adapter; capability failures never reach a provider.
+- Negative: spec 5.1 needed an "as implemented" note; adding a live model needs a registry entry.
+- Known limitation: LiteLLM 1.108.0's Gemini and Groq paths load the `cl100k_base` tokenizer, which its wheel does not bundle, so the first live call downloads it from openaipublic.blob.core.windows.net (tiktoken checks its hash). The OpenAI path goes straight to the provider. Revisit before the first live smoke test (vendor the file via `CUSTOM_TIKTOKEN_CACHE_DIR` or upgrade LiteLLM).
+
+### D-006: 14-day release cooldown for Python dependencies
+
+**Date:** 2026-11-19
+**Status:** accepted
+**Context:** LiteLLM was compromised on PyPI in March 2026 (malicious 1.82.7/1.82.8 releases). The newest LiteLLM when feat-003 started was uploaded the same day.
+**Decision:** `[tool.uv] exclude-newer` in `pyproject.toml` resolves only releases published before a fixed date about 14 days in the past (currently 2026-11-05). Moving it is a deliberate commit that re-locks and reviews what changed. After any dependency change, check that no unexpected `.pth` file appeared in `.venv`.
+**Alternatives considered:**
+- Pin only LiteLLM — Rejected: the same risk applies to every transitive dependency.
+**Consequences:**
+- Positive: a freshly published malicious release cannot enter the lock before the community has had time to catch it.
+- Negative: urgent security fixes need a deliberate date bump; resolved versions lag upstream (for example fastapi 0.162.0, litellm 1.108.0).

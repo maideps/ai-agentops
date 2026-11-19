@@ -50,6 +50,7 @@ One working task: synthetic sales + evidence → grounded report → authorized 
 - **Ruff** for lint and format (`uv run ruff check .`, `uv run ruff format --check .`). Enable at least `E`, `F`, `I`, `B`, `UP`, `S110`, `BLE001`, `E722` so swallowed and blind exceptions fail lint alongside arch-103.
 - **mypy** in strict mode over product code and `testsuite/` (`uv run mypy`, targets in `[tool.mypy] files`; add each new package there).
 - **pytest** (`uv run pytest`) with markers `integration` (needs local Postgres), `live` (real provider; never in default CI).
+- **Dependency cooldown (D-006):** `[tool.uv] exclude-newer` keeps the lock to releases about 14 days old. Bump the date only in a dedicated commit, review the `uv lock` diff, and check `.venv` for unexpected `.pth` files.
 - **Node.js ≥ 18** only for the harness runtime, and later the Next.js UI in `apps/web/`.
 - **Docker Compose** for local PostgreSQL + pgvector (from feat-002).
 

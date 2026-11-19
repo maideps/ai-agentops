@@ -27,9 +27,17 @@ def _is_loopback(host: object) -> bool:
         return False
 
 
+@pytest.fixture
+def blocked_network_attempts() -> list[str]:
+    """Hosts the guard refused during the test, in order (request it to assert on them)."""
+    return []
+
+
 @pytest.fixture(autouse=True)
 def block_network(
-    request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+    request: pytest.FixtureRequest,
+    monkeypatch: pytest.MonkeyPatch,
+    blocked_network_attempts: list[str],
 ) -> Iterator[None]:
     if request.node.get_closest_marker("live"):
         yield
@@ -41,6 +49,7 @@ def block_network(
 
     def _check(sock: socket.socket, address: Any) -> None:
         if sock.family in (socket.AF_INET, socket.AF_INET6) and not _is_loopback(address[0]):
+            blocked_network_attempts.append(str(address[0]))
             raise NetworkAccessBlockedError(f"network access blocked in tests: {address[0]!r}")
 
     def guarded_connect(sock: socket.socket, address: Any) -> None:
@@ -53,6 +62,7 @@ def block_network(
 
     def guarded_getaddrinfo(host: Any, *args: Any, **kwargs: Any) -> Any:
         if host is not None and not _is_loopback(host):
+            blocked_network_attempts.append(host.decode() if isinstance(host, bytes) else str(host))
             raise NetworkAccessBlockedError(f"DNS lookup blocked in tests: {host!r}")
         return real_getaddrinfo(host, *args, **kwargs)
 

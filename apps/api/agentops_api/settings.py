@@ -5,7 +5,8 @@ from typing import Literal, Self
 from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-LLMMode = Literal["mock", "replay", "hosted_free", "live_paid"]
+from agentops_core.llm import LLMMode
+
 _LIVE_MODES: frozenset[str] = frozenset({"hosted_free", "live_paid"})
 
 
