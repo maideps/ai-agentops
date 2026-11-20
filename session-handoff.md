@@ -4,8 +4,8 @@ Fill this at session end for large sessions; keep it current otherwise.
 
 ## Current Objective
 
-- Goal: feat-011 (HTTP endpoints for approvals and resume).
-- Current status: feat-001 to feat-010 passing (feat-010 at 8f7ffc3); no feature active.
+- Goal: owner decisions pending (live model run, license, wording); no feature active.
+- Current status: feat-001 to feat-011 passing (feat-011 at 9f7ae40).
 - Branch / commit: main.
 
 ## Completed This Session
@@ -23,11 +23,11 @@ Fill this at session end for large sessions; keep it current otherwise.
 
 ## Files Changed
 
-- See `progress/012-2026-11-19.md`.
+- See `progress/013-2026-11-19.md` (feat-011) and `progress/012-2026-11-19.md` (feat-010, CI).
 
 ## Decisions Made
 
-- D-014 tenant-isolated run checkpoints; CI actions on Node 24 pinned by SHA.
+- D-014 tenant-isolated run checkpoints; D-015 HTTP approvals and resume; CI actions on Node 24 pinned by SHA.
 
 ## Blockers / Risks
 

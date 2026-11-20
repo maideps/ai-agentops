@@ -10,11 +10,11 @@ After adding or updating a session note, regenerate this file with `node scripts
 - Project root: this repository
 - Primary startup command: `./init.sh`
 - Primary verification command: `make check` (make-free equivalent: `npm run check`)
-- Active feature: feat-011 — Phase 2: HTTP approvals and run resume
-- Passing features (10): feat-001 — M0.1 Environment and application skeleton, feat-002 — M0.2 Synthetic data and persistence, feat-003 — M1.1 Model provider port and mock, feat-004 — M1.2 First vertical-slice graph, feat-005 — M2.1 MCP server and policy gateway, feat-006 — M2.2 Idempotency and fault recovery, feat-007 — M3.1 Observability, security evaluation and feedback, feat-008 — M4.1 Three-specialist comparison, feat-009 — M5.1 Demo and portfolio evidence, feat-010 — Phase 2: tenant-isolated run checkpoints
+- Active feature: none
+- Passing features (11): feat-001 — M0.1 Environment and application skeleton, feat-002 — M0.2 Synthetic data and persistence, feat-003 — M1.1 Model provider port and mock, feat-004 — M1.2 First vertical-slice graph, feat-005 — M2.1 MCP server and policy gateway, feat-006 — M2.2 Idempotency and fault recovery, feat-007 — M3.1 Observability, security evaluation and feedback, feat-008 — M4.1 Three-specialist comparison, feat-009 — M5.1 Demo and portfolio evidence, feat-010 — Phase 2: tenant-isolated run checkpoints, feat-011 — Phase 2: HTTP approvals and run resume
 - Failing/blocked features: none
 - Planned features (0): none
-- Last evidence: feat-010 — Phase 2: tenant-isolated run checkpoints — All verification layers passed via node scripts/framework-check.mjs verify-feature (2026-11-20T00:42:24.628Z)
+- Last evidence: feat-011 — Phase 2: HTTP approvals and run resume — All verification layers passed via node scripts/framework-check.mjs verify-feature (2026-11-20T00:54:16.355Z)
 
 ## Session Index
 
@@ -30,4 +30,5 @@ After adding or updating a session note, regenerate this file with `node scripts
 - [Session 010 — 2026-11-19 — feat-008 M4.1 specialists vs single-workflow benchmark](progress/010-2026-11-19.md)
 - [Session 011 — 2026-11-19 — feat-009 M5.1 replay demo, live runs and reviewer docs](progress/011-2026-11-19.md)
 - [Session 012 — 2026-11-19 — feat-010 tenant-isolated checkpoints; CI on Node 24](progress/012-2026-11-19.md)
+- [Session 013 — 2026-11-19 — feat-011 HTTP approvals and run resume](progress/013-2026-11-19.md)
 <!-- END GENERATED PROGRESS -->
