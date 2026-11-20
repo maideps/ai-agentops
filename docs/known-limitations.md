@@ -18,7 +18,7 @@ What AI AgentOps does not do or has not shown yet, as of feat-009. Each item nam
 
 ## Product surface
 
-- No HTTP endpoints to list runs, fetch a run, approve, or resume; approval and resume are Python APIs (`ToolGateway.decide`, `resume_task`). Runs are not stored as rows, so feedback references run ids that are not foreign keys (D-011).
+- No endpoint to list runs, and no approval screen in the UI; approve, resume and fetch exist over HTTP (D-015). Runs live in checkpoints, not rows, so feedback references run ids that are not foreign keys (D-011).
 - `POST /v1/runs` in mock mode needs the name of a scripted reply file; it demonstrates the real pipeline, not open-ended tasks (D-013).
 - The replay UI is read-only and shows recorded runs only; it has no live mode (D-013).
 - Reconciliation of stuck writes runs on demand; nothing schedules it (D-010).

@@ -257,3 +257,17 @@ This file records significant architectural decisions, their context, alternativ
 **Consequences:**
 - Positive: unscoped sessions see no checkpoints; cross-tenant resume and forged writes are refused by PostgreSQL.
 - Negative / limits: checkpoints still hold evidence text (now per tenant); the saver's tenant scope lasts for its connection, so a process must open one saver per tenant. Thread ids changed format, so pre-feat-010 checkpoints cannot be resumed (none exist outside local development).
+
+### D-015: HTTP approvals and run resume
+
+**Date:** 2026-11-19
+**Status:** accepted
+**Context:** Approval and resume were Python-only (`ToolGateway.decide`, `resume_task`); spec 11.1 lists `POST /v1/runs/{run_id}/approvals/{approval_id}` and `GET /v1/runs/{run_id}`.
+**Decision:**
+- API runs are always checkpointed with a saver scoped to the demo user's tenant; `POST /v1/runs` accepts `propose_followup` and can return `awaiting_approval` with the bound proposal.
+- `POST /v1/runs/{run_id}/approvals/{approval_id}` (`{"decision": "approve" | "reject"}`) first reads the run (404 if unknown or another tenant's), records the decision through `ToolGateway.decide` as the demo user, then resumes the run. Gateway refusals become problem details: 404 not found, 403 other principal or run, 409 already decided or expired. A run that is no longer paused is 409.
+- Resume and `GET /v1/runs/{run_id}` use a provider that refuses every model call (`ReplayProvider`), so neither can spend.
+- Tenant isolation over HTTP has two independent layers: the thread id is derived from the authenticated tenant, and checkpoint row-level security (D-014). Removing either alone does not expose another tenant's run; feat-010's tests exercise row-level security directly.
+**Consequences:**
+- Positive: the full propose → approve → resume → one ticket flow works over HTTP; repeated or foreign decisions write nothing.
+- Negative / limits: the identity is still the Phase 1 demo token, so "another user" means another configured demo identity; there is no list endpoint and no UI for approvals.

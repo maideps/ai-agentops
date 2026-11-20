@@ -58,7 +58,9 @@ Phase 1 complete (M0.1 to M5.1: feat-001 to feat-009). What works today:
 
 - Tenant-isolated run checkpoints (feat-010): a paused run's saved state carries its tenant in the thread id (`<tenant>/thread-<run_id>`) and is protected by row-level security, so another tenant can neither read nor resume it.
 
-There is no HTTP endpoint to list, fetch, approve or resume runs, and the UI has no live mode. See [`docs/known-limitations.md`](docs/known-limitations.md).
+- Approvals over HTTP (feat-011): POST /v1/runs with `"propose_followup": true` returns `awaiting_approval` and the bound proposal; POST /v1/runs/{run_id}/approvals/{approval_id} with `{"decision": "approve"}` or `"reject"` records the decision and resumes the run (one ticket at most; a second decision is 409, another user 403, another tenant 404); GET /v1/runs/{run_id} returns the run's current detail.
+
+There is no endpoint to list runs, and the UI has no live mode or approval screen. See [`docs/known-limitations.md`](docs/known-limitations.md).
 
 ## Quick Start
 

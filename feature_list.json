@@ -346,6 +346,43 @@
           "repair": "Start Docker, check the compose healthcheck and migrations, fix failing integration tests and rerun."
         }
       ]
+    },
+    {
+      "id": "feat-011",
+      "name": "Phase 2: HTTP approvals and run resume",
+      "behavior": "POST /v1/runs accepts propose_followup and returns awaiting_approval with the bound proposal; API runs are checkpointed per tenant. POST /v1/runs/{run_id}/approvals/{approval_id} with decision approve|reject records the decision through the gateway for the demo user and resumes the run, which writes at most one ticket. GET /v1/runs/{run_id} returns the run's current sanitized detail from its checkpoint. Gateway refusals map to problem details (404 unknown, 403 other principal or run, 409 already decided or used); another tenant's run is not found. Requirements: FR-001, FR-006, FR-013.",
+      "verification": "Integration tests over HTTP: propose, approve, resume writes one ticket; reject completes without a ticket; a second decision is 409 with no second ticket; another demo user gets 403; another tenant gets 404 for GET and approval; GET shows awaiting_approval then completed; resume makes no model call.",
+      "dependencies": [
+        "feat-009",
+        "feat-010"
+      ],
+      "layers": [
+        {
+          "label": "Layer 1: Harness and architecture checks",
+          "cmd": "node scripts/framework-check.mjs lint && npm run check-arch && node scripts/framework-check.mjs typecheck",
+          "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
+        },
+        {
+          "label": "Layer 2: Python static checks",
+          "cmd": "uv run ruff check . && uv run ruff format --check . && uv run mypy",
+          "repair": "Fix Ruff findings (or run uv run ruff format .) and mypy errors, then rerun."
+        },
+        {
+          "label": "Layer 3: Acceptance tests feat-011",
+          "cmd": "docker compose up -d --wait postgres && uv run pytest testsuite/acceptance/feat_011 -q",
+          "repair": "Fix the code until the declared behavior holds; a test that contradicts the behavior is fixed in the same commit."
+        },
+        {
+          "label": "Layer 4: Default regression suite (no network, no Docker)",
+          "cmd": "uv run pytest testsuite -q -m \"not live and not integration\"",
+          "repair": "Fix the regression this feature introduced; do not mark tests skipped to pass."
+        },
+        {
+          "label": "Layer 5: Integration suite (local Postgres)",
+          "cmd": "docker compose up -d --wait postgres && uv run pytest testsuite -q -m \"integration and not live\"",
+          "repair": "Start Docker, check the compose healthcheck and migrations, fix failing integration tests and rerun."
+        }
+      ]
     }
   ]
 }

@@ -33,7 +33,7 @@ The role setup in `infra/postgres/init/` runs only on a new volume; after changi
 
 **A ticket write ended `EXECUTION_UNCERTAIN`, or a process died mid-write.** Run `uv run python -m agentops_tools recover --tenant <tenant>`. Each stuck execution is looked up by its `SBX-…` reference first: `reconciled_found` means it already happened, `reconciled_retried` means it was written now. Never resubmit the approval by hand; a second approval would create a second ticket.
 
-**A run is stuck in `awaiting_approval`.** The approver (the same user) decides through the gateway (`ToolGateway.decide`), then the run is resumed with `resume_task(run_id, approved=...)`. Approvals expire after 15 minutes; an expired one cannot be used, so request a new run.
+**A run is stuck in `awaiting_approval`.** The requesting user calls `POST /v1/runs/{run_id}/approvals/{approval_id}` with `{"decision": "approve"}` or `"reject"` (the approval id is in the run's `proposed_action`; `GET /v1/runs/{run_id}` shows it). Approvals expire after 15 minutes; an expired one answers 409, so start a new run.
 
 **Demo users hit `QUOTA_EXCEEDED`.** The cap is `MAX_REQUESTS_PER_DEMO_USER` runs per user per UTC day, counted in `demo_run_requests`. Raise the setting or wait for the next UTC day; do not delete rows in production.
 

@@ -750,6 +750,22 @@ async def resume_task(
     return await _drive(deps, Command(resume={"approved": approved}), run_id, tenant_id)
 
 
+async def load_run(run_id: str, deps: RunDependencies, *, tenant_id: str) -> RunDetail:
+    """The current sanitized detail of a checkpointed run (FR-013). The checkpointer must be
+    scoped to ``tenant_id``; an unknown run, or another tenant's, raises LookupError."""
+    if deps.checkpointer is None:
+        msg = "reading a run needs a checkpointer"
+        raise ValueError(msg)
+    config: RunnableConfig = {"configurable": {"thread_id": thread_id_for(tenant_id, run_id)}}
+    # Building the graph opens no connection; it is only used to read the checkpoint.
+    snapshot = await _Run(deps, None, 0.0).build().aget_state(config)
+    if not snapshot.values:
+        msg = f"run {run_id!r} not found"
+        raise LookupError(msg)
+    state = cast(AgentRunState, snapshot.values)
+    return _detail(state, deps, awaiting=bool(snapshot.next) and not state.get("status"))
+
+
 def prompt_version(orchestration: Orchestration = "single") -> str:
     """Short hash of the prompts an orchestration sends to the model."""
     prompts = (
