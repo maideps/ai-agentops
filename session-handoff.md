@@ -4,8 +4,8 @@ Fill this at session end for large sessions; keep it current otherwise.
 
 ## Current Objective
 
-- Goal: Phase 1 complete; next work is the owner's choice (see Recommended Next Step).
-- Current status: all nine features passing (feat-009 at a8b8caf); no feature active.
+- Goal: feat-011 (HTTP endpoints for approvals and resume).
+- Current status: feat-001 to feat-010 passing (feat-010 at 8f7ffc3); no feature active.
 - Branch / commit: main.
 
 ## Completed This Session
@@ -23,11 +23,11 @@ Fill this at session end for large sessions; keep it current otherwise.
 
 ## Files Changed
 
-- See `progress/011-2026-11-19.md`.
+- See `progress/012-2026-11-19.md`.
 
 ## Decisions Made
 
-- D-013 replay-first static demo, capped live runs, reviewer documentation.
+- D-014 tenant-isolated run checkpoints; CI actions on Node 24 pinned by SHA.
 
 ## Blockers / Risks
 
