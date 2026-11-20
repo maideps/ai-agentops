@@ -4,30 +4,30 @@ Fill this at session end for large sessions; keep it current otherwise.
 
 ## Current Objective
 
-- Goal: feat-009 (M5.1 replay-first demo UI and portfolio evidence).
-- Current status: feat-001 to feat-008 passing (feat-008 at faacefa); no feature active.
+- Goal: Phase 1 complete; next work is the owner's choice (see Recommended Next Step).
+- Current status: all nine features passing (feat-009 at a8b8caf); no feature active.
 - Branch / commit: main.
 
 ## Completed This Session
 
-- [x] feat-008 (M4.1) specialist subgraphs and orchestration benchmark: keep the single workflow (42/42 both, 1.81 vs 2.74 model calls)
-- [x] D-012 recorded; results in benchmarks/orchestration/v1 name their code commit
+- [x] feat-009 (M5.1) replay-first static demo (5 replays, Playwright with no off-machine requests), capped live POST /v1/runs, threat model, runbooks, known limitations
+- [x] Documented reproduction commands executed (see progress/011)
 
 ## Verification Evidence
 
 | Check | Command | Result | Notes |
 |---|---|---|---|
-| Feature gate | `npm run verify-feature -- feat-008` | PASS, 4/4 layers | trail in `.harness/trails/` |
-| Full check | `npm run check` | PASS, 71 offline tests | integration: 101 tests |
-| Benchmark | `python -m agentops_evals benchmark` | keep_single_workflow | measured fields reproducible |
+| Feature gate | `npm run verify-feature -- feat-009` | PASS, 5/5 layers | 6 screenshots kept as evidence |
+| Full check | `npm run check` | PASS, 84 offline + 9 UI e2e | integration: 103 tests |
+| Eval corpus | `python -m agentops_evals run` | 50/50 at a8b8caf | |
 
 ## Files Changed
 
-- See `progress/010-2026-11-19.md`.
+- See `progress/011-2026-11-19.md`.
 
 ## Decisions Made
 
-- D-012 specialist roles stay an experiment; the single workflow remains the default.
+- D-013 replay-first static demo, capped live runs, reviewer documentation.
 
 ## Blockers / Risks
 
@@ -42,4 +42,4 @@ Fill this at session end for large sessions; keep it current otherwise.
 
 ## Recommended Next Step
 
-- Activate feat-009: settle the replay data format (RunDetail JSON) first, then write the Playwright replay tests before the Next.js UI.
+- Owner's choice: an opted-in, budget-capped hosted-model run of the corpus and benchmark; HTTP endpoints for approvals and resume; tenant isolation for checkpoints; license confirmation; CI actions off Node 20. Add any of these to feature_list.json before starting.

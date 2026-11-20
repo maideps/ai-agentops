@@ -17,13 +17,15 @@ Rate each module on a scale of A (excellent) / B (good) / C (acceptable) / D (ne
 | packages/tools/agentops_tools (read tools, gateway, approvals, registry, recovery, ticket service, MCP server, CLI) | A | A | B | A | B |
 | packages/telemetry/agentops_telemetry (tracing, redaction, Langfuse export) | A | A | B | A | B |
 | packages/evals/agentops_evals + datasets/evals/v1 (corpus, runner, scenarios, faults, benchmark) | A | A | B | A | B |
-| apps/api/agentops_api (health, feedback, problem details, request spans) | A | A | B | A | B |
+| apps/api/agentops_api (health, feedback, live runs with quota, auth, problem details, request spans) | A | A | B | A | B |
+| apps/web (replay-first Next.js static demo, Playwright e2e) | B | A | B | A | A |
+| fixtures/replays + agentops_evals.replays (recorded sanitized runs) | A | A | A | A | n/a |
 
 Ratings are judgments, not measurements: coverage is not measured yet (quality gates disabled), and performance has no baseline.
 
 ## Summary
 
-- **Overall Quality Grade:** B
+- **Overall Quality Grade:** B (Phase 1 complete)
 - **Blockers:** none
 - **Areas requiring attention:** coverage not measured; uvicorn access logs are not JSON; `./init.sh` unusable until the harness supports uv (D-004); LiteLLM's Gemini/Groq paths download a tokenizer on first live call (D-005).
 
@@ -38,6 +40,7 @@ Ratings are judgments, not measurements: coverage is not measured yet (quality g
 - 2026-11-19: feat-006 (M2.2) passed verify-feature at commit 404b264 (all five layers). Added the `tool_executions` registry (migration 0004), `agentops_tools.tickets` (external-style, idempotent sandbox ticket service), `ToolGateway.recover_executions`, Postgres checkpoints (`agentops_agents.checkpoints`), the approval pause and `resume_task` in `agentops_agents.workflow`, and `agentops_core.aio`. Tools and agents: coverage A (11 feat-006 tests run failing before implementation, including 8-way concurrent retries and injected crash/ambiguous faults; mutation spot-checks of the reference lookup, the recovery lease and the approval interrupt each caught), type safety A (mypy strict). Documentation B: D-010 states the at-most-once scope; the checkpoint privacy limit is recorded but not fixed.
 - 2026-11-19: feat-007 (M3.1) passed verify-feature at commit 5242686 (all five layers). Added `packages/telemetry/agentops_telemetry`, `packages/evals/agentops_evals`, `datasets/evals/v1` (50 cases, builder `build_v1.py`), the feedback endpoint and problem-details middleware in `apps/api/agentops_api`, migration 0005 and `agentops_data.feedback`; the workflow now reads through the gateway. Coverage A: tests run failing before implementation (the viewer case exposed a real access gap); eleven mutated eval expectations each failed with a precise reason; mutation spot-checks of the redaction wrapper, role permission, bearer comparison and principal decision each caught. Performance B: the 50-case corpus takes about 15 s locally, one database connection per gateway call. Documentation B: the corpus scores enforcement with scripted model turns, not model quality (D-011).
 - 2026-11-19: feat-008 (M4.1) passed verify-feature at commit faacefa (code at 3adeb9f, results at faacefa). Added the specialist orchestration (Research and Data Analyst subgraphs, `aggregate_evidence`) to `agentops_agents.workflow`, `agentops_evals.benchmark` and `benchmarks/orchestration/v1/`. Coverage A: tests run failing first; mutation spot-checks of the decision rule (ties adopt), role tool restriction and the specialists' abstention check each caught; benchmark measured fields identical across two runs. Documentation A: D-012 and REPORT.md state sample size, mode, limits and the single tool-call difference. Arch compliance B: feat-008's declared layers do not start Postgres although its tests need it (declaration from session 001).
+- 2026-11-19: feat-009 (M5.1) passed verify-feature at commit a8b8caf (all five layers; six screenshots kept as gate evidence and reviewed). Added `apps/web` (static export, catalog and replay pages, Playwright tests that fail on any non-local request), `fixtures/replays` (five recordings) and the recorder, `POST /v1/runs` with demo-token auth and a daily cap (migration 0006, `agentops_data.quota`), the shared `agentops_api.auth`, and reviewer docs (threat model, deployment checklist, operations runbook, known limitations). Web coverage B: e2e covers every page and the key interactions; there are no component unit tests. Performance A: the demo is static files. Arch compliance B: feat-009's Layer 3 also assumes PostgreSQL is running (its live-run tests).
 
 ---
 
