@@ -1,6 +1,6 @@
 # AI AgentOps
 
-A provider-agnostic, security-first agentic AI platform (portfolio project). It analyzes synthetic sales data, retrieves permission-filtered evidence, writes cited reports and proposes follow-up actions that run only after human approval, exactly once. It runs mock-first, with no paid model calls by default.
+A provider-agnostic, security-first agentic AI platform. It analyzes synthetic sales data, retrieves permission-filtered evidence, writes cited reports and proposes follow-up actions that run only after human approval, exactly once. It runs mock-first, with no paid model calls by default.
 
 ## Table of Contents
 
