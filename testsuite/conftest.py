@@ -83,7 +83,7 @@ DATASET_DIR = Path(__file__).resolve().parent.parent / "datasets" / "synthetic"
 def admin_dsn() -> str:
     return os.environ.get(
         "AGENTOPS_TEST_DATABASE_URL",
-        "postgresql://agentops:change-me@127.0.0.1:55432/agentops_test",
+        "postgresql://agentops:change-me@127.0.0.1:15432/agentops_test",
     )
 
 
@@ -91,7 +91,7 @@ def admin_dsn() -> str:
 def analytics_dsn() -> str:
     return os.environ.get(
         "AGENTOPS_TEST_ANALYTICS_URL",
-        "postgresql://agentops_analytics:change-me-analytics@127.0.0.1:55432/agentops_test",
+        "postgresql://agentops_analytics:change-me-analytics@127.0.0.1:15432/agentops_test",
     )
 
 
@@ -100,7 +100,7 @@ def app_dsn() -> str:
     """The tool gateway's least-privilege login (reads plus approvals, tickets, policy log)."""
     return os.environ.get(
         "AGENTOPS_TEST_APP_URL",
-        "postgresql://agentops_app:change-me-app@127.0.0.1:55432/agentops_test",
+        "postgresql://agentops_app:change-me-app@127.0.0.1:15432/agentops_test",
     )
 
 

@@ -10,8 +10,10 @@ services:
       ANALYTICS_DB_PASSWORD: ${ANALYTICS_DB_PASSWORD:-change-me-analytics}
       APP_DB_PASSWORD: ${APP_DB_PASSWORD:-change-me-app}
     ports:
-      # Localhost only; 55432 avoids clashing with a locally installed PostgreSQL on 5432.
-      - "127.0.0.1:55432:5432"
+      # Localhost only. 15432: not 5432 (a local PostgreSQL may use it) and below the OS
+      # ephemeral port ranges (Linux 32768-60999, Windows 49152-65535), where an outgoing
+      # connection can already hold the port and make the bind fail.
+      - "127.0.0.1:15432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro

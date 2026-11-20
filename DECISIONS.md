@@ -116,7 +116,7 @@ This file records significant architectural decisions, their context, alternativ
 - **Roles.** `agentops` owns the schema and runs migrations and the seed. `agentops_readonly` (NOLOGIN) holds `SELECT` grants only; `agentops_analytics` (LOGIN, NOBYPASSRLS) inherits it. Login roles and passwords come from the compose init script (`infra/postgres/init/`), so migrations never contain credentials.
 - **Document ACL.** `role_document_access` maps roles to access labels (viewer: public; analyst: public + internal; admin: all). A missing and a forbidden document raise the same `DocumentNotAccessibleError`.
 - **Migrations** are plain SQL files in `agentops_data/migrations/`, applied in order, recorded with a SHA-256 checksum; an edited applied file fails with `MigrationDriftError`. No ORM, no Alembic.
-- **Local layout.** Postgres 17 + pgvector 0.8.0 pinned by digest, on `127.0.0.1:55432` (5432 was taken by a locally installed PostgreSQL). Integration tests use a separate `agentops_test` database.
+- **Local layout.** Postgres 17 + pgvector 0.8.0 pinned by digest, on `127.0.0.1:15432` (5432 was taken by a locally installed PostgreSQL; the first choice, 55432, lies in the OS ephemeral port range and failed to bind on a CI runner in session 011). Integration tests use a separate `agentops_test` database.
 - **pgvector** is installed now; the embedding column and its dimension are chosen with retrieval in feat-004.
 **Alternatives considered:**
 - `SET ROLE` on the owner connection — Rejected: the session could `RESET ROLE` back to the owner.

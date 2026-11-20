@@ -3,9 +3,9 @@
 Commands assume the repository root, `uv sync` done, Docker running, and these variables:
 
 ```bash
-export DATABASE_URL=postgresql://agentops:change-me@127.0.0.1:55432/agentops                        # schema owner
-export ANALYTICS_DATABASE_URL=postgresql://agentops_analytics:change-me-analytics@127.0.0.1:55432/agentops
-export APP_DATABASE_URL=postgresql://agentops_app:change-me-app@127.0.0.1:55432/agentops
+export DATABASE_URL=postgresql://agentops:change-me@127.0.0.1:15432/agentops                        # schema owner
+export ANALYTICS_DATABASE_URL=postgresql://agentops_analytics:change-me-analytics@127.0.0.1:15432/agentops
+export APP_DATABASE_URL=postgresql://agentops_app:change-me-app@127.0.0.1:15432/agentops
 ```
 
 ## Start, upgrade, reset

@@ -28,7 +28,7 @@ SAMPLE_TASK = (
 FIXED_TRACE_ID = "0" * 31 + "1"
 APP_DSN = os.environ.get(
     "AGENTOPS_TEST_APP_URL",
-    "postgresql://agentops_app:change-me-app@127.0.0.1:55432/agentops_test",
+    "postgresql://agentops_app:change-me-app@127.0.0.1:15432/agentops_test",
 )
 
 

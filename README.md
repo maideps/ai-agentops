@@ -64,15 +64,15 @@ Prerequisites: Python 3.13, [uv](https://docs.astral.sh/uv/), Docker, Node.js â‰
 
 ```bash
 uv sync                                                    # install dependencies into .venv
-docker compose up -d --wait postgres                       # PostgreSQL + pgvector on 127.0.0.1:55432
-export DATABASE_URL=postgresql://agentops:change-me@127.0.0.1:55432/agentops
+docker compose up -d --wait postgres                       # PostgreSQL + pgvector on 127.0.0.1:15432
+export DATABASE_URL=postgresql://agentops:change-me@127.0.0.1:15432/agentops
 uv run python -m agentops_data migrate                     # create the schema
 uv run python -m agentops_data seed                        # load datasets/synthetic
 uv run python -m agentops_retrieval index                  # embed chunks (after every seed)
 uv run python -m agentops_agents setup-checkpoints         # run checkpoint tables (schema owner)
-export ANALYTICS_DATABASE_URL=postgresql://agentops_analytics:change-me-analytics@127.0.0.1:55432/agentops
+export ANALYTICS_DATABASE_URL=postgresql://agentops_analytics:change-me-analytics@127.0.0.1:15432/agentops
 uv run python -m agentops_agents run --run-id run-sample-q3-declines --tenant demo-a --user user-a-analyst "Analyze quarterly sales and explain the three largest declines"
-export APP_DATABASE_URL=postgresql://agentops_app:change-me-app@127.0.0.1:55432/agentops
+export APP_DATABASE_URL=postgresql://agentops_app:change-me-app@127.0.0.1:15432/agentops
 uv run python -m agentops_tools serve --tenant demo-a --user user-a-analyst --run-id run-1   # MCP over stdio
 uv run python -m agentops_evals run --out evals-report.json   # 50-case evaluation, mock mode
 uv run uvicorn agentops_api.app:create_app --factory       # serve the API on http://127.0.0.1:8000
