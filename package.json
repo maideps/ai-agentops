@@ -25,7 +25,7 @@
     "typecheck": "node scripts/framework-check.mjs typecheck && uv run mypy",
     "test": "node scripts/framework-check.mjs test && uv run pytest testsuite -q -m \"not live and not integration\"",
     "build": "node scripts/framework-check.mjs build",
-    "e2e": "node scripts/framework-check.mjs e2e",
+    "e2e": "node scripts/framework-check.mjs e2e && npm --prefix apps/web run e2e",
     "dev": "node scripts/framework-check.mjs dev",
     "check-arch": "node scripts/framework-check.mjs check-arch",
     "verify-feature": "node scripts/framework-check.mjs verify-feature",

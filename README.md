@@ -13,7 +13,7 @@ A provider-agnostic, security-first agentic AI platform (portfolio project). It 
 
 ## Status
 
-Early stage (M0.1 to M4.1 done: feat-001 to feat-008). What works today:
+Phase 1 complete (M0.1 to M5.1: feat-001 to feat-009). What works today:
 
 - A FastAPI service with two endpoints: GET /health/live returns `{"status": "ok"}` and GET /health/ready returns `{"status": "ready", "checks": {}}` (no dependencies yet).
 - Settings from environment variables with `LLM_MODE=mock` and `ENABLE_LIVE_LLM=false` by default; `hosted_free`/`live_paid` refuse to start without `ENABLE_LIVE_LLM=true`. Provider keys in the environment never switch the mode.
@@ -53,11 +53,14 @@ Early stage (M0.1 to M4.1 done: feat-001 to feat-008). What works today:
 
 - An orchestration experiment (feat-008, M4.1): Research, Data Analyst and Reporting roles as LangGraph subgraphs (`orchestration="specialists"`), each limited to its own tool. `python -m agentops_evals benchmark` runs the 42 workflow cases of the evaluation corpus under both designs and writes `benchmarks/orchestration/v1/` (results JSON and `REPORT.md`). In mock mode both reach 42/42 expected outcomes and the specialists need about one more model call per run (2.74 vs 1.81), so the single workflow stays the default. Mock mode cannot compare answer quality; no hosted-model numbers exist yet.
 
-There is no HTTP endpoint for runs or approvals, no command-line entry for pausing and resuming runs, and no UI yet; see the roadmap.
+- A replay-first demo UI (feat-009, M5.1) in `apps/web`: a static Next.js site that shows five recorded synthetic runs (the cited sample, a viewer denied by policy, missing data, a prompt injection, and a ticket written after human approval) with their report, evidence, policy decisions, approval and trace id. It makes no request to any backend or model provider. Replays are recorded with `python -m agentops_evals record-replays` into `fixtures/replays/`.
+- An optional live mode on the API: POST /v1/runs runs a task for the demo user (bearer `DEMO_API_TOKEN`), capped at `MAX_REQUESTS_PER_DEMO_USER` runs per day. In mock mode it uses a named scripted-reply file from `fixtures/llm/`.
+
+There is no HTTP endpoint to list, fetch, approve or resume runs, and the UI has no live mode. See [`docs/known-limitations.md`](docs/known-limitations.md).
 
 ## Quick Start
 
-Prerequisites: Python 3.13, [uv](https://docs.astral.sh/uv/), Docker, Node.js ≥ 18 (development harness) and Git.
+Prerequisites: Python 3.13, [uv](https://docs.astral.sh/uv/), Docker, Node.js ≥ 18 (development harness and the demo UI) and Git.
 
 ```bash
 uv sync                                                    # install dependencies into .venv
@@ -91,6 +94,23 @@ npm run activate -- feat-001
 npm run verify-feature -- feat-001
 npm run lane-suggest       # which planned features could run in parallel
 ```
+
+## Reproduce the key tests
+
+```bash
+docker compose up -d --wait postgres
+uv sync
+npm ci --prefix apps/web && npx --prefix apps/web playwright install chromium
+npm run check                                              # lint, types, offline tests, harness checks, replay UI e2e
+uv run pytest testsuite -q -m integration                  # tenant isolation, approvals, crash recovery, checkpoints
+uv run python -m agentops_evals run                        # needs ANALYTICS_DATABASE_URL and APP_DATABASE_URL
+uv run python -m agentops_evals benchmark                  # single workflow vs specialists
+npm --prefix apps/web run e2e                              # replay UI only: screenshots in apps/web/test-results/shots
+```
+
+For the demo UI alone, nothing but Node is needed: `npm ci --prefix apps/web`, `npm --prefix apps/web run build`, `npm --prefix apps/web run serve`, then open http://127.0.0.1:4173/.
+
+Further reading: [threat model](docs/threat-model.md), [deployment checklist](docs/runbooks/deployment-checklist.md), [operations runbook](docs/runbooks/operations.md), [known limitations](docs/known-limitations.md).
 
 ## Roadmap
 

@@ -41,6 +41,7 @@ def seed_dataset(conn: psycopg.Connection, dataset_dir: Path) -> SeedSummary:
     with conn.transaction():
         for table in (
             # Runtime rows of the tool gateway reference seeded tenants and users.
+            "demo_run_requests",
             "run_feedback",
             "sandbox_tickets",
             "tool_executions",

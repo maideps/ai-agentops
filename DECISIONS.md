@@ -223,3 +223,21 @@ This file records significant architectural decisions, their context, alternativ
 **Consequences:**
 - Positive: the comparison is reproducible (all non-timing fields identical across runs) and the decision is recorded with its evidence.
 - Negative / limits: mock mode cannot show quality differences between orchestrations; a specialist advantage, if any, would only appear with real model replies. Latency is local and machine-dependent.
+
+### D-013: Replay-first static demo, capped live runs, reviewer documentation
+
+**Date:** 2026-11-19
+**Status:** accepted
+**Context:** M5.1 needs a public demo that works with no provider credentials, no quota and the backend asleep (FR-015), shows run details including policy decisions and trace ids (FR-013), an optional live mode that is authenticated and capped, and documentation a reviewer can reproduce from.
+**Decision:**
+- **Replays are data.** `python -m agentops_evals record-replays` records sanitized `RunDetail` JSON of real mock-mode runs into `fixtures/replays/` with an `index.json`: the sample run, a viewer denied by policy, missing data, prompt injection, and an approved ticket (proposal, pause, approval, resume in a new process, one write). Python tests check the schema, coverage of those stories and that no string trips the telemetry redaction patterns.
+- **The UI is a Next.js static export** (`apps/web`, Next 16, React 19). Pages are rendered at build time from `fixtures/replays`; the browser makes no API or provider request. Playwright tests block and record every request that is not the local static server and fail if any occurs; they save a screenshot of the catalog and of every replay as gate evidence. The root `npm run check` e2e layer now runs these tests, and CI installs Chromium for them.
+- **Live mode is the API, not the UI:** `POST /v1/runs` requires the demo bearer token, claims one of `MAX_REQUESTS_PER_DEMO_USER` runs per user per UTC day (`demo_run_requests`, migration 0006, an advisory lock per user so the cap holds under concurrency), generates the run id server-side, and runs the workflow with the configured provider: mock by default, using a named scripted-reply file; hosted only with the existing opt-in; `LLM_MODE=replay` refuses (503). Request validation happens before storage or quota.
+- **Reviewer documentation:** `docs/threat-model.md` (threats mapped to controls and the tests that show them), `docs/runbooks/deployment-checklist.md`, `docs/runbooks/operations.md`, `docs/known-limitations.md`, and a "Reproduce the key tests" section in the README.
+- Web dependencies follow the same cooldown as Python (`npm install --before=2026-11-05`, exact versions, lockfile committed).
+**Alternatives considered:**
+- A UI calling the API for replays — Rejected: the demo must work with the backend asleep.
+- A live-run form in the UI — Deferred: it would put the demo token in a browser; the API endpoint is enough to show auth and capping.
+**Consequences:**
+- Positive: the public demo is plain files with no secrets and no runtime dependencies; the e2e tests prove no request leaves the machine.
+- Negative / limits: replays are recorded mock-mode runs, labeled as such in the UI; the live endpoint's mock mode needs a scripted-reply file name; there is no UI for approvals or live runs.

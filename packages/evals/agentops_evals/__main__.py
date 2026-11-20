@@ -14,12 +14,13 @@ from pathlib import Path
 
 from agentops_evals.benchmark import run_benchmark, write_benchmark
 from agentops_evals.corpus import DEFAULT_CORPUS, load_corpus
+from agentops_evals.replays import record_replays
 from agentops_evals.runner import run_corpus
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m agentops_evals")
-    parser.add_argument("command", choices=["run", "benchmark"])
+    parser.add_argument("command", choices=["run", "benchmark", "record-replays"])
     parser.add_argument("--corpus", type=Path, default=DEFAULT_CORPUS)
     parser.add_argument("--out", type=Path)
     parser.add_argument("--out-dir", type=Path, default=Path("benchmarks/orchestration/v1"))
@@ -29,6 +30,10 @@ def main(argv: list[str] | None = None) -> int:
     if not analytics or not app:
         print("ANALYTICS_DATABASE_URL and APP_DATABASE_URL must be set", file=sys.stderr)
         return 2
+    if args.command == "record-replays":
+        ids = record_replays(analytics_dsn=analytics, app_dsn=app)
+        print(f"recorded {len(ids)} replays: {', '.join(ids)}")
+        return 0
     if args.command == "benchmark":
         bench = run_benchmark(load_corpus(args.corpus), analytics_dsn=analytics, app_dsn=app)
         json_path, md_path = write_benchmark(bench, args.out_dir)

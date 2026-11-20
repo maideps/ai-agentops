@@ -1,5 +1,6 @@
 """Environment settings. ``LLM_MODE=mock`` is the default whatever keys the machine holds."""
 
+from pathlib import Path
 from typing import Literal, Self
 
 from pydantic import Field, SecretStr, model_validator
@@ -29,6 +30,9 @@ class Settings(BaseSettings):
     max_requests_per_demo_user: int = Field(default=5, ge=0)
     database_url: SecretStr | None = None
     app_database_url: SecretStr | None = None
+    analytics_database_url: SecretStr | None = None
+    # Mock mode: scripted model replies for POST /v1/runs (D-013).
+    mock_scripts_dir: Path = Path("fixtures/llm")
     # Phase 1 demo identity for mutations (spec section 9): one bearer token, one user.
     demo_api_token: SecretStr | None = None
     demo_tenant_id: str | None = None

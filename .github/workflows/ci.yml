@@ -30,6 +30,12 @@ jobs:
       - name: Install Python dependencies from the lockfile
         run: uv sync --locked
 
+      # Replay UI: Next.js static export plus Playwright (npm run check runs it as the e2e layer).
+      - name: Install web dependencies and Chromium
+        run: |
+          npm ci --prefix apps/web
+          cd apps/web && npx playwright install --with-deps chromium
+
       - name: Verify project
         run: npm run check
 

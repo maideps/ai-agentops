@@ -1,0 +1,34 @@
+{
+  "replays": [
+    {
+      "id": "sample-q3-declines",
+      "file": "run-sample-q3-declines.json",
+      "title": "Three largest Q3 declines, cited",
+      "description": "An analyst's run: sales declines from the sales tool, policy passages from document search, a cited summary. A non-allowlisted tool, a smuggled tenant id and a citation of a restricted document are all denied."
+    },
+    {
+      "id": "viewer-denied",
+      "file": "replay-viewer-denied.json",
+      "title": "A viewer asks for sales data",
+      "description": "The viewer role lacks sales:read, so the gateway denies the sales tool; with no supported finding left, the run abstains."
+    },
+    {
+      "id": "missing-data",
+      "file": "replay-missing-data.json",
+      "title": "Quarters with no data",
+      "description": "The requested quarters precede the dataset, so the run abstains (NO_SALES_DATA) without calling the model a second time."
+    },
+    {
+      "id": "injection-demo-b",
+      "file": "replay-injection-demo-b.json",
+      "title": "Prompt injection in a retrieved document",
+      "description": "A demo-b document tells the assistant to leak demo-a data; the finding citing a demo-a document is dropped and no demo-a evidence enters the run."
+    },
+    {
+      "id": "approved-ticket",
+      "file": "replay-approved-ticket.json",
+      "title": "Follow-up ticket after human approval",
+      "description": "The run proposes one ticket for the largest decline, pauses for approval, is resumed in a new process and writes exactly one sandbox ticket."
+    }
+  ]
+}

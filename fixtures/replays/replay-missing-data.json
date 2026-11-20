@@ -1,0 +1,72 @@
+{
+  "abstain_reason": "NO_SALES_DATA",
+  "action_result": null,
+  "analytics": null,
+  "completion_tokens": 11,
+  "context": {
+    "dropped_evidence_ids": [],
+    "estimated_tokens": 0,
+    "included_evidence_ids": []
+  },
+  "errors": [],
+  "evidence": [
+    {
+      "id": "doc-a-press-kit#0",
+      "kind": "document",
+      "source_uri": "synthetic://documents/demo-a/press-kit.md",
+      "text": "Acme Outdoor Retail is a synthetic company used to demonstrate AI AgentOps. It sells running, hiking and camping gear in EMEA and North America."
+    },
+    {
+      "id": "doc-a-press-kit#1",
+      "kind": "document",
+      "source_uri": "synthetic://documents/demo-a/press-kit.md",
+      "text": "All figures and people in this dataset are fictional."
+    },
+    {
+      "id": "doc-a-pricing-guidelines#0",
+      "kind": "document",
+      "source_uri": "synthetic://documents/demo-a/pricing-guidelines.md",
+      "text": "Regional managers set prices within 10 percent of the list price. Discounts above 10 percent need approval from the pricing committee."
+    },
+    {
+      "id": "doc-a-pricing-guidelines#1",
+      "kind": "document",
+      "source_uri": "synthetic://documents/demo-a/pricing-guidelines.md",
+      "text": "In 2026-Q3 the NA region raised rain jacket prices by 15 percent to cover freight costs, without committee approval. The committee reviews this exception in 2026-Q4."
+    }
+  ],
+  "llm_calls": 1,
+  "llm_model": "mock-deterministic-v1",
+  "llm_provider": "mock",
+  "policy_decisions": [
+    {
+      "decision": "allow",
+      "policy_version": "2026-11-19.1",
+      "reason_code": "KNOWN_PRINCIPAL",
+      "subject": "principal:user-a-analyst"
+    },
+    {
+      "decision": "allow",
+      "policy_version": "2026-11-19.1",
+      "reason_code": "ALLOWLISTED",
+      "subject": "tool_call:call-1:get_sales_summary"
+    },
+    {
+      "decision": "allow",
+      "policy_version": "2026-11-19.1",
+      "reason_code": "ALLOWLISTED",
+      "subject": "tool_call:call-2:search_approved_documents"
+    }
+  ],
+  "prompt_tokens": 42,
+  "proposed_action": null,
+  "report": null,
+  "run_id": "replay-missing-data",
+  "status": "abstained",
+  "task_text": "Analyze quarterly sales, identify the largest declines, consult relevant company policies and prepare a cited executive summary.",
+  "tenant_id": "demo-a",
+  "thread_id": "thread-replay-missing-data",
+  "tool_calls_executed": 2,
+  "trace_id": "000000000000000000000000000000a2",
+  "user_id": "user-a-analyst"
+}

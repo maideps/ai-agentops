@@ -153,6 +153,8 @@ def isolate_settings_env(monkeypatch: pytest.MonkeyPatch) -> None:
         "MAX_REQUESTS_PER_DEMO_USER",
         "DATABASE_URL",
         "APP_DATABASE_URL",
+        "ANALYTICS_DATABASE_URL",
+        "MOCK_SCRIPTS_DIR",
         "DEMO_API_TOKEN",
         "DEMO_TENANT_ID",
         "DEMO_USER_ID",

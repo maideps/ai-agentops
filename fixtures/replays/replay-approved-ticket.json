@@ -1,0 +1,241 @@
+{
+  "abstain_reason": null,
+  "action_result": {
+    "approval_id": "626ca5e6-9c03-45a8-b90a-4b021044c937",
+    "status": "created",
+    "ticket_id": "SBX-626CA5E69C03"
+  },
+  "analytics": {
+    "declines": [
+      {
+        "change": "-4000.00",
+        "citations": [
+          "sales:demo-a:101:EMEA:2026-Q2",
+          "sales:demo-a:101:EMEA:2026-Q3"
+        ],
+        "from_revenue": "10000.00",
+        "product_id": 101,
+        "product_name": "Trail Running Shoes",
+        "region": "EMEA",
+        "to_revenue": "6000.00"
+      },
+      {
+        "change": "-3000.00",
+        "citations": [
+          "sales:demo-a:102:NA:2026-Q2",
+          "sales:demo-a:102:NA:2026-Q3"
+        ],
+        "from_revenue": "9000.00",
+        "product_id": 102,
+        "product_name": "Rain Jacket",
+        "region": "NA",
+        "to_revenue": "6000.00"
+      },
+      {
+        "change": "-2000.00",
+        "citations": [
+          "sales:demo-a:103:NA:2026-Q2",
+          "sales:demo-a:103:NA:2026-Q3"
+        ],
+        "from_revenue": "7000.00",
+        "product_id": 103,
+        "product_name": "Camping Stove",
+        "region": "NA",
+        "to_revenue": "5000.00"
+      }
+    ],
+    "from_quarter": "2026-Q2",
+    "to_quarter": "2026-Q3",
+    "total_from": "56000.00",
+    "total_to": "47500.00"
+  },
+  "completion_tokens": 165,
+  "context": {
+    "dropped_evidence_ids": [],
+    "estimated_tokens": 158,
+    "included_evidence_ids": [
+      "sales:demo-a:101:EMEA:2026-Q2",
+      "sales:demo-a:101:EMEA:2026-Q3",
+      "sales:demo-a:102:NA:2026-Q2",
+      "sales:demo-a:102:NA:2026-Q3",
+      "sales:demo-a:103:NA:2026-Q2",
+      "sales:demo-a:103:NA:2026-Q3",
+      "doc-a-pricing-guidelines#1",
+      "doc-a-returns-policy#1",
+      "doc-a-pricing-guidelines#0",
+      "doc-a-returns-policy#0"
+    ]
+  },
+  "errors": [],
+  "evidence": [
+    {
+      "id": "sales:demo-a:101:EMEA:2026-Q2",
+      "kind": "sales",
+      "source_uri": "sales://demo-a/101/EMEA/2026-Q2",
+      "text": "Trail Running Shoes EMEA 2026-Q2: revenue 10000.00, units 200"
+    },
+    {
+      "id": "sales:demo-a:101:EMEA:2026-Q3",
+      "kind": "sales",
+      "source_uri": "sales://demo-a/101/EMEA/2026-Q3",
+      "text": "Trail Running Shoes EMEA 2026-Q3: revenue 6000.00, units 120"
+    },
+    {
+      "id": "sales:demo-a:102:NA:2026-Q2",
+      "kind": "sales",
+      "source_uri": "sales://demo-a/102/NA/2026-Q2",
+      "text": "Rain Jacket NA 2026-Q2: revenue 9000.00, units 180"
+    },
+    {
+      "id": "sales:demo-a:102:NA:2026-Q3",
+      "kind": "sales",
+      "source_uri": "sales://demo-a/102/NA/2026-Q3",
+      "text": "Rain Jacket NA 2026-Q3: revenue 6000.00, units 120"
+    },
+    {
+      "id": "sales:demo-a:103:NA:2026-Q2",
+      "kind": "sales",
+      "source_uri": "sales://demo-a/103/NA/2026-Q2",
+      "text": "Camping Stove NA 2026-Q2: revenue 7000.00, units 140"
+    },
+    {
+      "id": "sales:demo-a:103:NA:2026-Q3",
+      "kind": "sales",
+      "source_uri": "sales://demo-a/103/NA/2026-Q3",
+      "text": "Camping Stove NA 2026-Q3: revenue 5000.00, units 100"
+    },
+    {
+      "id": "doc-a-pricing-guidelines#1",
+      "kind": "document",
+      "source_uri": "synthetic://documents/demo-a/pricing-guidelines.md",
+      "text": "In 2026-Q3 the NA region raised rain jacket prices by 15 percent to cover freight costs, without committee approval. The committee reviews this exception in 2026-Q4."
+    },
+    {
+      "id": "doc-a-returns-policy#1",
+      "kind": "document",
+      "source_uri": "synthetic://documents/demo-a/returns-policy.md",
+      "text": "From 2026-Q3 the EMEA region requires a receipt for every return. Store managers reported that the stricter rule reduced repeat purchases of trail running shoes."
+    },
+    {
+      "id": "doc-a-pricing-guidelines#0",
+      "kind": "document",
+      "source_uri": "synthetic://documents/demo-a/pricing-guidelines.md",
+      "text": "Regional managers set prices within 10 percent of the list price. Discounts above 10 percent need approval from the pricing committee."
+    },
+    {
+      "id": "doc-a-returns-policy#0",
+      "kind": "document",
+      "source_uri": "synthetic://documents/demo-a/returns-policy.md",
+      "text": "Customers may return unused footwear within 30 days of purchase for a full refund. Trail running shoes with visible outsole wear are refunded at 50 percent."
+    }
+  ],
+  "llm_calls": 2,
+  "llm_model": "mock-deterministic-v1",
+  "llm_provider": "mock",
+  "policy_decisions": [
+    {
+      "decision": "allow",
+      "policy_version": "2026-11-19.1",
+      "reason_code": "KNOWN_PRINCIPAL",
+      "subject": "principal:user-a-analyst"
+    },
+    {
+      "decision": "allow",
+      "policy_version": "2026-11-19.1",
+      "reason_code": "ALLOWLISTED",
+      "subject": "tool_call:call-1:get_sales_summary"
+    },
+    {
+      "decision": "allow",
+      "policy_version": "2026-11-19.1",
+      "reason_code": "ALLOWLISTED",
+      "subject": "tool_call:call-2:search_approved_documents"
+    },
+    {
+      "decision": "deny",
+      "policy_version": "2026-11-19.1",
+      "reason_code": "TOOL_NOT_ALLOWED",
+      "subject": "tool_call:call-3:run_sql"
+    },
+    {
+      "decision": "deny",
+      "policy_version": "2026-11-19.1",
+      "reason_code": "INVALID_ARGUMENTS",
+      "subject": "tool_call:call-4:search_approved_documents"
+    },
+    {
+      "decision": "allow",
+      "policy_version": "2026-11-19.1",
+      "reason_code": "CITATIONS_SUPPORTED",
+      "subject": "finding:0"
+    },
+    {
+      "decision": "allow",
+      "policy_version": "2026-11-19.1",
+      "reason_code": "CITATIONS_SUPPORTED",
+      "subject": "finding:1"
+    },
+    {
+      "decision": "allow",
+      "policy_version": "2026-11-19.1",
+      "reason_code": "CITATIONS_SUPPORTED",
+      "subject": "finding:2"
+    },
+    {
+      "decision": "deny",
+      "policy_version": "2026-11-19.1",
+      "reason_code": "UNSUPPORTED_CITATION",
+      "subject": "finding:3"
+    }
+  ],
+  "prompt_tokens": 246,
+  "proposed_action": {
+    "action_hash": "14efeed1be98f73055bd685391da2471901ac93bf67e70e33da3510aee4a3ae5",
+    "approval_id": "626ca5e6-9c03-45a8-b90a-4b021044c937",
+    "arguments": {
+      "description": "Revenue fell from 56,000.00 in 2026-Q2 to 47,500.00 in 2026-Q3. The three largest declines were Trail Running Shoes in EMEA, Rain Jacket in NA and Camping Stove in NA. Proposed follow-up: review the EMEA receipt rule and the NA rain jacket price exception.",
+      "priority": "high",
+      "product_id": 101,
+      "title": "Investigate Trail Running Shoes EMEA revenue decline (2026-Q2 to 2026-Q3)"
+    },
+    "expires_at": "2026-11-20T00:17:47.584328+00:00",
+    "policy_version": "2026-11-19.1",
+    "tool": "create_followup_ticket"
+  },
+  "report": {
+    "findings": [
+      {
+        "citations": [
+          "sales:demo-a:101:EMEA:2026-Q2",
+          "sales:demo-a:101:EMEA:2026-Q3",
+          "doc-a-returns-policy#1"
+        ],
+        "claim": "Trail Running Shoes in EMEA fell from 10,000.00 to 6,000.00 (-4,000.00), the quarter EMEA started requiring a receipt for every return."
+      },
+      {
+        "citations": [
+          "sales:demo-a:102:NA:2026-Q2",
+          "sales:demo-a:102:NA:2026-Q3",
+          "doc-a-pricing-guidelines#1"
+        ],
+        "claim": "Rain Jacket in NA fell from 9,000.00 to 6,000.00 (-3,000.00), the quarter NA raised rain jacket prices by 15 percent without committee approval."
+      },
+      {
+        "citations": [
+          "sales:demo-a:103:NA:2026-Q2",
+          "sales:demo-a:103:NA:2026-Q3"
+        ],
+        "claim": "Camping Stove in NA fell from 7,000.00 to 5,000.00 (-2,000.00); the documents available to this user do not explain the decline."
+      }
+    ],
+    "summary": "Revenue fell from 56,000.00 in 2026-Q2 to 47,500.00 in 2026-Q3. The three largest declines were Trail Running Shoes in EMEA, Rain Jacket in NA and Camping Stove in NA. Proposed follow-up: review the EMEA receipt rule and the NA rain jacket price exception."
+  },
+  "run_id": "replay-approved-ticket",
+  "status": "completed",
+  "task_text": "Analyze the largest Q3 declines and propose a follow-up ticket.",
+  "tenant_id": "demo-a",
+  "thread_id": "thread-replay-approved-ticket",
+  "tool_calls_executed": 2,
+  "trace_id": "000000000000000000000000000000a4",
+  "user_id": "user-a-analyst"
+}

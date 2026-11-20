@@ -1,0 +1,75 @@
+{
+  "abstain_reason": "NO_SUPPORTED_FINDINGS",
+  "action_result": null,
+  "analytics": null,
+  "completion_tokens": 22,
+  "context": {
+    "dropped_evidence_ids": [],
+    "estimated_tokens": 35,
+    "included_evidence_ids": [
+      "doc-a-press-kit#0",
+      "doc-a-press-kit#1"
+    ]
+  },
+  "errors": [],
+  "evidence": [
+    {
+      "id": "doc-a-press-kit#0",
+      "kind": "document",
+      "source_uri": "synthetic://documents/demo-a/press-kit.md",
+      "text": "Acme Outdoor Retail is a synthetic company used to demonstrate AI AgentOps. It sells running, hiking and camping gear in EMEA and North America."
+    },
+    {
+      "id": "doc-a-press-kit#1",
+      "kind": "document",
+      "source_uri": "synthetic://documents/demo-a/press-kit.md",
+      "text": "All figures and people in this dataset are fictional."
+    }
+  ],
+  "llm_calls": 2,
+  "llm_model": "mock-deterministic-v1",
+  "llm_provider": "mock",
+  "policy_decisions": [
+    {
+      "decision": "allow",
+      "policy_version": "2026-11-19.1",
+      "reason_code": "KNOWN_PRINCIPAL",
+      "subject": "principal:user-a-viewer"
+    },
+    {
+      "decision": "allow",
+      "policy_version": "2026-11-19.1",
+      "reason_code": "ALLOWLISTED",
+      "subject": "tool_call:call-1:get_sales_summary"
+    },
+    {
+      "decision": "allow",
+      "policy_version": "2026-11-19.1",
+      "reason_code": "ALLOWLISTED",
+      "subject": "tool_call:call-2:search_approved_documents"
+    },
+    {
+      "decision": "deny",
+      "policy_version": "2026-11-19.1",
+      "reason_code": "PERMISSION_DENIED",
+      "subject": "tool_call:call-1:get_sales_summary"
+    },
+    {
+      "decision": "deny",
+      "policy_version": "2026-11-19.1",
+      "reason_code": "UNSUPPORTED_CITATION",
+      "subject": "finding:0"
+    }
+  ],
+  "prompt_tokens": 137,
+  "proposed_action": null,
+  "report": null,
+  "run_id": "replay-viewer-denied",
+  "status": "abstained",
+  "task_text": "Analyze quarterly sales, identify the largest declines, consult relevant company policies and prepare a cited executive summary.",
+  "tenant_id": "demo-a",
+  "thread_id": "thread-replay-viewer-denied",
+  "tool_calls_executed": 1,
+  "trace_id": "000000000000000000000000000000a1",
+  "user_id": "user-a-viewer"
+}

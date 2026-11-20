@@ -4,13 +4,13 @@ Phase 1 uses a scoped demo identity (spec section 9): a configured bearer token 
 configured demo user. No token configured means no writes.
 """
 
-import secrets
 from typing import Annotated, Literal
 
 import psycopg
 from fastapi import APIRouter, Header, Path, Request
 from pydantic import BaseModel, ConfigDict, Field
 
+from agentops_api.auth import demo_principal
 from agentops_api.problems import ProblemError
 from agentops_api.settings import Settings
 from agentops_data.access import UnknownPrincipalError
@@ -34,16 +34,6 @@ class FeedbackOut(BaseModel):
     run_id: str
 
 
-def _principal(settings: Settings, authorization: str | None) -> tuple[str, str]:
-    expected = settings.demo_api_token.get_secret_value() if settings.demo_api_token else ""
-    if not expected or not settings.demo_tenant_id or not settings.demo_user_id:
-        raise ProblemError(503, "AUTH_NOT_CONFIGURED", "feedback is disabled: no demo identity")
-    scheme, _, token = (authorization or "").partition(" ")
-    if scheme != "Bearer" or not secrets.compare_digest(token.encode(), expected.encode()):
-        raise ProblemError(401, "UNAUTHENTICATED", "a valid bearer token is required")
-    return settings.demo_tenant_id, settings.demo_user_id
-
-
 @router.post("/{run_id}/feedback", status_code=201)
 def submit_feedback(
     run_id: RunId,
@@ -52,7 +42,7 @@ def submit_feedback(
     authorization: Annotated[str | None, Header()] = None,
 ) -> FeedbackOut:
     settings: Settings = request.app.state.settings
-    tenant_id, user_id = _principal(settings, authorization)
+    tenant_id, user_id = demo_principal(settings, authorization)
     if settings.app_database_url is None:
         raise ProblemError(503, "STORAGE_NOT_CONFIGURED", "APP_DATABASE_URL is not set")
     try:

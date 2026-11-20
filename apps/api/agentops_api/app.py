@@ -12,6 +12,7 @@ from agentops_api import __version__, problems
 from agentops_api.feedback import router as feedback_router
 from agentops_api.health import router as health_router
 from agentops_api.logging import ROOT_LOGGER, configure_logging
+from agentops_api.runs import router as runs_router
 from agentops_api.settings import Settings
 from agentops_telemetry.tracing import configure_tracing
 
@@ -29,6 +30,7 @@ def create_app(settings: Settings | None = None, *, log_stream: TextIO | None = 
     problems.install(app)
     app.include_router(health_router)
     app.include_router(feedback_router)
+    app.include_router(runs_router)
 
     logger.info(
         "app.created",
