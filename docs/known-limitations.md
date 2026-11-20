@@ -29,4 +29,4 @@ What AI AgentOps does not do or has not shown yet, as of feat-009. Each item nam
 - `./init.sh` and `npm run setup` from the harness would install into the system Python; sessions use `uv sync` instead (D-004, upstream harness issues #63 and #64).
 - The declared verification layers of feat-008 and feat-009 assume PostgreSQL is already running.
 - The license (MIT, copied by the harness) is unconfirmed by the owner.
-- CI's actions still target the deprecated Node 20 runtime.
+- CI actions are pinned by commit SHA; bumping them is a manual review step.
