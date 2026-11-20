@@ -188,7 +188,7 @@ def resume_after_restart(env: Env, ctx: CallContext) -> dict[str, Any]:
         provider = CountingProvider(MockLLMProvider(scripts=[script]))
 
         async def go() -> RunDetail:
-            async with postgres_checkpointer(env.app_dsn) as saver:
+            async with postgres_checkpointer(env.app_dsn, tenant_id=ctx.tenant_id) as saver:
                 deps = RunDependencies(
                     gateway=LLMGateway(provider, MOCK_MODEL),
                     llm_provider=provider.name,
@@ -213,7 +213,9 @@ def resume_after_restart(env: Env, ctx: CallContext) -> dict[str, Any]:
     if paused.proposed_action is None:
         return _observe(env, ctx, status=paused.status.value, llm_calls_after_resume=-1)
     env.gateway().decide(ctx, str(paused.proposed_action["approval_id"]), approve=True)
-    resumed, calls = process(lambda deps: resume_task(ctx.run_id, deps, approved=True))
+    resumed, calls = process(
+        lambda deps: resume_task(ctx.run_id, deps, tenant_id=ctx.tenant_id, approved=True)
+    )
     return _observe(env, ctx, status=resumed.status.value, llm_calls_after_resume=calls)
 
 

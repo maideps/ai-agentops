@@ -241,3 +241,19 @@ This file records significant architectural decisions, their context, alternativ
 **Consequences:**
 - Positive: the public demo is plain files with no secrets and no runtime dependencies; the e2e tests prove no request leaves the machine.
 - Negative / limits: replays are recorded mock-mode runs, labeled as such in the UI; the live endpoint's mock mode needs a scripted-reply file name; there is no UI for approvals or live runs.
+
+### D-014: Tenant-isolated run checkpoints
+
+**Date:** 2026-11-19
+**Status:** accepted (closes the checkpoint isolation risk of D-010)
+**Context:** LangGraph's checkpoint tables have no tenant column; any session of the app login could read or overwrite any run's saved state, which includes retrieved evidence text.
+**Decision:**
+- Thread ids carry the tenant: `<tenant>/thread-<run_id>` (`thread_id_for(tenant_id, run_id)`). Tenant and run ids are validated and cannot contain `/`, so a run id cannot forge another tenant's prefix.
+- `setup_checkpoints` enables row-level security on `checkpoints`, `checkpoint_blobs` and `checkpoint_writes` with a `FOR ALL` policy `split_part(thread_id, '/', 1) = current_setting('app.tenant_id', true)`; reads are filtered and writes checked by the same expression. `checkpoint_migrations` holds only schema versions and stays unrestricted.
+- `postgres_checkpointer(dsn, tenant_id=...)` sets `app.tenant_id` when the saver's connection opens (`options=-c app.tenant_id=...`), so one saver serves one tenant; `resume_task` takes the tenant explicitly. A saver scoped to another tenant sees no such run and resume fails with `LookupError`.
+**Alternatives considered:**
+- A tenant column on the checkpoint tables — Rejected: the tables belong to LangGraph and its queries would not fill it.
+- One schema per tenant — Rejected for two synthetic tenants: more moving parts for the same guarantee.
+**Consequences:**
+- Positive: unscoped sessions see no checkpoints; cross-tenant resume and forged writes are refused by PostgreSQL.
+- Negative / limits: checkpoints still hold evidence text (now per tenant); the saver's tenant scope lasts for its connection, so a process must open one saver per tenant. Thread ids changed format, so pre-feat-010 checkpoints cannot be resumed (none exist outside local development).

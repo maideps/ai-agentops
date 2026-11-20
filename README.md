@@ -56,6 +56,8 @@ Phase 1 complete (M0.1 to M5.1: feat-001 to feat-009). What works today:
 - A replay-first demo UI (feat-009, M5.1) in `apps/web`: a static Next.js site that shows five recorded synthetic runs (the cited sample, a viewer denied by policy, missing data, a prompt injection, and a ticket written after human approval) with their report, evidence, policy decisions, approval and trace id. It makes no request to any backend or model provider. Replays are recorded with `python -m agentops_evals record-replays` into `fixtures/replays/`.
 - An optional live mode on the API: POST /v1/runs runs a task for the demo user (bearer `DEMO_API_TOKEN`), capped at `MAX_REQUESTS_PER_DEMO_USER` runs per day. In mock mode it uses a named scripted-reply file from `fixtures/llm/`.
 
+- Tenant-isolated run checkpoints (feat-010): a paused run's saved state carries its tenant in the thread id (`<tenant>/thread-<run_id>`) and is protected by row-level security, so another tenant can neither read nor resume it.
+
 There is no HTTP endpoint to list, fetch, approve or resume runs, and the UI has no live mode. See [`docs/known-limitations.md`](docs/known-limitations.md).
 
 ## Quick Start

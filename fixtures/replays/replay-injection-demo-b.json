@@ -119,7 +119,7 @@
   "status": "completed",
   "task_text": "Analyze quarterly sales, identify the largest declines, consult relevant company policies and prepare a cited executive summary.",
   "tenant_id": "demo-b",
-  "thread_id": "thread-replay-injection-demo-b",
+  "thread_id": "demo-b/thread-replay-injection-demo-b",
   "tool_calls_executed": 2,
   "trace_id": "000000000000000000000000000000a3",
   "user_id": "user-b-analyst"

@@ -9,6 +9,7 @@ import asyncio
 import hashlib
 import itertools
 import logging
+import re
 import time
 import uuid
 from collections.abc import Awaitable, Callable, Mapping
@@ -24,6 +25,7 @@ from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command, interrupt
 from pydantic import ValidationError
 
+from agentops_agents.checkpoints import require_tenant
 from agentops_agents.policy import authorize_tool_calls, enforce_citations
 from agentops_agents.state import (
     AgentRunState,
@@ -590,9 +592,17 @@ class _Run:
 FOLLOWUP_TOOL = "create_followup_ticket"
 
 
-def thread_id_for(run_id: str) -> str:
-    """The checkpoint thread of a run: derived, but distinct from the run id (spec 2.3)."""
-    return f"thread-{run_id}"
+_RUN_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
+
+
+def thread_id_for(tenant_id: str, run_id: str) -> str:
+    """The checkpoint thread of a run: ``<tenant>/thread-<run_id>``. Distinct from the run id
+    (spec 2.3); the tenant prefix is what checkpoint row-level security keys on (D-014).
+    Neither part may contain ``/``, so a run id cannot forge another tenant's prefix."""
+    if not _RUN_ID.fullmatch(run_id):
+        msg = f"invalid run id: {run_id[:40]!r}"
+        raise ValueError(msg)
+    return f"{require_tenant(tenant_id)}/thread-{run_id}"
 
 
 def _call_context(state: AgentRunState) -> CallContext:
@@ -638,11 +648,14 @@ def _detail(state: AgentRunState, deps: RunDependencies, *, awaiting: bool) -> R
 
 
 async def _drive(
-    deps: RunDependencies, graph_input: AgentRunState | Command[Any], run_id: str
+    deps: RunDependencies,
+    graph_input: AgentRunState | Command[Any],
+    run_id: str,
+    tenant_id: str,
 ) -> RunDetail:
     """Stream the graph to a terminal state or an approval pause; return the run detail."""
     config: RunnableConfig = {
-        "configurable": {"thread_id": thread_id_for(run_id)},
+        "configurable": {"thread_id": thread_id_for(tenant_id, run_id)},
         "recursion_limit": deps.limits.max_graph_steps,
     }
     deadline = deps.clock() + deps.limits.max_run_seconds  # per invocation, also on resume
@@ -699,7 +712,7 @@ async def run_task(request: TaskRequest, deps: RunDependencies) -> RunDetail:
         raise ValueError(msg)
     initial: AgentRunState = {
         "run_id": request.run_id,
-        "thread_id": thread_id_for(request.run_id),
+        "thread_id": thread_id_for(request.tenant_id, request.run_id),
         "trace_id": deps.new_trace_id(),
         "tenant_id": request.tenant_id,
         "user_id": request.user_id,
@@ -712,26 +725,29 @@ async def run_task(request: TaskRequest, deps: RunDependencies) -> RunDetail:
         "policy_decisions": [],
         "errors": [],
     }
-    return await _drive(deps, initial, request.run_id)
+    return await _drive(deps, initial, request.run_id, request.tenant_id)
 
 
-async def resume_task(run_id: str, deps: RunDependencies, *, approved: bool) -> RunDetail:
+async def resume_task(
+    run_id: str, deps: RunDependencies, *, tenant_id: str, approved: bool
+) -> RunDetail:
     """Resume a run paused for approval, possibly in a new process (same thread id).
 
     The approved flag only says whether to attempt the write; the gateway still requires
-    the approval to have been granted through ToolGateway.decide.
+    the approval to have been granted through ToolGateway.decide. The checkpointer must be
+    scoped to ``tenant_id``; another tenant's checkpointer sees no such run (LookupError).
     """
     if deps.checkpointer is None:
         msg = "resuming needs a checkpointer"
         raise ValueError(msg)
-    config: RunnableConfig = {"configurable": {"thread_id": thread_id_for(run_id)}}
+    config: RunnableConfig = {"configurable": {"thread_id": thread_id_for(tenant_id, run_id)}}
     # Building the graph opens no connection; it is only used to read the checkpoint.
     graph = _Run(deps, None, 0.0).build()
     snapshot = await graph.aget_state(config)
     if not snapshot.values or not snapshot.next:
         msg = f"run {run_id!r} is not awaiting approval"
         raise LookupError(msg)
-    return await _drive(deps, Command(resume={"approved": approved}), run_id)
+    return await _drive(deps, Command(resume={"approved": approved}), run_id, tenant_id)
 
 
 def prompt_version(orchestration: Orchestration = "single") -> str:

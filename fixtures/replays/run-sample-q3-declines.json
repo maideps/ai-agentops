@@ -218,7 +218,7 @@
   "status": "completed",
   "task_text": "Analyze quarterly sales, identify the three largest declines from 2026-Q2 to 2026-Q3, consult relevant company policies, prepare a cited executive summary, and propose a follow-up ticket.",
   "tenant_id": "demo-a",
-  "thread_id": "thread-run-sample-q3-declines",
+  "thread_id": "demo-a/thread-run-sample-q3-declines",
   "tool_calls_executed": 2,
   "trace_id": "00000000000000000000000000000001",
   "user_id": "user-a-analyst"

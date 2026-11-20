@@ -36,12 +36,13 @@ Scope: the Phase 1 platform as built (feat-001 to feat-009), running locally or 
 | T11 | Unbounded loops or spend | Limits on model calls, tool calls, graph steps and time; mock by default; daily cap on demo runs | `feat_004/test_abstain_and_limits.py`; `feat_009/test_live_runs.py`; eval `budget-01` |
 | T12 | Unauthenticated mutation | Demo bearer token compared in constant time; mutations disabled without it | `feat_007/test_feedback.py`; `feat_009/test_live_runs.py` |
 | T13 | Supply-chain compromise of a dependency | 14-day release cooldown (`uv` `exclude-newer`, `npm install --before`); `.pth` review | D-006; lockfiles |
+| T15 | One tenant reads or resumes another tenant's paused run | Thread ids carry the tenant; row-level security on the checkpoint tables; tenant-scoped checkpointer connections (D-014) | `feat_010/test_checkpoint_isolation.py` |
 | T14 | Public demo leaks data or calls a model | The demo is a static export of sanitized replays; no backend or provider request leaves the browser | `apps/web/e2e/replays.spec.ts` (all requests must stay on localhost); `feat_009/test_replays.py` |
 
 ## Residual risks
 
 - The demo bearer token is a single shared credential, not user authentication; it is fit for a local or invite-only demo, not a public live endpoint.
-- Checkpoint tables have no row-level security and contain evidence text; any session of the app login can read any thread (D-010).
+- Checkpoints contain retrieved evidence text; they are isolated per tenant (D-014) but not minimized to references.
 - The analytics login could set its own tenant if it could run arbitrary SQL; isolation relies on typed functions plus RLS (D-007).
 - Prompt-injection tests show the platform refuses the actions; they do not measure whether a real model resists the text.
 - Redaction is pattern-based; secrets in unforeseen formats could pass if code ever put them into spans.

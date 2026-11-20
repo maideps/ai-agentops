@@ -310,6 +310,42 @@
           ]
         }
       ]
+    },
+    {
+      "id": "feat-010",
+      "name": "Phase 2: tenant-isolated run checkpoints",
+      "behavior": "Checkpoint thread ids carry the tenant (<tenant>/thread-<run_id>). Row-level security on LangGraph's checkpoint tables limits every read and write to the tenant set for the checkpointer's connection; a connection without a tenant sees and writes nothing. A checkpointer scoped to one tenant cannot read, resume or overwrite another tenant's run. Requirements: NFR-001, FR-008 (D-010 risk).",
+      "verification": "Integration tests: a paused demo-a run is invisible to and cannot be resumed by a demo-b-scoped checkpointer; an unscoped app-login session sees zero checkpoint rows; writing a checkpoint row for another tenant's thread is rejected; the existing approval pause/resume still works with tenant-scoped checkpointers.",
+      "dependencies": [
+        "feat-006"
+      ],
+      "layers": [
+        {
+          "label": "Layer 1: Harness and architecture checks",
+          "cmd": "node scripts/framework-check.mjs lint && npm run check-arch && node scripts/framework-check.mjs typecheck",
+          "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
+        },
+        {
+          "label": "Layer 2: Python static checks",
+          "cmd": "uv run ruff check . && uv run ruff format --check . && uv run mypy",
+          "repair": "Fix Ruff findings (or run uv run ruff format .) and mypy errors, then rerun."
+        },
+        {
+          "label": "Layer 3: Acceptance tests feat-010",
+          "cmd": "docker compose up -d --wait postgres && uv run pytest testsuite/acceptance/feat_010 -q",
+          "repair": "Fix the code until the declared behavior holds; a test that contradicts the behavior is fixed in the same commit."
+        },
+        {
+          "label": "Layer 4: Default regression suite (no network, no Docker)",
+          "cmd": "uv run pytest testsuite -q -m \"not live and not integration\"",
+          "repair": "Fix the regression this feature introduced; do not mark tests skipped to pass."
+        },
+        {
+          "label": "Layer 5: Integration suite (local Postgres)",
+          "cmd": "docker compose up -d --wait postgres && uv run pytest testsuite -q -m \"integration and not live\"",
+          "repair": "Start Docker, check the compose healthcheck and migrations, fix failing integration tests and rerun."
+        }
+      ]
     }
   ]
 }

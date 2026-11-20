@@ -41,7 +41,7 @@ def _in_process(
     """One 'process': its own checkpointer connection, graph and dependencies."""
 
     async def go() -> RunDetail:
-        async with postgres_checkpointer(app_dsn) as saver:
+        async with postgres_checkpointer(app_dsn, tenant_id="demo-a") as saver:
             deps = RunDependencies(
                 gateway=LLMGateway(provider, MOCK_MODEL),
                 llm_provider=provider.name,
@@ -78,7 +78,7 @@ def _resume(
     provider = _provider(run_id)  # a restarted process: nothing in memory carries over
 
     async def step(deps: RunDependencies) -> RunDetail:
-        return await resume_task(run_id, deps, approved=approved)
+        return await resume_task(run_id, deps, tenant_id="demo-a", approved=approved)
 
     detail = _in_process(admin_dsn, app_dsn, analytics_dsn, provider, step)
     return detail, provider.calls
@@ -95,7 +95,7 @@ def test_run_pauses_for_approval_with_a_bound_proposal(
     run_id, detail, calls = _start(admin_dsn, app_dsn, analytics_dsn)
 
     assert detail.status is RunStatus.AWAITING_APPROVAL
-    assert detail.thread_id and detail.thread_id != run_id
+    assert detail.thread_id == f"demo-a/thread-{run_id}"
     assert detail.proposed_action is not None
     assert detail.proposed_action["tool"] == "create_followup_ticket"
     assert detail.proposed_action["arguments"]["product_id"] == 101
@@ -156,7 +156,7 @@ def test_resuming_an_unknown_thread_is_refused(
     seeded_db: str, admin_dsn: str, app_dsn: str, analytics_dsn: str
 ) -> None:
     async def step(deps: RunDependencies) -> Any:
-        return await resume_task("run-never-started", deps, approved=True)
+        return await resume_task("run-never-started", deps, tenant_id="demo-a", approved=True)
 
     with pytest.raises(LookupError):
         _in_process(admin_dsn, app_dsn, analytics_dsn, _provider("run-never-started"), step)

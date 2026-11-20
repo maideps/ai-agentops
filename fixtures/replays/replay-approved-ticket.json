@@ -1,9 +1,9 @@
 {
   "abstain_reason": null,
   "action_result": {
-    "approval_id": "626ca5e6-9c03-45a8-b90a-4b021044c937",
+    "approval_id": "6aa182fc-50d6-4c36-9141-7e0b5caed69e",
     "status": "created",
-    "ticket_id": "SBX-626CA5E69C03"
+    "ticket_id": "SBX-6AA182FC50D6"
   },
   "analytics": {
     "declines": [
@@ -191,14 +191,14 @@
   "prompt_tokens": 246,
   "proposed_action": {
     "action_hash": "14efeed1be98f73055bd685391da2471901ac93bf67e70e33da3510aee4a3ae5",
-    "approval_id": "626ca5e6-9c03-45a8-b90a-4b021044c937",
+    "approval_id": "6aa182fc-50d6-4c36-9141-7e0b5caed69e",
     "arguments": {
       "description": "Revenue fell from 56,000.00 in 2026-Q2 to 47,500.00 in 2026-Q3. The three largest declines were Trail Running Shoes in EMEA, Rain Jacket in NA and Camping Stove in NA. Proposed follow-up: review the EMEA receipt rule and the NA rain jacket price exception.",
       "priority": "high",
       "product_id": 101,
       "title": "Investigate Trail Running Shoes EMEA revenue decline (2026-Q2 to 2026-Q3)"
     },
-    "expires_at": "2026-11-20T00:17:47.584328+00:00",
+    "expires_at": "2026-11-20T00:52:32.520639+00:00",
     "policy_version": "2026-11-19.1",
     "tool": "create_followup_ticket"
   },
@@ -234,7 +234,7 @@
   "status": "completed",
   "task_text": "Analyze the largest Q3 declines and propose a follow-up ticket.",
   "tenant_id": "demo-a",
-  "thread_id": "thread-replay-approved-ticket",
+  "thread_id": "demo-a/thread-replay-approved-ticket",
   "tool_calls_executed": 2,
   "trace_id": "000000000000000000000000000000a4",
   "user_id": "user-a-analyst"

@@ -12,7 +12,7 @@ What AI AgentOps does not do or has not shown yet, as of feat-009. Each item nam
 ## Security
 
 - **Demo identity, not authentication.** One bearer token stands for one configured user (D-011, D-013). It suits a local or invite-only demo only.
-- **Checkpoints are not tenant-isolated** and contain retrieved evidence text (D-010).
+- **Checkpoints store retrieved evidence text.** They are isolated per tenant (D-014), but the spec's goal of storing references instead of text is not met.
 - **Tenant isolation assumes typed access.** A session able to run arbitrary SQL as the analytics login could set its own tenant (D-007).
 - **Redaction is pattern-based** (D-011).
 

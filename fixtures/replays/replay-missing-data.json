@@ -65,7 +65,7 @@
   "status": "abstained",
   "task_text": "Analyze quarterly sales, identify the largest declines, consult relevant company policies and prepare a cited executive summary.",
   "tenant_id": "demo-a",
-  "thread_id": "thread-replay-missing-data",
+  "thread_id": "demo-a/thread-replay-missing-data",
   "tool_calls_executed": 2,
   "trace_id": "000000000000000000000000000000a2",
   "user_id": "user-a-analyst"

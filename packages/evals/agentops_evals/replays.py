@@ -141,7 +141,7 @@ def _record(replay: Replay, analytics_dsn: str, app_dsn: str) -> RunDetail:
         return run_async(run_task(request, deps()))
 
     async def start() -> RunDetail:
-        async with postgres_checkpointer(app_dsn) as saver:
+        async with postgres_checkpointer(app_dsn, tenant_id=replay.tenant_id) as saver:
             return await run_task(request, deps(saver))
 
     paused = run_async(start())
@@ -154,8 +154,10 @@ def _record(replay: Replay, analytics_dsn: str, app_dsn: str) -> RunDetail:
     )
 
     async def resume() -> RunDetail:
-        async with postgres_checkpointer(app_dsn) as saver:
-            return await resume_task(replay.run_id, deps(saver), approved=True)
+        async with postgres_checkpointer(app_dsn, tenant_id=replay.tenant_id) as saver:
+            return await resume_task(
+                replay.run_id, deps(saver), tenant_id=replay.tenant_id, approved=True
+            )
 
     return run_async(resume())
 
