@@ -31,7 +31,7 @@ Fill this at session end for large sessions; keep it current otherwise.
 
 ## Blockers / Risks
 
-- `./init.sh` unusable (D-004; upstream #63/#64). Docker Desktop must be running for feature layers 3 and 5. LiteLLM Gemini/Groq tokenizer download on first live call (D-005). Dev databases from before session 006 need the agentops_app roles (D-009). LICENSE unconfirmed. CI runs on GitHub (private repo maideps/ai-agentops); its actions still target the deprecated Node 20 runtime. History was rewritten in session 007 (blueprint PDF removed, single author); pre-rewrite commits may stay reachable on GitHub by SHA until its garbage collection.
+- `./init.sh` unusable (D-004; upstream #63/#64). Docker Desktop must be running for feature layers 3 and 5. LiteLLM Gemini/Groq tokenizer download on first live call (D-005). Dev databases from before session 006 need the agentops_app roles (D-009). LICENSE resolved (MIT, `LICENSE` present). GitHub repo description still says "portfolio project" (owner action on GitHub). CI runs on GitHub (private repo maideps/ai-agentops); its actions still target the deprecated Node 20 runtime. History was rewritten in session 007 (blueprint PDF removed, single author); pre-rewrite commits may stay reachable on GitHub by SHA until its garbage collection.
 
 ## Next Session Startup
 
@@ -42,4 +42,4 @@ Fill this at session end for large sessions; keep it current otherwise.
 
 ## Recommended Next Step
 
-- Owner's choice: an opted-in, budget-capped hosted-model run of the corpus and benchmark; HTTP endpoints for approvals and resume; tenant isolation for checkpoints; license confirmation; CI actions off Node 20. Add any of these to feature_list.json before starting.
+- Owner's choice: an opted-in, budget-capped hosted-model run of the corpus and benchmark (provider, key handling and budget cap TBD); CI actions off Node 20. Add new work to feature_list.json before starting.
