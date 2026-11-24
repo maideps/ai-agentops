@@ -452,6 +452,37 @@
           "repair": "Fix Layer 4: Retrieval acceptance failures and rerun the layer command."
         }
       ]
+    },
+    {
+      "id": "feat-015",
+      "name": "Phase 2: retrieval stress corpus and baseline comparison",
+      "behavior": "A separately versioned 28-query synthetic retrieval stress corpus contains eight paraphrases, eight multi-chunk questions, eight distractor questions and four no-accessible-evidence cases. The existing benchmark and ranking remain unchanged. On the same seeded source/index and committed code, run v1 and the stress corpus and record per-query hits, source hashes, Recall@3/MRR, access violations and dataset/commit provenance, plus a comparison that explains failures without tuning ranking or imposing a quality threshold. Existing v1 data/results are preserved; no model calls are made. Requirements: FR-003, NFR-007, NFR-010.",
+      "verification": "Actual CLI acceptance tests select both versioned datasets using read-only PostgreSQL, prove reproducible stress output, preserve negative-case null metrics and reject partially inaccessible multi-chunk judgments without writing a success artifact. Review synthetic judgments before measuring; document both measured runs and limits.",
+      "dependencies": [
+        "feat-013"
+      ],
+      "layers": [
+        {
+          "label": "Layer 1: Static checks",
+          "cmd": "npm run lint",
+          "repair": "Fix static-analysis issues and rerun the layer command."
+        },
+        {
+          "label": "Layer 2: Runtime tests",
+          "cmd": "npm run test",
+          "repair": "Fix failing tests and rerun the layer command."
+        },
+        {
+          "label": "Layer 3: System confirmation",
+          "cmd": "npm run check-arch && npm run typecheck && npm run build && npm run e2e && npm run verify-all && npm run quality",
+          "repair": "Resolve cross-layer issues and rerun full verification."
+        },
+        {
+          "label": "Layer 4: Retrieval stress acceptance",
+          "cmd": "uv run pytest testsuite/acceptance/feat_015 -q",
+          "repair": "Fix Layer 4: Retrieval stress acceptance failures and rerun the layer command."
+        }
+      ]
     }
   ]
 }

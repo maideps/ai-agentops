@@ -10,7 +10,7 @@ After adding or updating a session note, regenerate this file with `node scripts
 - Project root: this repository
 - Primary startup command: `./init.sh`
 - Primary verification command: `make check` (make-free equivalent: `npm run check`)
-- Active feature: none
+- Active feature: feat-015 — Phase 2: retrieval stress corpus and baseline comparison
 - Passing features (13): feat-001 — M0.1 Environment and application skeleton, feat-002 — M0.2 Synthetic data and persistence, feat-003 — M1.1 Model provider port and mock, feat-004 — M1.2 First vertical-slice graph, feat-005 — M2.1 MCP server and policy gateway, feat-006 — M2.2 Idempotency and fault recovery, feat-007 — M3.1 Observability, security evaluation and feedback, feat-008 — M4.1 Three-specialist comparison, feat-009 — M5.1 Demo and portfolio evidence, feat-010 — Phase 2: tenant-isolated run checkpoints, feat-011 — Phase 2: HTTP approvals and run resume, feat-012 — Phase 2: hosted-model live run, feat-013 — Phase 2: retrieval relevance baseline
 - Failing/blocked features: none
 - Planned features (0): none
@@ -36,4 +36,5 @@ After adding or updating a session note, regenerate this file with `node scripts
 - [Session 016 — 2026-11-24 — feat-012 live Gemini evidence and gate](progress/016-2026-11-24.md)
 - [Session 017 — 2026-11-24 — feat-013 independent retrieval benchmark](progress/017-2026-11-24.md)
 - [Session 018 — 2026-11-24 — Land feat-013 alongside completed hosted-model support](progress/018-2026-11-24.md)
+- [Session 019 — 2026-11-24 — feat-015 retrieval stress corpus](progress/019-2026-11-24.md)
 <!-- END GENERATED PROGRESS -->

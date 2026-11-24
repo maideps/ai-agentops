@@ -15,6 +15,7 @@ Rate each module on a scale of A (excellent) / B (good) / C (acceptable) / D (ne
 | packages/agents/agentops_agents (graph, tools, policy, run detail, CLI) | A | A | B | A | B |
 | packages/retrieval/agentops_retrieval (hashing embedder, indexing, search, CLI) | B | A | B | A | B |
 | packages/retrieval/agentops_retrieval.benchmark + datasets/retrieval/v1 | B | A | B | A | B |
+| datasets/retrieval/stress-v2 + testsuite/acceptance/feat_015 | B | A | B | A | B |
 | packages/tools/agentops_tools (read tools, gateway, approvals, registry, recovery, ticket service, MCP server, CLI) | A | A | B | A | B |
 | packages/telemetry/agentops_telemetry (tracing, redaction, Langfuse export) | A | A | B | A | B |
 | packages/evals/agentops_evals + datasets/evals/v1 (corpus, runner, scenarios, faults, benchmark) | A | A | B | A | B |
@@ -38,6 +39,12 @@ Ratings are judgments, not measurements: coverage is not measured yet (quality g
 
 ## Notes
 
+- 2026-11-24: feat-015 adds a separately versioned synthetic stress corpus and actual
+  CLI acceptance, reusing unchanged retrieval code. Coverage B: both dataset selections,
+  reproducibility, access-negative metrics and partially inaccessible multi-chunk
+  judgments are exercised; no coverage percentage or real-world quality is claimed.
+  Type safety A uses strict mypy; documentation B describes manual judgment intent,
+  paired reproduction and limitations. Measured comparison and gate follow the corpus commit.
 - 2026-11-19: harness adopted (D-001).
 - 2026-11-24: feat-013 passed verify-feature at commit bae0993 in its independent lane,
   then passed a fresh combined-tree gate at ab39535 after integrating completed feat-012.

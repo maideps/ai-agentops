@@ -67,6 +67,11 @@ Phase 1 complete (M0.1 to M5.1: feat-001 to feat-009). What works today:
 
 There is no endpoint to list runs, and the UI has no live mode or approval screen. See [`docs/known-limitations.md`](docs/known-limitations.md).
 
+The optional [retrieval stress corpus](docs/retrieval-baseline.md#stress-corpus-v2)
+(feat-015) adds 28 synthetic questions: paraphrases, multi-chunk answers, distracting
+topics and access-negative cases. Select it with `--dataset`; the default v1 corpus
+and ranking are unchanged. Neither corpus measures held-out real-world quality.
+
 ## Quick Start
 
 Prerequisites: Python 3.13, [uv](https://docs.astral.sh/uv/), Docker, Node.js ≥ 18 (development harness and the demo UI) and Git.
@@ -139,6 +144,7 @@ Features are declared in [`feature_list.json`](feature_list.json); their state i
 | feat-009 | M5.1 | Replay-first Next.js demo and portfolio evidence |
 | feat-012 | Phase 2 | Budgeted Gemini hosted calls and opt-in evaluations; manual live evidence recorded |
 | feat-013 | Phase 2 | Read-only retrieval-relevance baseline, independent of hosted-model support |
+| feat-015 | Phase 2 | Versioned retrieval stress queries and a same-index v1 comparison |
 
 ## Documentation
 
