@@ -123,7 +123,13 @@ Development tests use the separate `agentops_feat015_test` database for all thre
 `AGENTOPS_TEST_*` URLs, plus actual `GITHUB_SHA` for legacy worktree provenance.
 No hosted call is needed. Do not seed another agent's database.
 
-The paired reports/comparison are recorded after the corpus commit. Mean Recall@3 and
+The [paired comparison](../benchmarks/retrieval/stress-v2/REPORT.md) was recorded at
+corpus/code commit `d6f0c3bace40b8cda82c39c76fd1a4f7a13e00de`: v1 Recall@3/MRR
+1.0/1.0; stress Recall@3 0.7639, MRR 0.7361; zero forbidden hits in both. Four stress
+answerable cases miss completely and four retrieve only part of the required evidence.
+The queries and judgments were not changed after seeing these results.
+
+Mean Recall@3 and
 MRR still exclude the four access-negative queries; MRR can hide missing secondary chunks,
 so inspect per-query Recall for multi questions. Unequal corpora have different task
 distributions: a score difference is not a ranking regression or a causal quality gain.
