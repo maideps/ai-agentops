@@ -20,7 +20,7 @@ CANARY = "CANARY-SECRET-0009"
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
-    "budget, status, calls", [(0.001, "budget_exhausted", 0), (0.3, "completed", 2)]
+    "budget, status, calls", [(0.001, "budget_exhausted", 0), (0.7, "completed", 2)]
 )
 def test_hosted_http_run_uses_key_and_enforces_budget(
     seeded_db: str,

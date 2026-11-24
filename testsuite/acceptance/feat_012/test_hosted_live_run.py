@@ -284,11 +284,11 @@ def test_default_price_map_reports_real_usage_cost_offline() -> None:
     async def completion(**kwargs: object) -> object:
         return _fake_raw(100, 10)
 
-    provider = LiteLLMProvider(registry=hosted_registry(), completion=completion, budget_usd=0.2)
+    provider = LiteLLMProvider(registry=hosted_registry(), completion=completion, budget_usd=0.4)
     response = asyncio.run(provider.generate(_request(), GEMINI_FLASH_LITE))
-    assert response.estimated_cost_usd == pytest.approx(0.000014)
-    assert provider.spent_usd("r") == pytest.approx(0.000014)
-    assert provider.reserved_usd("r") == pytest.approx(0.1048616)
+    assert response.estimated_cost_usd == pytest.approx(0.000055)
+    assert provider.spent_usd("r") == pytest.approx(0.000055)
+    assert provider.reserved_usd("r") == pytest.approx(0.3145978)
 
 
 def test_live_provider_refuses_a_missing_key() -> None:

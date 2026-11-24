@@ -288,3 +288,11 @@ a separately approved manual step. See [ADR-0016](docs/decisions/ADR-0016-hosted
 **Consequences:** Conservative refusal is intentional. Reported usage cost is not a provider
 invoice, and process-local reservations do not meet the persistent account-wide budget goal.
 Real provider results remain unmeasured until the manual run.
+**Amendment (2026-11-24, owner-approved):** The first live attempt got HTTP 404 on every
+call: Google no longer serves `gemini-2.5-flash-lite` to new users and names
+`gemini-3.5-flash-lite` as the replacement. The allowlisted model is now
+`gemini/gemini-3.5-flash-lite` (same 1,048,576/65,536-token window and capabilities in the
+bundled LiteLLM 1.108 map; prices 3e-7 input / 2.5e-6 output USD per token). A 500-output-token
+reservation rises from USD 0.1050576 to USD 0.3158228, so full-coverage ceilings are about
+USD 78.01 (corpus) and USD 156.02 (benchmark); the owner approved caps of 79 and 157. The
+failed 2.5 attempt spent nothing (zero tokens) and is not gate evidence.

@@ -191,7 +191,7 @@ Implement an `LLMProvider` protocol with `generate(request)` and `capabilities(m
 **As implemented (feat-003, D-005):** messages are typed (`Message`), the request also carries `tools: list[ToolDefinition]` and replaces `response_schema_name` with `response_schema: ResponseSchema` (name + JSON Schema), and the port is `async generate(request, model)`. The `LLMGateway` in `packages/core` checks capabilities before any provider call and validates structured output for every provider. Error codes: `MODEL_CAPABILITY_UNSUPPORTED` for the pre-execution registry check (FR-010), the six provider codes of 5.2, plus `INVALID_REQUEST` and `INVALID_RESPONSE`.
 
 **Hosted implementation (feat-012, D-016; manual live evidence pending):** Gemini Flash-Lite
-(`gemini/gemini-2.5-flash-lite`) exposes tool calling, structured output and usage reporting.
+(`gemini/gemini-3.5-flash-lite`) exposes tool calling, structured output and usage reporting.
 Each budgeted call reserves the entire registered input window plus its maximum output at
 bundled LiteLLM rates before dispatch. Reservations are atomic, never refunded, and disable
 retries; unknown pricing fails closed. An opted-in evaluation command also has a shared total

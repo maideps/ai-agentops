@@ -1,8 +1,8 @@
 """Hosted model registry entries (deny by default; a model is unusable unless listed here).
 
 The Gemini Flash-Lite entry mirrors the bundled LiteLLM model map
-(``gemini/gemini-2.5-flash-lite``: max input 1_048_576, max output 65_536 tokens;
-input 1e-7 USD/token, output 4e-7 USD/token). Provider selection stays independent of
+(``gemini/gemini-3.5-flash-lite``: max input 1_048_576, max output 65_536 tokens;
+input 3e-7 USD/token, output 2.5e-6 USD/token). Provider selection stays independent of
 the adapter: this module imports only the ``agentops_core`` port, never LiteLLM.
 """
 
@@ -19,7 +19,7 @@ from agentops_core.llm import (
 if TYPE_CHECKING:
     from agentops_llm.litellm_provider import LiteLLMProvider
 
-GEMINI_FLASH_LITE = "gemini/gemini-2.5-flash-lite"
+GEMINI_FLASH_LITE = "gemini/gemini-3.5-flash-lite"
 
 GEMINI_FLASH_LITE_CAPABILITIES = ModelCapabilities(
     provider="gemini",

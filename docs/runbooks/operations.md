@@ -49,7 +49,7 @@ commit it, or include it in recorded output. Default commands and CI stay mock-o
 
 Set `LLM_MODE=hosted_free` (only after checking the provider's free allowance/terms) or
 `live_paid`, `ENABLE_LIVE_LLM=true`, and the existing database URLs. For the HTTP API also
-set `LLM_MODEL=gemini/gemini-2.5-flash-lite` and a positive `LLM_BUDGET_USD`; its default
+set `LLM_MODEL=gemini/gemini-3.5-flash-lite` and a positive `LLM_BUDGET_USD`; its default
 is zero, so flags and a key alone cannot spend.
 
 Example command caps below are **not approval** and may exhaust before all cases finish:
@@ -61,7 +61,7 @@ uv run python -m agentops_evals benchmark --live --budget-usd 30
 
 Each command's explicit cap covers both each run and the complete batch. Each dispatched
 call reserves all 1,048,576 input tokens plus the requested maximum output; at 500 output
-tokens this is USD 0.1050576. Reservations are never refunded, including after failures.
+tokens this is USD 0.3158228. Reservations are never refunded, including after failures.
 No SDK retries are permitted. Use a provider-side account cap too: SDK prices/ceilings are
 external assumptions, and these counters do not survive a process restart.
 

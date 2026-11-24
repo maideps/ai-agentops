@@ -196,8 +196,8 @@ def test_real_workflow_corpus_and_benchmark_use_budgeted_hosted_adapter(
         return LiteLLMProvider(
             registry=hosted_registry(),
             completion=stub_completion(turns),
-            budget_usd=1.0,
-            total_budget_usd=1.0,
+            budget_usd=3.0,
+            total_budget_usd=3.0,
         )
 
     report = runner.run_corpus(
@@ -207,7 +207,7 @@ def test_real_workflow_corpus_and_benchmark_use_budgeted_hosted_adapter(
         live_provider=provider(case.turns),
     )
     assert report.passed == 1, report.results[0].failures
-    assert 0 < report.cost_usd_total < report.reserved_usd_total <= 1.0
+    assert 0 < report.cost_usd_total < report.reserved_usd_total <= 3.0
     bench = benchmark.run_benchmark(
         selected,
         analytics_dsn=analytics_dsn,
@@ -215,4 +215,4 @@ def test_real_workflow_corpus_and_benchmark_use_budgeted_hosted_adapter(
         live_provider=provider([*case.turns, *benchmark.specialist_turns(case.turns)]),
     )
     assert all(r.success for r in bench.runs), [r.failures for r in bench.runs]
-    assert all(0 < r.cost_usd < r.reserved_usd <= 1.0 for r in bench.runs)
+    assert all(0 < r.cost_usd < r.reserved_usd <= 3.0 for r in bench.runs)

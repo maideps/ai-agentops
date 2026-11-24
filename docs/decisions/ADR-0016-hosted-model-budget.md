@@ -13,7 +13,7 @@ dispatch, cancellation and timeouts also make post-response accounting insuffici
 
 ## Decision
 
-The deny-by-default registry exposes `gemini/gemini-2.5-flash-lite` for tool calling,
+The deny-by-default registry exposes `gemini/gemini-3.5-flash-lite` for tool calling,
 structured output and usage reporting. The adapter does not expose streaming.
 Trusted configuration reads `GEMINI_API_KEY`; a key never selects a mode. HTTP live runs
 need the existing mode and enable flags; their USD budget defaults to zero.
@@ -43,13 +43,20 @@ real-model quality rubric. Manual live evidence requires separate owner approval
 ## Consequences and assumptions
 
 Short prompts can be refused by small budgets. Every 500-output-token call reserves
-USD 0.1050576 even when reported usage costs much less. A failed call's invoice cost
+USD 0.3158228 even when reported usage costs much less. A failed call's invoice cost
 can be unknown; retained reservations are not evidence of actual spend.
 
 The bound assumes the provider honors its registered input/output ceilings, the bundled
 text prices, and one completion per dispatch. It is not a provider-enforced account cap,
 an invoice guarantee, or a persistent multi-process budget. API resume makes no model
 calls; evaluation restarts constitute a new manually approved batch.
+
+## Amendment (2026-11-24)
+
+The model id was changed from `gemini/gemini-2.5-flash-lite` to
+`gemini/gemini-3.5-flash-lite` after the provider returned 404 ("no longer available to new
+users") for every live call. Window, capabilities and the reservation rule are unchanged; the
+per-call reservation follows the new bundled prices. See the D-016 amendment in DECISIONS.md.
 
 ## Reversal
 
