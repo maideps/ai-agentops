@@ -58,7 +58,7 @@
       "subject": "tool_call:call-2:search_approved_documents"
     }
   ],
-  "prompt_tokens": 42,
+  "prompt_tokens": 72,
   "proposed_action": null,
   "report": null,
   "run_id": "replay-missing-data",

@@ -15,7 +15,7 @@ Rate each module on a scale of A (excellent) / B (good) / C (acceptable) / D (ne
 | packages/agents/agentops_agents (graph, tools, policy, run detail, CLI) | A | A | B | A | B |
 | packages/retrieval/agentops_retrieval (hashing embedder, indexing, search, CLI) | B | A | B | A | B |
 | packages/retrieval/agentops_retrieval.benchmark + datasets/retrieval/v1 | B | A | B | A | B |
-| datasets/retrieval/stress-v2 + testsuite/acceptance/feat_015 | B | A | B | A | B |
+| datasets/retrieval/stress-v2 + testsuite/acceptance/feat_016 | B | A | B | A | B |
 | packages/tools/agentops_tools (read tools, gateway, approvals, registry, recovery, ticket service, MCP server, CLI) | A | A | B | A | B |
 | packages/telemetry/agentops_telemetry (tracing, redaction, Langfuse export) | A | A | B | A | B |
 | packages/evals/agentops_evals + datasets/evals/v1 (corpus, runner, scenarios, faults, benchmark) | A | A | B | A | B |
@@ -36,10 +36,16 @@ Ratings are judgments, not measurements: coverage is not measured yet (quality g
   test coverage B, type safety B/A respectively, documentation B, architecture A, performance B.
   Evaluation: coverage B, type safety A, documentation B, architecture A, performance B.
   Ratings are judgments; no live quality or provider-billing measurement is claimed.
+- **feat-014 passing:** planning receives the tenant's quarters and the sales tool defaults
+  to the two most recent; corpus evals-v1.1.0 tasks name their period. Live run: 2
+  abstentions (was 36), 30 of 42 workflows reach report writing, 5 complete; report calls
+  mostly fail on provider 503s and network outages. Workflow and tools: test coverage B,
+  type safety A, documentation B, architecture A, performance B.
 
 ## Notes
 
-- 2026-11-24: feat-015 passed its four-layer gate at cb5aafb. Adds a separately
+- 2026-11-24: Retrieval stress (originally feat-015, renamed feat-016 with owner
+  approval at landing) passed its original four-layer gate at cb5aafb. Adds a separately
   versioned synthetic stress corpus, paired reports/comparison and actual
   CLI acceptance, reusing unchanged retrieval code. Coverage B: both dataset selections,
   reproducibility, access-negative metrics and partially inaccessible multi-chunk

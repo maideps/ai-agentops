@@ -30,7 +30,8 @@ READ_TOOLS: dict[str, ToolSpec] = {
             name="get_sales_summary",
             description=(
                 "Read-only. Largest revenue declines per product and region between two "
-                "quarters (YYYY-Qn) for the caller's tenant."
+                "quarters (YYYY-Qn) for the caller's tenant. Omit both quarters to compare the "
+                "two most recent quarters with data."
             ),
             args_model=SalesSummaryArgs,
         ),

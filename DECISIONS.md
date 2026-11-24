@@ -303,3 +303,26 @@ bundled LiteLLM 1.108 map; prices 3e-7 input / 2.5e-6 output USD per token). A 5
 reservation rises from USD 0.1050576 to USD 0.3158228, so full-coverage ceilings are about
 USD 78.01 (corpus) and USD 156.02 (benchmark); the owner approved caps of 79 and 157. The
 failed 2.5 attempt spent nothing (zero tokens) and is not gate evidence.
+
+### D-017: Planning states the tenant's sales quarters; corpus tasks name their period
+
+**Date:** 2026-11-24
+**Status:** accepted
+**Context:** The first live Gemini run (feat-012) abstained in most workflow cases. A single
+diagnostic plan call showed why: with no period in the task and no hint of the data's coverage,
+the model asked for 2023-Q3 to 2024-Q3, while the synthetic data covers 2026-Q1 to 2026-Q4. The
+mock passed only because its scripts hard-code each case's quarters, and all 42 corpus tasks
+said "identify the largest declines" without naming the period their expectations assume.
+**Decision:** (1) Before a planning call that offers `get_sales_summary`, the workflow reads the
+tenant's quarters through the read-only analytics connection and appends them to the system
+prompt, with the rule to use only those quarters and to compare the two most recent when the
+task names no period. (2) `get_sales_summary` takes both quarters or neither; neither means the
+tenant's two most recent quarters with data. The first-party MCP tool keeps both required.
+(3) The owner chose to version the corpus to `evals-v1.1.0`: each workflow task now names the
+period and the number of declines its scripted sales call and expectations already assume.
+Changing the default to "search every quarter pair for the largest decline" was rejected as
+product logic fitted to the synthetic data.
+**Consequences:** The seed has declines only from 2026-Q2 to 2026-Q3 and recovers in Q4, so a
+task without a period now compares Q3 to Q4 and honestly abstains. Prompt versions change and
+recorded replays gain the context tokens. Live results before and after this change use
+different corpus versions; compare them as such.

@@ -6,12 +6,12 @@ arguments: every argument model forbids extra fields, so a smuggled ``tenant_id`
 
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Literal
+from typing import Literal, Self
 
 import psycopg
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from agentops_data.access import SalesRecord, issue_by_id, quarterly_sales
+from agentops_data.access import SalesRecord, issue_by_id, quarterly_sales, revenue_by_quarter
 from agentops_retrieval.embedding import Embedder
 from agentops_retrieval.search import search_documents
 
@@ -23,9 +23,18 @@ class _Args(BaseModel):
 
 
 class SalesSummaryArgs(_Args):
-    from_quarter: str = Field(pattern=QUARTER_PATTERN)
-    to_quarter: str = Field(pattern=QUARTER_PATTERN)
+    """Both quarters, or neither for the tenant's two most recent quarters with data."""
+
+    from_quarter: str | None = Field(default=None, pattern=QUARTER_PATTERN)
+    to_quarter: str | None = Field(default=None, pattern=QUARTER_PATTERN)
     top_n: int = Field(default=3, ge=1, le=10)
+
+    @model_validator(mode="after")
+    def _both_or_neither(self) -> Self:
+        if (self.from_quarter is None) != (self.to_quarter is None):
+            msg = "give both from_quarter and to_quarter, or neither"
+            raise ValueError(msg)
+        return self
 
 
 class DocumentSearchArgs(_Args):
@@ -126,8 +135,14 @@ def _sales_evidence(record: SalesRecord) -> Evidence:
 
 def get_sales_summary(ctx: ToolContext, args: SalesSummaryArgs) -> ToolOutput:
     """Largest quarter-over-quarter revenue declines per product and region."""
-    before = quarterly_sales(ctx.conn, ctx.tenant_id, args.from_quarter)
-    after = quarterly_sales(ctx.conn, ctx.tenant_id, args.to_quarter)
+    from_quarter, to_quarter = args.from_quarter, args.to_quarter
+    if from_quarter is None or to_quarter is None:
+        available = list(revenue_by_quarter(ctx.conn, ctx.tenant_id))
+        if len(available) < 2:
+            return ToolOutput(evidence=[], analytics=None)
+        from_quarter, to_quarter = available[-2], available[-1]
+    before = quarterly_sales(ctx.conn, ctx.tenant_id, from_quarter)
+    after = quarterly_sales(ctx.conn, ctx.tenant_id, to_quarter)
     if not before or not after:
         return ToolOutput(evidence=[], analytics=None)
 
@@ -156,8 +171,8 @@ def get_sales_summary(ctx: ToolContext, args: SalesSummaryArgs) -> ToolOutput:
         for old, new in top
     ]
     analytics = SalesAnalytics(
-        from_quarter=args.from_quarter,
-        to_quarter=args.to_quarter,
+        from_quarter=from_quarter,
+        to_quarter=to_quarter,
         total_from=sum((row.revenue for row in before), Decimal("0")),
         total_to=sum((row.revenue for row in after), Decimal("0")),
         declines=declines,

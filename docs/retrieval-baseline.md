@@ -81,7 +81,7 @@ That evaluation code is intentionally not changed in this independent lane.
 
 ## Stress corpus v2
 
-feat-015 adds `datasets/retrieval/stress-v2/queries.json`, version
+feat-016 adds `datasets/retrieval/stress-v2/queries.json`, version
 `retrieval-stress-v2.0.0`, without changing the embedder, ranking, source documents,
 default corpus or scoring. All 28 cases use k=3. Their questions are distinct from v1.
 

@@ -5,7 +5,6 @@ failing case leads straight to its spans. The report records dataset_version, gi
 prompt_version and policy_version.
 """
 
-import hashlib
 import os
 import uuid
 from collections import Counter
@@ -17,7 +16,7 @@ import psycopg
 from pydantic import BaseModel, Field
 
 from agentops_agents.state import RunDetail, RunLimits, TaskRequest
-from agentops_agents.workflow import PLAN_PROMPT, REPORT_PROMPT, RunDependencies, run_task
+from agentops_agents.workflow import RunDependencies, prompt_version, run_task
 from agentops_core.aio import run as run_async
 from agentops_core.llm import LLMGateway
 from agentops_core.policy import POLICY_VERSION
@@ -29,7 +28,7 @@ from agentops_llm.mock import MOCK_MODEL, MockLLMProvider, MockScript
 from agentops_telemetry.tracing import span
 from agentops_tools.gateway import CallContext
 
-PROMPT_VERSION = hashlib.sha256((PLAN_PROMPT + "\n" + REPORT_PROMPT).encode()).hexdigest()[:12]
+PROMPT_VERSION = prompt_version("single")
 
 
 class CaseResult(BaseModel):

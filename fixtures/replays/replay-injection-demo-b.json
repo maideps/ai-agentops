@@ -101,7 +101,7 @@
       "subject": "finding:1"
     }
   ],
-  "prompt_tokens": 196,
+  "prompt_tokens": 226,
   "proposed_action": null,
   "report": {
     "findings": [

@@ -62,13 +62,14 @@ Phase 1 complete (M0.1 to M5.1: feat-001 to feat-009). What works today:
 
 - Hosted-model support (feat-012): Gemini Flash-Lite is allowlisted as gemini/gemini-3.5-flash-lite, with tool calling, JSON-schema output and usage reporting. Live API calls need a live `LLM_MODE`, `ENABLE_LIVE_LLM=true`, `LLM_MODEL` set to that id, `GEMINI_API_KEY` and an explicit `LLM_BUDGET_USD` (default zero). Each call reserves the full input window plus bounded output at bundled LiteLLM prices; reservations are not refunded, even after a timeout. Unknown pricing or insufficient budget fails closed. This is deliberately conservative, not a provider-billing guarantee.
 - The evaluation CLI remains mock by default, even with live environment settings. `--live --budget-usd` explicitly enables hosted workflow calls and caps the entire command; corpus runs also require `--out`. Live benchmark files default to a separate directory so mock evidence stays intact. The first owner-approved live run (free tier, 2026-11-24) is recorded in `benchmarks/evals/v1/live/` and `benchmarks/orchestration/v1/live/`: corpus 11/50 and benchmark 5/42 for both orchestrations, at about USD 0.024 reported usage. The model abstained without tool calls in most workflow cases, and many expectations assume scripted mock trajectories, so these are not quality scores; see the [manual live procedure](docs/runbooks/operations.md#manual-hosted-evaluation).
+- Planning knows the data's quarters (feat-014): before the planning call the workflow tells the model which sales quarters the tenant has and to compare the two most recent when the task names no period; `get_sales_summary` takes both quarters or neither (neither means the two most recent). The corpus is now `evals-v1.1.0`, whose tasks name the period their expectations assume. The second live run (`benchmarks/evals/v1.1/live/`, `benchmarks/orchestration/v1/live-evals-v1.1/`) abstained twice instead of 36 times and reached report writing in 30 of 42 workflows; most report calls then failed on provider overload (HTTP 503) or local network outages, so pass rates stayed low (corpus 11/50, benchmark 4/42 and 2/42).
 
 - A read-only retrieval benchmark (feat-013): 16 versioned synthetic queries at k=3 measure the existing hashing/pgvector search. Recall@k and MRR cover the 12 queries with accessible relevant chunks; four no-accessible-evidence queries are reported separately, not given perfect scores. Reports contain chunk ids/hashes, model and commit provenance, and forbidden-hit counts, never retrieved text. Ranking is unchanged and no model is called. The [recorded synthetic baseline](benchmarks/retrieval/v1/results.json) has Recall@3 1.0, MRR 1.0 and zero forbidden hits; this is not held-out retrieval quality. See the [procedure and limitations](docs/retrieval-baseline.md).
 
 There is no endpoint to list runs, and the UI has no live mode or approval screen. See [`docs/known-limitations.md`](docs/known-limitations.md).
 
 The optional [retrieval stress corpus](docs/retrieval-baseline.md#stress-corpus-v2)
-(feat-015) adds 28 synthetic questions: paraphrases, multi-chunk answers, distracting
+(feat-016) adds 28 synthetic questions: paraphrases, multi-chunk answers, distracting
 topics and access-negative cases. Select it with `--dataset`; the default v1 corpus
 and ranking are unchanged. The [paired comparison](benchmarks/retrieval/stress-v2/REPORT.md)
 records stress Recall@3 0.7639 and MRR 0.7361 versus v1 1.0/1.0, with zero forbidden
@@ -146,7 +147,8 @@ Features are declared in [`feature_list.json`](feature_list.json); their state i
 | feat-009 | M5.1 | Replay-first Next.js demo and portfolio evidence |
 | feat-012 | Phase 2 | Budgeted Gemini hosted calls and opt-in evaluations; manual live evidence recorded |
 | feat-013 | Phase 2 | Read-only retrieval-relevance baseline, independent of hosted-model support |
-| feat-015 | Phase 2 | Versioned retrieval stress queries and a same-index v1 comparison |
+| feat-014 | Phase 2 | Planning states the tenant's sales quarters; corpus v1.1.0 tasks name their period |
+| feat-016 | Phase 2 | Versioned retrieval stress queries and a same-index v1 comparison |
 
 ## Documentation
 

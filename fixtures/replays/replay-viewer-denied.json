@@ -61,7 +61,7 @@
       "subject": "finding:0"
     }
   ],
-  "prompt_tokens": 137,
+  "prompt_tokens": 167,
   "proposed_action": null,
   "report": null,
   "run_id": "replay-viewer-denied",
