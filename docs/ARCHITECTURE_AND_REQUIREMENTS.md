@@ -190,6 +190,15 @@ Implement an `LLMProvider` protocol with `generate(request)` and `capabilities(m
 
 **As implemented (feat-003, D-005):** messages are typed (`Message`), the request also carries `tools: list[ToolDefinition]` and replaces `response_schema_name` with `response_schema: ResponseSchema` (name + JSON Schema), and the port is `async generate(request, model)`. The `LLMGateway` in `packages/core` checks capabilities before any provider call and validates structured output for every provider. Error codes: `MODEL_CAPABILITY_UNSUPPORTED` for the pre-execution registry check (FR-010), the six provider codes of 5.2, plus `INVALID_REQUEST` and `INVALID_RESPONSE`.
 
+**Hosted implementation (feat-012, D-016; manual live evidence pending):** Gemini Flash-Lite
+(`gemini/gemini-2.5-flash-lite`) exposes tool calling, structured output and usage reporting.
+Each budgeted call reserves the entire registered input window plus its maximum output at
+bundled LiteLLM rates before dispatch. Reservations are atomic, never refunded, and disable
+retries; unknown pricing fails closed. An opted-in evaluation command also has a shared total
+cap. Reported usage cost is not an invoice; provider price changes or violated token ceilings
+are outside this guarantee. Process-local reservations do not yet satisfy the persistent
+budget goal in NFR-009. No hosted results are claimed until the owner-approved manual run.
+
 ### 5.2 API key handling
 
 Credentials live in environment/server secrets, never in UI or Git. The demo must never ask arbitrary visitors to paste an API key into an untrusted public form. If bring-your-own-key becomes a feature later, it requires a full scoped secret storage / revocation and threat-model design. Independent provider adapter errors are typed: `RATE_LIMITED`, `AUTH_FAILED`, `TIMEOUT`, `CAPABILITY_UNSUPPORTED`, `PROVIDER_UNAVAILABLE`, `BUDGET_EXCEEDED`.

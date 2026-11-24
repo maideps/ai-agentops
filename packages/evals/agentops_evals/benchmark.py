@@ -1,10 +1,9 @@
 """Orchestration benchmark (FR-016, NFR-008): single workflow vs. three specialists on the same
-evaluation corpus, in mock mode.
+evaluation corpus, mock-first with explicitly injected budgeted live providers.
 
 What mock mode can measure: whether both orchestrations reach the expected outcome on every
 workflow case, and their structural cost (model calls, tool calls, tokens, latency). What it
-cannot measure: answer quality, because the model's replies are scripted. Hosted-model numbers
-would need an explicitly opted-in, budget-capped live run and are not produced here.
+cannot measure: answer quality, because the model's replies are scripted.
 """
 
 import json
@@ -25,6 +24,8 @@ from agentops_core.llm import LLMGateway
 from agentops_evals.corpus import Case, Corpus
 from agentops_evals.runner import _score_workflow, git_sha
 from agentops_evals.scenarios import CountingProvider, Env
+from agentops_llm.hosted import GEMINI_FLASH_LITE
+from agentops_llm.litellm_provider import LiteLLMProvider
 from agentops_llm.mock import MOCK_MODEL, MockLLMProvider, MockScript
 
 BENCHMARK_VERSION = "orch-bench-v1.0.0"
@@ -67,6 +68,8 @@ class CaseRun(BaseModel):
     findings_supported: int
     findings_checked: int
     latency_ms: float
+    cost_usd: float = 0.0
+    reserved_usd: float = 0.0
 
 
 class CaseRef(BaseModel):
@@ -78,7 +81,7 @@ class BenchmarkReport(BaseModel):
     benchmark_version: str
     dataset_version: str
     git_sha: str
-    mode: Literal["mock"]
+    mode: Literal["mock", "live"]
     provider: str
     model: str
     prompt_versions: dict[str, str]
@@ -89,7 +92,7 @@ class BenchmarkReport(BaseModel):
     aggregates: dict[str, Aggregate]
     recommendation: Literal["keep_single_workflow", "adopt_specialists"]
     rationale: str
-    hosted_model_numbers: None = None
+    hosted_model_numbers: dict[str, float] | None = None
     limitations: list[str]
 
     def deterministic_view(self) -> dict[str, Any]:
@@ -129,17 +132,28 @@ def specialist_turns(turns: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [turn(research, "No documents needed."), turn(analyst, "No sales data needed."), *rest]
 
 
-def _run(env: Env, case: Case, orchestration: Orchestration, batch: str) -> CaseRun:
+def _run(
+    env: Env,
+    case: Case,
+    orchestration: Orchestration,
+    batch: str,
+    live_provider: LiteLLMProvider | None = None,
+) -> CaseRun:
     run_id = f"bench-{case.id}-{orchestration[:4]}-{batch}"
     turns = case.turns if orchestration == "single" else specialist_turns(case.turns)
     provider = CountingProvider(
-        MockLLMProvider(scripts=[MockScript.model_validate({"run_id": run_id, "turns": turns})])
+        live_provider
+        if live_provider is not None
+        else MockLLMProvider(
+            scripts=[MockScript.model_validate({"run_id": run_id, "turns": turns})]
+        )
     )
+    model = GEMINI_FLASH_LITE if live_provider is not None else MOCK_MODEL
     trace_id = uuid.uuid4().hex
     deps = RunDependencies(
-        gateway=LLMGateway(provider, MOCK_MODEL),
+        gateway=LLMGateway(provider, model),
         llm_provider=provider.name,
-        llm_model=MOCK_MODEL,
+        llm_model=model,
         connect=lambda: psycopg.connect(env.analytics_dsn),
         embedder=env.embedder,
         tool_gateway=env.gateway(),
@@ -171,6 +185,8 @@ def _run(env: Env, case: Case, orchestration: Orchestration, batch: str) -> Case
         findings_supported=sum(d.decision == "allow" for d in findings),
         findings_checked=len(findings),
         latency_ms=round(latency_ms, 1),
+        cost_usd=live_provider.spent_usd(run_id) if live_provider else 0.0,
+        reserved_usd=live_provider.reserved_usd(run_id) if live_provider else 0.0,
     )
 
 
@@ -190,7 +206,7 @@ def _aggregate(runs: list[CaseRun]) -> Aggregate:
         mean_tokens=round(statistics.fmean(r.tokens for r in runs), 1),
         latency_ms_p50=round(statistics.median(latencies), 1),
         latency_ms_p95=round(latencies[min(len(latencies) - 1, int(0.95 * len(latencies)))], 1),
-        cost_usd_total=0.0,
+        cost_usd_total=sum(r.cost_usd for r in runs),
     )
 
 
@@ -214,12 +230,20 @@ def recommend(
     )
 
 
-def run_benchmark(corpus: Corpus, *, analytics_dsn: str, app_dsn: str) -> BenchmarkReport:
+def run_benchmark(
+    corpus: Corpus,
+    *,
+    analytics_dsn: str,
+    app_dsn: str,
+    live_provider: LiteLLMProvider | None = None,
+) -> BenchmarkReport:
     env = Env(analytics_dsn, app_dsn)
     batch = uuid.uuid4().hex[:6]
     cases = [c for c in corpus.cases if c.kind == "workflow"]
     started = datetime.now(UTC).isoformat()
-    runs = [_run(env, case, orch, batch) for case in cases for orch in ORCHESTRATIONS]
+    runs = [
+        _run(env, case, orch, batch, live_provider) for case in cases for orch in ORCHESTRATIONS
+    ]
     aggregates = {
         orch: _aggregate([r for r in runs if r.orchestration == orch]) for orch in ORCHESTRATIONS
     }
@@ -228,9 +252,9 @@ def run_benchmark(corpus: Corpus, *, analytics_dsn: str, app_dsn: str) -> Benchm
         benchmark_version=BENCHMARK_VERSION,
         dataset_version=corpus.dataset_version,
         git_sha=git_sha(),
-        mode="mock",
-        provider="mock",
-        model=MOCK_MODEL,
+        mode="live" if live_provider is not None else "mock",
+        provider="gemini" if live_provider is not None else "mock",
+        model=GEMINI_FLASH_LITE if live_provider is not None else MOCK_MODEL,
         prompt_versions={orch: prompt_version(orch) for orch in ORCHESTRATIONS},
         sample_size=len(cases),
         started_at=started,
@@ -239,7 +263,23 @@ def run_benchmark(corpus: Corpus, *, analytics_dsn: str, app_dsn: str) -> Benchm
         aggregates=aggregates,
         recommendation=recommendation,
         rationale=rationale,
-        limitations=LIMITATIONS,
+        hosted_model_numbers={
+            "cost_usd_total": sum(r.cost_usd for r in runs),
+            "reserved_usd_total": sum(r.reserved_usd for r in runs),
+        }
+        if live_provider is not None
+        else None,
+        limitations=[
+            "Live workflow cases run once per orchestration; scripted mock expectations "
+            "may fail and are not a model-quality rubric.",
+            "Costs use reported tokens at bundled LiteLLM rates, not provider invoices. "
+            "Reservations include uncertain failed calls and are not refunded.",
+            "Gateway/reliability scenarios are excluded, as in the mock benchmark.",
+            "One shared batch cap covers both orchestrations; budget exhaustion can leave "
+            "later cases unexecuted, so compare the recorded failures too.",
+        ]
+        if live_provider is not None
+        else LIMITATIONS,
     )
 
 
@@ -266,13 +306,17 @@ def _markdown(report: BenchmarkReport) -> str:
             f"{single.mean_tool_calls:.2f}",
             f"{spec.mean_tool_calls:.2f}",
         ),
-        ("Tokens per run (mean, estimate)", f"{single.mean_tokens:.0f}", f"{spec.mean_tokens:.0f}"),
+        (
+            "Tokens per run (mean, " + ("reported" if report.mode == "live" else "estimate") + ")",
+            f"{single.mean_tokens:.0f}",
+            f"{spec.mean_tokens:.0f}",
+        ),
         (
             "Latency p50 / p95 (ms, local)",
             f"{single.latency_ms_p50:.0f} / {single.latency_ms_p95:.0f}",
             f"{spec.latency_ms_p50:.0f} / {spec.latency_ms_p95:.0f}",
         ),
-        ("Cost (USD)", f"{single.cost_usd_total:.2f}", f"{spec.cost_usd_total:.2f}"),
+        ("Reported usage cost (USD)", f"{single.cost_usd_total:.6f}", f"{spec.cost_usd_total:.6f}"),
     ]
     differing = [
         (a.case_id, a.success, b.success)
@@ -290,7 +334,11 @@ def _markdown(report: BenchmarkReport) -> str:
         f"- Dataset: {report.dataset_version}",
         f"- Commit: {report.git_sha}",
         f"- Mode: {report.mode} (provider {report.provider}, model {report.model});"
-        " hosted-model numbers: none",
+        + (
+            " hosted-model numbers: recorded below"
+            if report.mode == "live"
+            else " hosted-model numbers: none"
+        ),
         f"- Prompt versions: single {report.prompt_versions['single']},"
         f" specialists {report.prompt_versions['specialists']}",
         f"- Sample size: {report.sample_size} workflow cases, each run once per orchestration",

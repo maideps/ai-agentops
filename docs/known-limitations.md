@@ -5,7 +5,9 @@ What AI AgentOps does not do or has not shown yet, as of feat-009. Each item nam
 ## Evidence and measurement
 
 - **No hosted model has been run.** Every result (tests, the 50-case corpus, the orchestration benchmark, the replays) uses scripted model replies. The platform's enforcement is measured; answer quality is not (D-011, D-012).
-- **The live adapter has never reached a provider.** No model is registered in the capability registry, so `LiteLLMProvider` refuses every model before calling out (D-005).
+- **The live adapter has never reached a provider.** Gemini Flash-Lite is registered and tested with stubbed completions, but a real owner-approved corpus/benchmark run is still pending (D-016).
+- **Budget reservations are conservative and process-local.** Each call reserves the full input window plus bounded output, with no refund. A small budget may refuse even a short prompt. Prices and token ceilings come from the bundled SDK map, not an invoice or provider-enforced account limit; persistent account-wide budgets remain unimplemented (D-016).
+- **Live evaluation is not a replacement quality corpus.** Gateway/reliability scenarios stay mocked, and workflow expectations include scripted errors/trajectories that a real model may not produce. Reports preserve those failures instead of claiming a quality score.
 - **Retrieval is lexical.** The hashing embedder matches shared words, not meaning; retrieval quality on real text is unmeasured (D-008).
 - **The orchestration benchmark cannot show a quality win** for the specialist roles in mock mode; it shows equal outcomes at higher cost (D-012).
 

@@ -30,7 +30,7 @@ from agentops_api.auth import demo_principal
 from agentops_api.problems import ProblemError
 from agentops_api.settings import Settings
 from agentops_core.aio import run as run_async
-from agentops_core.llm import CapabilityRegistry, LLMGateway, LLMProvider
+from agentops_core.llm import LLMError, LLMGateway, LLMProvider
 from agentops_data.access import UnknownPrincipalError
 from agentops_data.quota import QuotaExceededError, claim_run
 from agentops_llm.mock import MockLLMProvider, MockScript
@@ -86,12 +86,18 @@ def _mock_provider(scripts_dir: Path, script: str, run_id: str) -> MockLLMProvid
     return MockLLMProvider(scripts=[loaded.model_copy(update={"run_id": run_id})])
 
 
-def _live_provider() -> LLMProvider:
-    """Hosted models go through LiteLLM; none is registered yet, so every model is refused
-    before any provider call (MODEL_CAPABILITY_UNSUPPORTED, D-005)."""
-    from agentops_llm.litellm_provider import LiteLLMProvider
+def _live_provider(settings: Settings) -> LLMProvider:
+    """Hosted models go through LiteLLM, allowlisted by the hosted registry and capped
+    per run by LLM_BUDGET_USD (D-016)."""
+    from agentops_llm.hosted import hosted_provider
 
-    return LiteLLMProvider(registry=CapabilityRegistry([]))
+    try:
+        return hosted_provider(
+            settings.gemini_api_key.get_secret_value() if settings.gemini_api_key else None,
+            settings.llm_budget_usd,
+        )
+    except LLMError as exc:
+        raise ProblemError(503, exc.code.value, exc.message) from None
 
 
 def _storage(settings: Settings) -> tuple[str, str]:
@@ -151,7 +157,7 @@ def create_run(
         settings.llm_mode,
         enable_live_llm=settings.enable_live_llm,
         mock_factory=lambda: _mock_provider(settings.mock_scripts_dir, body.script, run_id),
-        live_factory=_live_provider,
+        live_factory=lambda: _live_provider(settings),
     )
     app_url, _ = _storage(settings)
     try:

@@ -15,7 +15,8 @@ The full product architecture — trust boundaries, graph units, typed state, LL
 │ Domain         packages/core (typed contracts, policies,  │
 │                run state, ports)                          │
 ├──────────────────────────────────────────────────────────┤
-│ Infrastructure packages/llm (mock, LiteLLM adapter),      │
+│ Infrastructure packages/llm (mock, hosted registry,       │
+│                budgeted LiteLLM adapter),                 │
 │                packages/data (migrations, seed, typed     │
 │                tenant-scoped reads), Postgres + pgvector, │
 │                packages/retrieval, packages/telemetry     │
@@ -40,6 +41,17 @@ The default run is the single workflow. An experimental `specialists` orchestrat
 ## Tracing and Evaluation (D-011)
 
 `packages/telemetry` configures OpenTelemetry with every exporter behind a redaction layer; spans carry ids, counts and codes, never prompt or document text, and share the run's trace id. The workflow reads only through the tool gateway, so role permissions and the policy log cover every tool call. `packages/evals` runs the versioned corpus in `datasets/evals/` in mock mode and records dataset version, git commit, model, prompt version and policy version.
+
+## Hosted Calls and Reservations (D-016)
+
+`packages/llm` allowlists Gemini Flash-Lite and reads the key supplied by trusted configuration.
+Mock/replay selection is unchanged. Before every budgeted call, the adapter atomically reserves
+the registered maximum input window plus `max_output_tokens`, priced from LiteLLM's bundled map.
+Reservations are retained after success, errors or cancellation; retries are disabled. The
+evaluation CLI additionally shares one total reservation cap across all runs and both designs.
+Reported usage cost and reserved cost are separate fields; missing/out-of-bound usage is an
+explicit error, not zero-cost success. These counters are process-local; they do not implement
+the spec's persistent account-wide budget. See D-016 for external pricing assumptions.
 
 ## Recovery and Resumable Runs (D-010)
 
@@ -66,6 +78,7 @@ Product rules live in `.harness/arch-rules.json` (ids `arch-101` and up) and run
 | arch-103 | Bare `except:` and single-line swallowed exceptions (`except …: pass`); Ruff `S110`/`BLE001`/`E722` cover the multi-line form |
 | arch-104 | Provider or Langfuse API key patterns in tracked product files and config |
 | arch-105 | Writes to `approvals`, `tool_executions` or `sandbox_tickets` anywhere but the tool gateway and its ticket service |
+| arch-106 | Word-count token estimation in the live adapter's budget path |
 
 Add a rule whenever review catches a mistake a pattern can describe.
 

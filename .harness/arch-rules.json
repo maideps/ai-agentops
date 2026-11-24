@@ -165,6 +165,18 @@
       "what": "Code outside the tool gateway writes to approvals, tool_executions or sandbox_tickets.",
       "why": "Every external write must pass the gateway's allowlist, permission, approval-binding and logging checks (FR-006, NFR-001); a second write path would bypass them.",
       "fix": "Call ToolGateway.request_approval / decide / invoke instead of writing these tables directly."
+    },
+    {
+      "id": "arch-106",
+      "kind": "forbid",
+      "description": "The live adapter never budgets from whitespace word counts",
+      "pattern": "\\b(approx_tokens|_approx_prompt_tokens)\\b|\\.split\\s*\\(",
+      "paths": [
+        "packages/llm/agentops_llm/litellm_provider.py"
+      ],
+      "what": "The live adapter estimates billable input tokens using whitespace words.",
+      "why": "Words do not bound tokens and omit tool/schema overhead; a hard pre-call reservation must cover the entire registered input window (D-016).",
+      "fix": "Reserve the registered maximum input window plus bounded output using known prices; fail closed if pricing is unavailable."
     }
   ]
 }

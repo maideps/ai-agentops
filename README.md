@@ -15,14 +15,14 @@ A provider-agnostic, security-first agentic AI platform. It analyzes synthetic s
 
 Phase 1 complete (M0.1 to M5.1: feat-001 to feat-009). What works today:
 
-- A FastAPI service with two endpoints: GET /health/live returns `{"status": "ok"}` and GET /health/ready returns `{"status": "ready", "checks": {}}` (no dependencies yet).
+- FastAPI health endpoints: GET /health/live returns `{"status": "ok"}`; GET /health/ready checks PostgreSQL when configured.
 - Settings from environment variables with `LLM_MODE=mock` and `ENABLE_LIVE_LLM=false` by default; `hosted_free`/`live_paid` refuse to start without `ENABLE_LIVE_LLM=true`. Provider keys in the environment never switch the mode.
 - JSON logs for the app's own events (uvicorn's access log is still plain text).
 - A keyless, offline test suite: tests cannot open non-loopback connections or DNS lookups.
-- A provider-independent model layer (feat-003, M1.1), used from Python; nothing in the HTTP API calls it yet:
+- A provider-independent model layer (feat-003, M1.1), used by the workflow and HTTP API:
   - `agentops_core.llm`: typed `ModelRequest`/`ModelResponse`, the `LLMProvider` port, a capability registry that rejects unknown models, and `LLMGateway`, which refuses a request needing tool calling, structured output or streaming the model lacks (`MODEL_CAPABILITY_UNSUPPORTED`) before any provider call, and validates structured output against its JSON Schema.
   - `agentops_llm.mock.MockLLMProvider`: deterministic replies scripted per run id, loadable from JSON files, zero cost.
-  - `agentops_llm.litellm_provider.LiteLLMProvider`: LiteLLM SDK adapter that normalizes text, tool calls, usage and errors (`RATE_LIMITED`, `AUTH_FAILED`, `TIMEOUT`, `CAPABILITY_UNSUPPORTED`, `PROVIDER_UNAVAILABLE`, `BUDGET_EXCEEDED`, `INVALID_REQUEST`, `INVALID_RESPONSE`). Its capability registry holds no live models yet, so no live call is possible without registering one.
+  - `agentops_llm.litellm_provider.LiteLLMProvider`: LiteLLM SDK adapter that normalizes text, tool calls, usage and errors (`RATE_LIMITED`, `AUTH_FAILED`, `TIMEOUT`, `CAPABILITY_UNSUPPORTED`, `PROVIDER_UNAVAILABLE`, `BUDGET_EXCEEDED`, `INVALID_REQUEST`, `INVALID_RESPONSE`).
   - `agentops_llm.selection.select_provider`: mock by default, replay refuses every model call, and hosted or paid modes need `ENABLE_LIVE_LLM=true`.
 
 - Synthetic data in PostgreSQL 17 + pgvector (feat-002, M0.2), from `datasets/synthetic/`: two tenants (`demo-a`, `demo-b`), four users with viewer/analyst/admin roles, 64 quarterly sales rows and six documents split into 13 citable chunks (`<document-id>#<n>`).
@@ -59,6 +59,9 @@ Phase 1 complete (M0.1 to M5.1: feat-001 to feat-009). What works today:
 - Tenant-isolated run checkpoints (feat-010): a paused run's saved state carries its tenant in the thread id (`<tenant>/thread-<run_id>`) and is protected by row-level security, so another tenant can neither read nor resume it.
 
 - Approvals over HTTP (feat-011): POST /v1/runs with `"propose_followup": true` returns `awaiting_approval` and the bound proposal; POST /v1/runs/{run_id}/approvals/{approval_id} with `{"decision": "approve"}` or `"reject"` records the decision and resumes the run (one ticket at most; a second decision is 409, another user 403, another tenant 404); GET /v1/runs/{run_id} returns the run's current detail.
+
+- Hosted-model support (feat-012, implementation awaiting manual live evidence): Gemini Flash-Lite is allowlisted as gemini/gemini-2.5-flash-lite, with tool calling, JSON-schema output and usage reporting. Live API calls need a live `LLM_MODE`, `ENABLE_LIVE_LLM=true`, `LLM_MODEL` set to that id, `GEMINI_API_KEY` and an explicit `LLM_BUDGET_USD` (default zero). Each call reserves the full input window plus bounded output at bundled LiteLLM prices; reservations are not refunded, even after a timeout. Unknown pricing or insufficient budget fails closed. This is deliberately conservative, not a provider-billing guarantee.
+- The evaluation CLI remains mock by default, even with live environment settings. `--live --budget-usd` explicitly enables hosted workflow calls and caps the entire command; corpus runs also require `--out`. Live benchmark files default to a separate directory so mock evidence stays intact. Real hosted results have not been recorded; see the [manual live procedure](docs/runbooks/operations.md#manual-hosted-evaluation).
 
 There is no endpoint to list runs, and the UI has no live mode or approval screen. See [`docs/known-limitations.md`](docs/known-limitations.md).
 
@@ -131,6 +134,7 @@ Features are declared in [`feature_list.json`](feature_list.json); their state i
 | feat-007 | M3.1 | Sanitized telemetry, feedback API, 50-case evaluation corpus |
 | feat-008 | M4.1 | Three-specialist comparison against the single-workflow baseline |
 | feat-009 | M5.1 | Replay-first Next.js demo and portfolio evidence |
+| feat-012 | Phase 2 | Budgeted Gemini hosted calls and opt-in evaluations; manual live evidence pending |
 
 ## Documentation
 

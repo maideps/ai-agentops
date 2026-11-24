@@ -41,6 +41,45 @@ The role setup in `infra/postgres/init/` runs only on a new volume; after changi
 
 **Rotate the demo token.** Set a new `DEMO_API_TOKEN` and restart the API; old tokens stop working immediately.
 
+## Manual hosted evaluation
+
+Do not run these commands without owner approval of the two command budgets and a
+`GEMINI_API_KEY` supplied through the shell or a secret store. Never paste a key into chat,
+commit it, or include it in recorded output. Default commands and CI stay mock-only.
+
+Set `LLM_MODE=hosted_free` (only after checking the provider's free allowance/terms) or
+`live_paid`, `ENABLE_LIVE_LLM=true`, and the existing database URLs. For the HTTP API also
+set `LLM_MODEL=gemini/gemini-2.5-flash-lite` and a positive `LLM_BUDGET_USD`; its default
+is zero, so flags and a key alone cannot spend.
+
+Example command caps below are **not approval** and may exhaust before all cases finish:
+
+```bash
+uv run python -m agentops_evals run --live --budget-usd 10 --out evals-live.json
+uv run python -m agentops_evals benchmark --live --budget-usd 30
+```
+
+Each command's explicit cap covers both each run and the complete batch. Each dispatched
+call reserves all 1,048,576 input tokens plus the requested maximum output; at 500 output
+tokens this is USD 0.1050576. Reservations are never refunded, including after failures.
+No SDK retries are permitted. Use a provider-side account cap too: SDK prices/ceilings are
+external assumptions, and these counters do not survive a process restart.
+
+The corpus writes every result (including failures) and exits 1 when any expectation fails.
+The live benchmark writes `results-live.json` and `REPORT.md` under
+`benchmarks/orchestration/v1/live/` by default, leaving mock artifacts unchanged, and also
+exits 1 on failed cases. JSON records dataset, commit, model, prompt version, reported usage
+cost and reservation totals. Costs use returned usage at bundled LiteLLM prices, not
+invoices; a timeout can have unknown actual spend covered only by its retained reservation.
+Only workflow cases use the hosted model; gateway/reliability scenarios remain deterministic.
+Some expectations assume scripted model errors or trajectories and may fail live: preserve
+them, inspect the trace ids, and do not present the pass rate as a model-quality score.
+
+Commit code before collecting live evidence so `git_sha` names the tested implementation.
+Record command caps, observed costs, failures, model/pricing version and the report paths
+in the session note; only then close feat-012. Tokenizer downloads on the first Gemini call
+are expected (D-005). Return `LLM_MODE` to mock and `ENABLE_LIVE_LLM` to false afterward.
+
 ## Reviewing feedback and decisions
 
 - Feedback: `uv run python -m agentops_data export-feedback --tenant demo-a` (JSON lines).

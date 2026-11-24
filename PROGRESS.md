@@ -32,4 +32,5 @@ After adding or updating a session note, regenerate this file with `node scripts
 - [Session 012 — 2026-11-19 — feat-010 tenant-isolated checkpoints; CI on Node 24](progress/012-2026-11-19.md)
 - [Session 013 — 2026-11-19 — feat-011 HTTP approvals and run resume](progress/013-2026-11-19.md)
 - [Session 014 — 2026-11-24 — Declare feat-012 hosted-model live run (Gemini Flash-Lite)](progress/014-2026-11-24.md)
+- [Session 015 — 2026-11-24 — feat-012 offline hosted-model checkpoint](progress/015-2026-11-24.md)
 <!-- END GENERATED PROGRESS -->
