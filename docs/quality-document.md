@@ -33,12 +33,20 @@ Ratings are judgments, not measurements: coverage is not measured yet (quality g
 ## Notes
 
 - 2026-11-19: harness adopted (D-001).
-- 2026-11-24: feat-013 implementation in its independent lane adds a synthetic retrieval
+- 2026-11-24: feat-013 passed verify-feature at commit bae0993 in its independent lane.
+  Changed benchmark.py and the retrieval CLI, added datasets/retrieval/v1,
+  testsuite/acceptance/feat_013 and benchmarks/retrieval/v1. Adds a synthetic retrieval
   benchmark without changing ranking. Coverage B: metric denominators, rank cutoffs,
   inaccessible judgments, CLI configuration and real tenant/role retrieval are exercised;
   no coverage percentage or held-out relevance quality is claimed. Type safety A:
   strict mypy. Documentation B: reproducible commands, provenance and limits are explicit.
-  Gate evidence and measured baseline are recorded at session close.
+  Twelve acceptance tests, 94 offline tests, 120 integration tests and nine UI e2e pass.
+  Measured Recall@3=1.0 and MRR=1.0 across 12 answerable queries, with four unscored
+  access queries and no forbidden hits. These synthetic vocabulary-overlap scores do
+  not change the B coverage/performance judgments. Optional quality/multi-repo gates
+  remain SKIP, not verified. Sprint rubric: correctness B (minor CLI/typing fixes),
+  completeness A, cleanliness A, continuity B (documented init/worktree and landing
+  constraints); overall B.
 - 2026-11-19: feat-001 (M0.1) passed verify-feature at commit bd1f4e7. Added `apps/api/agentops_api` (Settings with mock default and live opt-in validator, JSON log formatter, health router, `create_app` factory) and `testsuite/` (network guard, settings env isolation, 16 tests). Type safety A: mypy strict clean over app and tests. Test coverage B: every declared behavior has an acceptance test; no coverage number yet. Documentation B: README, STANDARDS and D-003/D-004 updated; no API reference beyond FastAPI's generated OpenAPI.
 - 2026-11-19: feat-003 (M1.1) passed verify-feature at commit b770f9d. Added `packages/core/agentops_core/llm` (typed contracts, error codes, deny-by-default capability registry, `LLMGateway`) and `packages/llm/agentops_llm` (scripted mock, LiteLLM adapter, provider selection, LiteLLM test stub); 36 feat-003 tests, 52 in the suite. Core: coverage A (every contract path exercised by the shared suite against two adapters; mutation spot-check of the capability check and live opt-in both caught), type safety A (mypy strict, no `Any`). LLM adapters: type safety B (the LiteLLM adapter handles SDK objects as `Any`), coverage B (no live provider exercised; error mapping verified with real LiteLLM exception classes).
 - 2026-11-19: feat-002 (M0.2) passed verify-feature at commit bc63625 (all five layers, including the integration suite against Postgres). Added `packages/data/agentops_data` (SQL migrations with checksum drift detection, deterministic seed, typed tenant-scoped reads with role-based document access, migrate/seed CLI), `docker-compose.yml`, `infra/postgres/init/`, `datasets/synthetic/`, and the database readiness check in `apps/api/agentops_api/health.py`. Data package: coverage A (31 acceptance tests; tests were run failing before the implementation; mutation spot-checks of row-level security, the read-only grant and the role filter were each caught), type safety A (mypy strict). Infra: no automated check of the init script beyond the tests that depend on it.

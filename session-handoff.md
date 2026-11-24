@@ -4,22 +4,27 @@ Fill this at session end for large sessions; keep it current otherwise.
 
 ## Current Objective
 
-- Goal: Complete feat-013 retrieval relevance baseline in its independent lane. feat-012 belongs to the other agent on main; its planned appearance here reflects the approved older lane base, not main's current state.
-- Current status: feat-001 to feat-011 passing (feat-011 at 9f7ae40).
+- Goal: feat-013 retrieval relevance baseline is gate-verified in its independent lane. feat-012 belongs to the other agent on main; its planned appearance here reflects the approved older lane base, not main's current state.
+- Current status: feat-001 to feat-011 and feat-013 passing; no active feature in this lane. feat-013 gate at bae0993, measured implementation at dc644a3.
 - Branch / commit: lane/feat-013, based on 120d21d before feat-012 activation.
 
 ## Completed This Session
 
 - [x] Independent worktree and feature declaration/activation approved by the owner.
 - [x] Read-only retrieval benchmark and 16 synthetic queries; no ranking change or model calls.
-- [x] Eleven focused acceptance tests pass using agentops_feat013_test, not the shared test database.
+- [x] Twelve focused acceptance tests pass using agentops_feat013_test, not the shared test database.
+- [x] Committed benchmark: Recall@3=1.0, MRR=1.0 for 12 answerable queries; four unscored access cases; zero forbidden hits.
+- [x] Feature gate passed all four declared layers; evidence shard/trail recorded.
 
 ## Verification Evidence
 
 | Check | Command | Result | Notes |
 |---|---|---|---|
-| Retrieval acceptance | `uv run pytest testsuite/acceptance/feat_013 -q` | PASS, 11 tests | Isolated local PostgreSQL |
-| Final check / gate | Full check, measured corpus, verify-feature | Pending final verification | Final results in progress/015 |
+| Retrieval acceptance | `uv run pytest testsuite/acceptance/feat_013 -q` | PASS, 12 tests | Isolated local PostgreSQL |
+| Full check | `npm run check` | PASS, 94 offline tests and nine UI e2e | Lint, types, architecture and production UI build |
+| Database regressions | `uv run pytest testsuite -q -m "integration and not live"` | PASS, 120 tests | Isolated database and actual GITHUB_SHA |
+| Feature gate | `npm run verify-feature -- feat-013` | PASS, four layers at bae0993 | Layer 3 includes unconfigured framework e2e, multi-repo and quality SKIPs; actual UI e2e passed |
+| Measured baseline | `python -m agentops_retrieval benchmark` | 1.0 Recall@3, 1.0 MRR, zero forbidden hits | benchmarks/retrieval/v1/results.json, implementation dc644a3 |
 
 ## Files Changed
 
@@ -46,4 +51,4 @@ Fill this at session end for large sessions; keep it current otherwise.
 
 ## Recommended Next Step
 
-- Finish the lane gate/evidence, then obtain separate approval before landing. No live provider call is needed or authorized for feat-013.
+- Obtain separate approval before landing the committed lane. Preserve feat-012 changes and reconcile shared docs/session numbering. No live provider call is needed or authorized for feat-013.

@@ -25,7 +25,7 @@ Phase 1 complete (M0.1 to M5.1: feat-001 to feat-009). What works today:
   - `agentops_llm.litellm_provider.LiteLLMProvider`: LiteLLM SDK adapter that normalizes text, tool calls, usage and errors (`RATE_LIMITED`, `AUTH_FAILED`, `TIMEOUT`, `CAPABILITY_UNSUPPORTED`, `PROVIDER_UNAVAILABLE`, `BUDGET_EXCEEDED`, `INVALID_REQUEST`, `INVALID_RESPONSE`). Its capability registry holds no live models yet, so no live call is possible without registering one.
   - `agentops_llm.selection.select_provider`: mock by default, replay refuses every model call, and hosted or paid modes need `ENABLE_LIVE_LLM=true`.
 
-- Synthetic data in PostgreSQL 17 + pgvector (feat-002, M0.2), from `datasets/synthetic/`: two tenants (`demo-a`, `demo-b`), four users with viewer/analyst/admin roles, 64 quarterly sales rows and six documents split into 13 citable chunks (`<document-id>#<n>`).
+- Synthetic data in PostgreSQL 17 + pgvector (feat-002, M0.2), from `datasets/synthetic/`: two tenants (`demo-a`, `demo-b`), four users with viewer/analyst/admin roles, 64 quarterly sales rows and seven documents split into 16 citable chunks (`<document-id>#<n>`).
   - Row-level security keeps each tenant's rows invisible to the other; the read-only analytics login cannot insert, update, delete, truncate, alter or drop anything.
   - Typed reads in `agentops_data.access`: `revenue_by_quarter`, `quarterly_sales`, `documents_for_user` and `document_chunks`, filtered by the user's role (viewer sees public documents, analyst public and internal, admin everything).
   - GET /health/ready checks the database when `DATABASE_URL` is set and answers 503 `not_ready` when it is unreachable.
@@ -60,7 +60,7 @@ Phase 1 complete (M0.1 to M5.1: feat-001 to feat-009). What works today:
 
 - Approvals over HTTP (feat-011): POST /v1/runs with `"propose_followup": true` returns `awaiting_approval` and the bound proposal; POST /v1/runs/{run_id}/approvals/{approval_id} with `{"decision": "approve"}` or `"reject"` records the decision and resumes the run (one ticket at most; a second decision is 409, another user 403, another tenant 404); GET /v1/runs/{run_id} returns the run's current detail.
 
-- A read-only retrieval benchmark (feat-013): 16 versioned synthetic queries measure the existing hashing/pgvector search. Recall@k and MRR cover the 12 queries with accessible relevant chunks; four no-accessible-evidence queries are reported separately, not given perfect scores. Reports contain chunk ids/hashes, model and commit provenance, and forbidden-hit counts, never retrieved text. Ranking is unchanged and no model is called. See the [retrieval baseline procedure and limitations](docs/retrieval-baseline.md).
+- A read-only retrieval benchmark (feat-013): 16 versioned synthetic queries measure the existing hashing/pgvector search. Recall@k and MRR cover the 12 queries with accessible relevant chunks; four no-accessible-evidence queries are reported separately, not given perfect scores. Reports contain chunk ids/hashes, model and commit provenance, and forbidden-hit counts, never retrieved text. Ranking is unchanged and no model is called. The [recorded synthetic baseline](benchmarks/retrieval/v1/results.json) has Recall@3 1.0, MRR 1.0 and zero forbidden hits; this is not held-out retrieval quality. See the [procedure and limitations](docs/retrieval-baseline.md).
 
 There is no endpoint to list runs, and the UI has no live mode or approval screen. See [`docs/known-limitations.md`](docs/known-limitations.md).
 
