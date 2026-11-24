@@ -1,10 +1,10 @@
 # Orchestration benchmark: single workflow vs. specialists
 
 - Benchmark: orch-bench-v1.0.0
-- Dataset: evals-v1.0.0
-- Commit: 3adeb9f9bf381ed3468b44753c7cc7dad7d7f138
+- Dataset: evals-v1.1.0
+- Commit: ea398c9e275340f1db058a02b6bc47efdf669771
 - Mode: mock (provider mock, model mock-deterministic-v1); hosted-model numbers: none
-- Prompt versions: single 4a2aeafab709, specialists 62ad462853f4
+- Prompt versions: single 24b6ccb937c7, specialists 331f504c5950
 - Sample size: 42 workflow cases, each run once per orchestration
 
 | Metric | Single workflow | Specialists |
@@ -13,11 +13,11 @@
 | Supported findings (citation check) | 89.1% | 89.1% |
 | Model calls per run (mean) | 1.81 | 2.74 |
 | Tool calls per run (mean) | 1.57 | 1.55 |
-| Tokens per run (mean, estimate) | 191 | 230 |
-| Latency p50 / p95 (ms, local) | 159 / 208 | 172 / 238 |
-| Cost (USD) | 0.00 | 0.00 |
+| Tokens per run (mean, estimate) | 228 | 271 |
+| Latency p50 / p95 (ms, local) | 200 / 294 | 241 / 331 |
+| Reported usage cost (USD) | 0.000000 | 0.000000 |
 
-**Recommendation: keep_single_workflow.** Specialists reached 42/42 expected outcomes vs 42/42, so they do not measurably win; they cost 2.74 model calls and 230 tokens per run vs 1.81 and 191.
+**Recommendation: keep_single_workflow.** Specialists reached 42/42 expected outcomes vs 42/42, so they do not measurably win; they cost 2.74 model calls and 271 tokens per run vs 1.81 and 228.
 
 Cases where the orchestrations differ: none.
 
