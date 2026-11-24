@@ -35,6 +35,11 @@ Ratings are judgments, not measurements: coverage is not measured yet (quality g
   test coverage B, type safety B/A respectively, documentation B, architecture A, performance B.
   Evaluation: coverage B, type safety A, documentation B, architecture A, performance B.
   Ratings are judgments; no live quality or provider-billing measurement is claimed.
+- **feat-014 passing:** planning receives the tenant's quarters and the sales tool defaults
+  to the two most recent; corpus evals-v1.1.0 tasks name their period. Live run: 2
+  abstentions (was 36), 30 of 42 workflows reach report writing, 5 complete; report calls
+  mostly fail on provider 503s and network outages. Workflow and tools: test coverage B,
+  type safety A, documentation B, architecture A, performance B.
 
 ## Notes
 
