@@ -55,7 +55,7 @@ is zero, so flags and a key alone cannot spend.
 Example command caps below are **not approval** and may exhaust before all cases finish:
 
 ```bash
-uv run python -m agentops_evals run --live --budget-usd 10 --out evals-live.json
+uv run python -m agentops_evals run --live --budget-usd 10 --out benchmarks/evals/v1/live/evals-live.json
 uv run python -m agentops_evals benchmark --live --budget-usd 30
 ```
 
