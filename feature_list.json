@@ -489,6 +489,43 @@
           "repair": "Start Docker, check the compose healthcheck and migrations, fix failing integration tests and rerun."
         }
       ]
+    },
+    {
+      "id": "feat-015",
+      "name": "Phase 2: hosted-call reliability",
+      "behavior": "The default per-call output limit (MAX_OUTPUT_TOKENS) is 1,024 tokens, so a three-finding hosted report is not cut off; a provider reply that stops at the output limit fails with OUTPUT_TRUNCATED instead of a generic validation error. Transient provider failures (HTTP 503/unavailable and connection errors) are retried at most twice with bounded backoff; every attempt reserves budget exactly like a new call before dispatch, retained reservations are never refunded, and a retry that the run or command budget cannot cover is not sent. Rate limits (429), authentication, invalid requests and budget refusals are never retried. Each run records its retry count. Mock mode and default CI make no network calls. A new owner-approved, budget-capped live corpus and benchmark run on evals-v1.1.0 records results for comparison with feat-014. Requirements: FR-011, NFR-005, NFR-009.",
+      "verification": "Offline acceptance tests with stubbed completions: a 503 then success completes with one retry and two reservations; three 503s fail as PROVIDER_UNAVAILABLE after exactly three attempts; a 429 or invalid request is attempted once; a retry the remaining budget cannot cover is not dispatched; a length-limited reply fails as OUTPUT_TRUNCATED; the default output limit is 1,024. The owner-run live corpus/benchmark is a documented manual step, not CI.",
+      "dependencies": [
+        "feat-012",
+        "feat-014"
+      ],
+      "layers": [
+        {
+          "label": "Layer 1: Harness and architecture checks",
+          "cmd": "node scripts/framework-check.mjs lint && npm run check-arch && node scripts/framework-check.mjs typecheck",
+          "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
+        },
+        {
+          "label": "Layer 2: Python static checks",
+          "cmd": "uv run ruff check . && uv run ruff format --check . && uv run mypy",
+          "repair": "Fix Ruff findings (or run uv run ruff format .) and mypy errors, then rerun."
+        },
+        {
+          "label": "Layer 3: Offline acceptance tests feat-015",
+          "cmd": "uv run pytest testsuite/acceptance/feat_015 -q -m \"not integration\"",
+          "repair": "Fix the code until the declared behavior holds; a test that contradicts the behavior is fixed in the same commit."
+        },
+        {
+          "label": "Layer 4: Default regression suite (no network, no Docker)",
+          "cmd": "uv run pytest testsuite -q -m \"not live and not integration\"",
+          "repair": "Fix the regression this feature introduced; do not mark tests skipped to pass."
+        },
+        {
+          "label": "Layer 5: Integration suite (stubbed provider, local Postgres)",
+          "cmd": "docker compose up -d --wait postgres && uv run pytest testsuite -q -m \"integration and not live\"",
+          "repair": "Start Docker, check the compose healthcheck and migrations, fix failing integration tests and rerun."
+        }
+      ]
     }
   ]
 }
