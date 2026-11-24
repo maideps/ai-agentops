@@ -70,7 +70,9 @@ There is no endpoint to list runs, and the UI has no live mode or approval scree
 The optional [retrieval stress corpus](docs/retrieval-baseline.md#stress-corpus-v2)
 (feat-015) adds 28 synthetic questions: paraphrases, multi-chunk answers, distracting
 topics and access-negative cases. Select it with `--dataset`; the default v1 corpus
-and ranking are unchanged. Neither corpus measures held-out real-world quality.
+and ranking are unchanged. The [paired comparison](benchmarks/retrieval/stress-v2/REPORT.md)
+records stress Recall@3 0.7639 and MRR 0.7361 versus v1 1.0/1.0, with zero forbidden
+hits in both. Neither corpus measures held-out real-world quality.
 
 ## Quick Start
 

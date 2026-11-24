@@ -39,12 +39,19 @@ Ratings are judgments, not measurements: coverage is not measured yet (quality g
 
 ## Notes
 
-- 2026-11-24: feat-015 adds a separately versioned synthetic stress corpus and actual
+- 2026-11-24: feat-015 passed its four-layer gate at cb5aafb. Adds a separately
+  versioned synthetic stress corpus, paired reports/comparison and actual
   CLI acceptance, reusing unchanged retrieval code. Coverage B: both dataset selections,
   reproducibility, access-negative metrics and partially inaccessible multi-chunk
   judgments are exercised; no coverage percentage or real-world quality is claimed.
   Type safety A uses strict mypy; documentation B describes manual judgment intent,
-  paired reproduction and limitations. Measured comparison and gate follow the corpus commit.
+  paired reproduction and limitations. Fourteen focused benchmark tests, 124 offline
+  tests and nine UI e2e pass; mypy checks 110 source files. Corpus/code d6f0c3b:
+  stress Recall@3 0.7639, MRR 0.7361 versus v1 1.0/1.0; four complete misses and four
+  partial retrievals, both runs zero forbidden hits. No ranking/source/v1 changes.
+  Optional unconfigured framework layers are SKIP. Sprint: correctness B (two
+  natural-language judgment fixes before measurement), completeness A, cleanliness A,
+  continuity B (documented init/parallel-landing constraints), overall B.
 - 2026-11-19: harness adopted (D-001).
 - 2026-11-24: feat-013 passed verify-feature at commit bae0993 in its independent lane,
   then passed a fresh combined-tree gate at ab39535 after integrating completed feat-012.

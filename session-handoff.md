@@ -3,7 +3,7 @@
 ## Current Objective
 
 - feat-015: retrieval stress corpus, in lane/feat-015 at the approved main base 19a4a06.
-- Thirteen features passing; only feat-015 active here. feat-014 is the other agent's
+- All declared features passing; none active here. feat-015 gate at cb5aafb. feat-014 is the other agent's
   work in the original checkout, deliberately not inherited or modified.
 
 ## Completed
@@ -16,7 +16,10 @@
 
 - Baseline static checks, 124 offline tests and nine UI e2e passed after restoring missing lane web dependencies.
 - Fourteen focused benchmark tests passed using isolated agentops_feat015_test.
-- Commit-bound paired reports, full check and feat-015 gate are the remaining steps.
+- Full check passed: 124 offline tests, nine UI e2e, 14 architecture rules and strict mypy.
+- Paired runs at d6f0c3b: stress Recall@3 0.7639 / MRR 0.7361 versus v1 1.0/1.0;
+  four misses, four partial retrievals, zero forbidden hits in both. See benchmarks/retrieval/stress-v2/REPORT.md.
+- feat-015 gate passed four layers at cb5aafb with bound state/trail; optional framework layers report SKIP.
 
 ## Decisions and Limits
 
@@ -29,6 +32,6 @@
 
 ## Next Session
 
-Read AGENTS.md, the brief and progress/019-2026-11-24.md. Finish the gate and paired
-comparison, then obtain separate approval before pushing/landing. Preserve the other
+Read AGENTS.md, the brief and progress/019-2026-11-24.md. Obtain separate approval
+before pushing/landing the committed passing lane. Preserve the other
 agent's feat-014 work and reconcile shared docs/session numbering at landing.
