@@ -452,6 +452,43 @@
           "repair": "Fix Layer 4: Retrieval acceptance failures and rerun the layer command."
         }
       ]
+    },
+    {
+      "id": "feat-014",
+      "name": "Phase 2: hosted planning knows the available sales quarters",
+      "behavior": "Before each planning model call that offers get_sales_summary, the workflow reads the caller tenant's available sales quarters through the read-only analytics connection (row-level security applies) and states them in the system prompt, with the rule to compare the two most recent quarters when the task names no period and to use only listed quarters; with no sales data the prompt says so. get_sales_summary accepts from_quarter and to_quarter together or neither: when both are omitted it compares the tenant's two most recent quarters with data, and its description says so; supplying only one is INVALID_ARGUMENTS. Explicitly requested quarters without data still abstain with NO_SALES_DATA. Prompt templates keep a stable prompt_version; mock scripts, replays and default CI make no network calls. A new owner-approved, budget-capped live corpus and benchmark run records results for comparison with feat-012. Requirements: FR-002, FR-004, FR-012, NFR-006.",
+      "verification": "Offline acceptance tests with stubbed completions: the planning request contains the tenant's quarter range and two-most-recent rule and never another tenant's quarters; a tenant with no sales gets the no-data statement; omitted quarters resolve to the two most recent quarters with data; a single omitted quarter is INVALID_ARGUMENTS; explicit quarters without data abstain with NO_SALES_DATA. The owner-run live corpus/benchmark is a documented manual step, not CI.",
+      "dependencies": [
+        "feat-004",
+        "feat-012"
+      ],
+      "layers": [
+        {
+          "label": "Layer 1: Harness and architecture checks",
+          "cmd": "node scripts/framework-check.mjs lint && npm run check-arch && node scripts/framework-check.mjs typecheck",
+          "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
+        },
+        {
+          "label": "Layer 2: Python static checks",
+          "cmd": "uv run ruff check . && uv run ruff format --check . && uv run mypy",
+          "repair": "Fix Ruff findings (or run uv run ruff format .) and mypy errors, then rerun."
+        },
+        {
+          "label": "Layer 3: Offline acceptance tests feat-014",
+          "cmd": "uv run pytest testsuite/acceptance/feat_014 -q -m \"not integration\"",
+          "repair": "Fix the code until the declared behavior holds; a test that contradicts the behavior is fixed in the same commit."
+        },
+        {
+          "label": "Layer 4: Default regression suite (no network, no Docker)",
+          "cmd": "uv run pytest testsuite -q -m \"not live and not integration\"",
+          "repair": "Fix the regression this feature introduced; do not mark tests skipped to pass."
+        },
+        {
+          "label": "Layer 5: Integration suite (stubbed provider, local Postgres)",
+          "cmd": "docker compose up -d --wait postgres && uv run pytest testsuite -q -m \"integration and not live\"",
+          "repair": "Start Docker, check the compose healthcheck and migrations, fix failing integration tests and rerun."
+        }
+      ]
     }
   ]
 }

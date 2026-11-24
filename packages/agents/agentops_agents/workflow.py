@@ -51,7 +51,7 @@ from agentops_core.llm import (
     ResponseSchema,
     ToolCall,
 )
-from agentops_data.access import UnknownPrincipalError, principal_role
+from agentops_data.access import UnknownPrincipalError, principal_role, revenue_by_quarter
 from agentops_llm.mock import approx_tokens
 from agentops_retrieval.embedding import Embedder
 from agentops_telemetry.tracing import span
@@ -74,6 +74,13 @@ ANALYST_PROMPT = (
     "You are the data analyst specialist. Measure the sales changes the task asks about with "
     "the sales tool only. Never pass tenant or user identifiers."
 )
+# Appended to a planning prompt that offers the sales tool (feat-014): a hosted model cannot
+# know which quarters the synthetic data covers, and invented quarters return no data.
+QUARTERS_CONTEXT = (
+    "Sales data for this tenant covers these quarters: {quarters}. Use only these quarters. "
+    "If the task names no period, compare the two most recent: {previous} to {latest}."
+)
+NO_QUARTERS_CONTEXT = "No sales data is available for this tenant."
 ROLE_TOOLS: dict[str, frozenset[str]] = {
     "research": frozenset({"search_approved_documents"}),
     "analyst": frozenset({"get_sales_summary"}),
@@ -234,6 +241,8 @@ class _Run:
         *,
         abstain_if_empty: bool,
     ) -> dict[str, Any]:
+        if "get_sales_summary" in tools:
+            prompt = f"{prompt}\n\n{await self._quarters_context(state)}"
         request = ModelRequest(
             run_id=state["run_id"],
             messages=[
@@ -251,6 +260,15 @@ class _Run:
         if abstain_if_empty and not response.tool_calls:
             return {**update, "status": RunStatus.ABSTAINED.value, "abstain_reason": "NO_EVIDENCE"}
         return update
+
+    async def _quarters_context(self, state: AgentRunState) -> str:
+        quarters = list(await asyncio.to_thread(revenue_by_quarter, self.db, state["tenant_id"]))
+        if not quarters:
+            return NO_QUARTERS_CONTEXT
+        previous = quarters[-2] if len(quarters) > 1 else quarters[-1]
+        return QUARTERS_CONTEXT.format(
+            quarters=", ".join(quarters), previous=previous, latest=quarters[-1]
+        )
 
     async def plan(self, state: AgentRunState) -> dict[str, Any]:
         return await self._plan(state, self.deps.tools, PLAN_PROMPT, abstain_if_empty=True)
@@ -772,5 +790,5 @@ def prompt_version(orchestration: Orchestration = "single") -> str:
         [PLAN_PROMPT, REPORT_PROMPT]
         if orchestration == "single"
         else [RESEARCH_PROMPT, ANALYST_PROMPT, REPORT_PROMPT]
-    )
+    ) + [QUARTERS_CONTEXT, NO_QUARTERS_CONTEXT]
     return hashlib.sha256("\n".join(prompts).encode()).hexdigest()[:12]
