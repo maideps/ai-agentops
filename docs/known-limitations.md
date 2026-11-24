@@ -4,8 +4,8 @@ What AI AgentOps does not do or has not shown yet, as of feat-009. Each item nam
 
 ## Evidence and measurement
 
-- **No hosted model has been run.** Every result (tests, the 50-case corpus, the orchestration benchmark, the replays) uses scripted model replies. The platform's enforcement is measured; answer quality is not (D-011, D-012).
-- **The live adapter has never reached a provider.** Gemini Flash-Lite is registered and tested with stubbed completions, but a real owner-approved corpus/benchmark run is still pending (D-016).
+- **One hosted run, no quality baseline.** Tests, replays and the default corpus/benchmark use scripted replies. A single free-tier Gemini 3.5 Flash-Lite run exists (corpus 11/50, benchmark 5/42): the model abstained after one call in most workflow cases, so answer quality is effectively unmeasured and the workflow prompts are not yet tuned for a hosted model (D-011, D-012, D-016).
+- **Free-tier rate limits surface as failures.** No retries are allowed under a budget, so provider throttling ends a case as failed with zero reported cost (four corpus cases in the first live run). Model availability can also change: `gemini-2.5-flash-lite` was withdrawn for new users and replaced (D-016 amendment).
 - **Budget reservations are conservative and process-local.** Each call reserves the full input window plus bounded output, with no refund. A small budget may refuse even a short prompt. Prices and token ceilings come from the bundled SDK map, not an invoice or provider-enforced account limit; persistent account-wide budgets remain unimplemented (D-016).
 - **Live evaluation is not a replacement quality corpus.** Gateway/reliability scenarios stay mocked, and workflow expectations include scripted errors/trajectories that a real model may not produce. Reports preserve those failures instead of claiming a quality score.
 - **Retrieval is lexical.** The hashing embedder matches shared words, not meaning; retrieval quality on real text is unmeasured (D-008).

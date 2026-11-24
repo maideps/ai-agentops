@@ -28,8 +28,9 @@ Ratings are judgments, not measurements: coverage is not measured yet (quality g
 - **Overall Quality Grade:** B (Phase 1 complete)
 - **Blockers:** none
 - **Areas requiring attention:** coverage not measured; uvicorn access logs are not JSON; `./init.sh` unusable until the harness supports uv (D-004); LiteLLM's Gemini/Groq paths download a tokenizer on first live call (D-005).
-- **feat-012 checkpoint:** hosted calls and live evaluation are implemented and tested with
-  stubs; real hosted evidence is pending, so the feature remains active. LLM adapter and API:
+- **feat-012 passing:** hosted calls and live evaluation are tested with stubs and one
+  owner-run free-tier Gemini 3.5 Flash-Lite run (corpus 11/50, benchmark 5/42; mostly
+  abstentions, not a quality score). LLM adapter and API:
   test coverage B, type safety B/A respectively, documentation B, architecture A, performance B.
   Evaluation: coverage B, type safety A, documentation B, architecture A, performance B.
   Ratings are judgments; no live quality or provider-billing measurement is claimed.
