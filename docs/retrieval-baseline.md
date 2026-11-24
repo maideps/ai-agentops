@@ -41,7 +41,24 @@ Each uses k=3.
 
 JSON records dataset version and canonical-content SHA-256, supplied git SHA, embedding
 model, per-query ids/distances/source hashes and aggregates. Retrieved text is not copied.
-The committed measured baseline will be recorded after the implementation commit.
+
+## Recorded v1 baseline
+
+The [measured JSON report](../benchmarks/retrieval/v1/results.json) was generated on
+2026-11-24 from implementation commit `dc644a3c766f3c3149b447ccb9ff72f09cbea2e9`,
+after seeding and indexing the isolated synthetic database with `hashing-v1-256`.
+
+| Measurement | Result |
+|---|---|
+| Total / answerable / no-accessible-evidence queries | 16 / 12 / 4 |
+| Mean Recall@3 (answerable queries only) | 1.0 |
+| MRR (answerable queries only) | 1.0 |
+| Forbidden hits | 0 |
+
+All 12 answerable queries found their judged chunk at rank one. This result is a
+regression baseline on the curated seeded vocabulary, **not** a held-out quality score.
+The four unanswerable/access queries remain unscored; returned candidates are not
+evidence that the system can answer or abstain correctly.
 
 ## Limits
 
