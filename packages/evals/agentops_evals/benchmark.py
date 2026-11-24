@@ -70,6 +70,7 @@ class CaseRun(BaseModel):
     latency_ms: float
     cost_usd: float = 0.0
     reserved_usd: float = 0.0
+    retries: int = 0
 
 
 class CaseRef(BaseModel):
@@ -187,6 +188,7 @@ def _run(
         latency_ms=round(latency_ms, 1),
         cost_usd=live_provider.spent_usd(run_id) if live_provider else 0.0,
         reserved_usd=live_provider.reserved_usd(run_id) if live_provider else 0.0,
+        retries=live_provider.retries(run_id) if live_provider else 0,
     )
 
 
@@ -266,6 +268,7 @@ def run_benchmark(
         hosted_model_numbers={
             "cost_usd_total": sum(r.cost_usd for r in runs),
             "reserved_usd_total": sum(r.reserved_usd for r in runs),
+            "retries_total": sum(r.retries for r in runs),
         }
         if live_provider is not None
         else None,

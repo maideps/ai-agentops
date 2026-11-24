@@ -60,6 +60,7 @@ class EvalReport(BaseModel):
     mode: Literal["mock", "live"] = "mock"
     cost_usd_total: float = 0.0
     reserved_usd_total: float = 0.0
+    retries_total: int = 0
     limitations: list[str] = Field(default_factory=list)
 
 
@@ -197,6 +198,7 @@ def run_case(
                 "model_mode": "live" if live_provider is not None else "mock",
                 "cost_usd": live_provider.spent_usd(run_id) if live_provider else 0.0,
                 "reserved_usd": live_provider.reserved_usd(run_id) if live_provider else 0.0,
+                "retries": live_provider.retries(run_id) if live_provider else 0,
             }
         else:
             ctx = CallContext(tenant_id=case.tenant_id, user_id=case.user_id, run_id=run_id)
@@ -255,6 +257,7 @@ def run_corpus(
         mode="live" if live_provider is not None else "mock",
         cost_usd_total=sum(r.observed.get("cost_usd", 0.0) for r in results),
         reserved_usd_total=sum(r.observed.get("reserved_usd", 0.0) for r in results),
+        retries_total=sum(int(r.observed.get("retries", 0)) for r in results),
         limitations=[
             "Live workflow calls only; gateway/reliability scenarios remain deterministic mocks.",
             "Expectations include scripted model errors and tool trajectories; live failures "

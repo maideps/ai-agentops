@@ -106,6 +106,7 @@ def test_corpus_uses_live_workflows_but_labels_mock_scenarios(
     assert report.cost_usd_total == 0.1
     assert report.reserved_usd_total == 0.1
     assert [r.observed["model_mode"] for r in report.results] == ["live", "mock"]
+    assert report.results[0].observed["retries"] == 0 and report.retries_total == 0
     assert report.limitations
 
 
@@ -121,7 +122,11 @@ def test_benchmark_runs_both_designs_live_and_keeps_costs(
     assert set(report.prompt_versions) == {"single", "specialists"}
     assert report.aggregates["single"].cost_usd_total == 0.1
     assert report.aggregates["specialists"].cost_usd_total == 0.1
-    assert report.hosted_model_numbers == {"cost_usd_total": 0.2, "reserved_usd_total": 0.2}
+    assert report.hosted_model_numbers == {
+        "cost_usd_total": 0.2,
+        "reserved_usd_total": 0.2,
+        "retries_total": 0,
+    }
     json_path, md_path = benchmark.write_benchmark(report, tmp_path)
     assert json_path.name == "results-live.json"
     assert "hosted-model numbers: none" not in md_path.read_text(encoding="utf-8")

@@ -43,7 +43,8 @@ real-model quality rubric. Manual live evidence requires separate owner approval
 ## Consequences and assumptions
 
 Short prompts can be refused by small budgets. Every 500-output-token call reserves
-USD 0.3158228 even when reported usage costs much less. A failed call's invoice cost
+USD 0.3158228 (USD 0.3171328 at the feat-015 default of 1,024 output tokens) even when
+reported usage costs much less. A failed call's invoice cost
 can be unknown; retained reservations are not evidence of actual spend.
 
 The bound assumes the provider honors its registered input/output ceilings, the bundled

@@ -34,7 +34,7 @@ class RunLimits(_Model):
     max_tool_calls: int = Field(default=8, ge=0)
     max_graph_steps: int = Field(default=16, ge=1)
     max_run_seconds: float = Field(default=90, gt=0)
-    max_output_tokens: int = Field(default=500, ge=1)
+    max_output_tokens: int = Field(default=1024, ge=1)
     max_context_tokens: int = Field(default=1500, ge=1)
 
 

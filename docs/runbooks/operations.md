@@ -60,9 +60,11 @@ uv run python -m agentops_evals benchmark --live --budget-usd 30 --out-dir bench
 ```
 
 Each command's explicit cap covers both each run and the complete batch. Each dispatched
-call reserves all 1,048,576 input tokens plus the requested maximum output; at 500 output
-tokens this is USD 0.3158228. Reservations are never refunded, including after failures.
-No SDK retries are permitted. Use a provider-side account cap too: SDK prices/ceilings are
+call reserves all 1,048,576 input tokens plus the requested maximum output; at the default
+1,024 output tokens this is USD 0.3171328. Reservations are never refunded, including after
+failures. No SDK retries are permitted; the adapter itself retries a 503 or connection error at
+most twice (feat-015), and each attempt reserves again, so a cap that covers every first attempt
+(about USD 78.33 corpus, USD 156.66 benchmark) can still stop late cases after many retries. Use a provider-side account cap too: SDK prices/ceilings are
 external assumptions, and these counters do not survive a process restart.
 
 The corpus writes every result (including failures) and exits 1 when any expectation fails.

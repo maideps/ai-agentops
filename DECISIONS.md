@@ -326,3 +326,13 @@ product logic fitted to the synthetic data.
 task without a period now compares Q3 to Q4 and honestly abstains. Prompt versions change and
 recorded replays gain the context tokens. Live results before and after this change use
 different corpus versions; compare them as such.
+**Amendment 2 (2026-11-24, feat-015, owner-approved):** The feat-014 live run lost most report
+calls to HTTP 503 "high demand" and network outages, and a diagnostic report stopped at the
+500-token limit. The adapter now retries a 503 or connection error (not timeouts, rate limits,
+authentication, invalid requests or budget refusals) at most twice with 1 s and 2 s backoff.
+Each attempt reserves like a new call before dispatch and is never refunded; a retry the run or
+command budget cannot cover is not sent and the provider failure is reported. SDK retries stay
+prohibited. The default output limit is 1,024 tokens (reservation USD 0.3171328 per attempt),
+and a reply stopped at that limit fails as `OUTPUT_TRUNCATED` after its usage is costed.
+Evaluation reports record retries per case and in total. Worst-case ceilings now triple with
+retries; command caps bound actual reservations either way.

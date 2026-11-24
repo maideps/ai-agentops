@@ -16,6 +16,8 @@ class LLMErrorCode(StrEnum):
     # Additions (D-005): rejected request, unusable response.
     INVALID_REQUEST = "INVALID_REQUEST"
     INVALID_RESPONSE = "INVALID_RESPONSE"
+    # feat-015: the reply stopped at max_output_tokens, so structured output is incomplete.
+    OUTPUT_TRUNCATED = "OUTPUT_TRUNCATED"
 
 
 _RETRYABLE = frozenset({LLMErrorCode.RATE_LIMITED, LLMErrorCode.TIMEOUT})
