@@ -40,6 +40,10 @@ Ratings are judgments, not measurements: coverage is not measured yet (quality g
   abstentions (was 36), 30 of 42 workflows reach report writing, 5 complete; report calls
   mostly fail on provider 503s and network outages. Workflow and tools: test coverage B,
   type safety A, documentation B, architecture A, performance B.
+- **feat-015 passing:** at most two budget-reserved retries for 503/connection failures,
+  1,024-token default output, OUTPUT_TRUNCATED. Live run: 22 of 42 workflows complete (was 5),
+  27 retries; corpus 11/50 because expectations follow mock trajectories. LLM adapter: test
+  coverage B, type safety A, documentation B, architecture A, performance B.
 
 ## Notes
 
