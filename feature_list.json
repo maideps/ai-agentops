@@ -420,6 +420,38 @@
           "repair": "Start Docker, check the compose healthcheck and migrations, fix failing integration tests and rerun."
         }
       ]
+    },
+    {
+      "id": "feat-013",
+      "name": "Phase 2: retrieval relevance baseline",
+      "behavior": "A versioned synthetic retrieval query set measures the existing permission-filtered HashingEmbedder/pgvector search without changing ranking. The benchmark records per-query retrieved chunk ids, Recall@k and reciprocal rank for answerable queries, labels queries with no accessible relevant evidence separately, and reports any forbidden-document hit. JSON records dataset version, dataset hash, supplied git SHA, embedding model and aggregate Recall@k/MRR. It performs no model calls and uses the read-only analytics role. Requirements: FR-003, NFR-007, NFR-010.",
+      "verification": "Offline metric/schema/CLI tests and local PostgreSQL acceptance tests verify metric denominators, no-relevant-evidence handling, tenant/role filtering and reproducible results. Run the versioned corpus once and record actual measured results, with no unmeasured quality threshold.",
+      "dependencies": [
+        "feat-002",
+        "feat-004"
+      ],
+      "layers": [
+        {
+          "label": "Layer 1: Static checks",
+          "cmd": "npm run lint",
+          "repair": "Fix static-analysis issues and rerun the layer command."
+        },
+        {
+          "label": "Layer 2: Runtime tests",
+          "cmd": "npm run test",
+          "repair": "Fix failing tests and rerun the layer command."
+        },
+        {
+          "label": "Layer 3: System confirmation",
+          "cmd": "npm run check-arch && npm run typecheck && npm run build && npm run e2e && npm run verify-all && npm run quality",
+          "repair": "Resolve cross-layer issues and rerun full verification."
+        },
+        {
+          "label": "Layer 4: Retrieval acceptance",
+          "cmd": "uv run pytest testsuite/acceptance/feat_013 -q",
+          "repair": "Fix Layer 4: Retrieval acceptance failures and rerun the layer command."
+        }
+      ]
     }
   ]
 }

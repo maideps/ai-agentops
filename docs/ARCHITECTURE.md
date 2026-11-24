@@ -67,6 +67,16 @@ Ticket writes go through the `tool_executions` registry: the gateway reserves on
 - The analytics login `agentops_analytics` has `SELECT` only (through `agentops_readonly`) and cannot bypass row-level security; the schema owner `agentops` runs migrations and the seed.
 - Documents are filtered by role access label (`role_document_access`); missing and forbidden documents are indistinguishable to the caller.
 
+## Retrieval Measurement (feat-013, D-008)
+
+`agentops_retrieval.benchmark` measures the unchanged search against
+`datasets/retrieval/v1/queries.json`. It validates relevant judgments against the caller's
+accessible chunk catalog, records ids/hashes rather than text, and scores macro Recall@k
+and MRR only for queries with accessible relevant chunks. Other queries remain explicit
+unscored samples; this nearest-neighbor benchmark does not measure abstention. The caller
+supplies the git SHA (or CI supplies GITHUB_SHA), avoiding an infrastructure dependency on
+the application-level evaluation runner. No provider or policy/write path is added.
+
 ## Enforced Rules
 
 Product rules live in `.harness/arch-rules.json` (ids `arch-101` and up) and run on every `npm run check-arch`:

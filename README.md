@@ -25,7 +25,7 @@ Phase 1 complete (M0.1 to M5.1: feat-001 to feat-009). What works today:
   - `agentops_llm.litellm_provider.LiteLLMProvider`: LiteLLM SDK adapter that normalizes text, tool calls, usage and errors (`RATE_LIMITED`, `AUTH_FAILED`, `TIMEOUT`, `CAPABILITY_UNSUPPORTED`, `PROVIDER_UNAVAILABLE`, `BUDGET_EXCEEDED`, `INVALID_REQUEST`, `INVALID_RESPONSE`).
   - `agentops_llm.selection.select_provider`: mock by default, replay refuses every model call, and hosted or paid modes need `ENABLE_LIVE_LLM=true`.
 
-- Synthetic data in PostgreSQL 17 + pgvector (feat-002, M0.2), from `datasets/synthetic/`: two tenants (`demo-a`, `demo-b`), four users with viewer/analyst/admin roles, 64 quarterly sales rows and six documents split into 13 citable chunks (`<document-id>#<n>`).
+- Synthetic data in PostgreSQL 17 + pgvector (feat-002, M0.2), from `datasets/synthetic/`: two tenants (`demo-a`, `demo-b`), four users with viewer/analyst/admin roles, 64 quarterly sales rows and seven documents split into 16 citable chunks (`<document-id>#<n>`).
   - Row-level security keeps each tenant's rows invisible to the other; the read-only analytics login cannot insert, update, delete, truncate, alter or drop anything.
   - Typed reads in `agentops_data.access`: `revenue_by_quarter`, `quarterly_sales`, `documents_for_user` and `document_chunks`, filtered by the user's role (viewer sees public documents, analyst public and internal, admin everything).
   - GET /health/ready checks the database when `DATABASE_URL` is set and answers 503 `not_ready` when it is unreachable.
@@ -51,7 +51,7 @@ Phase 1 complete (M0.1 to M5.1: feat-001 to feat-009). What works today:
   - POST /v1/runs/{run_id}/feedback stores a thumbs up or down, with an optional comment and evaluation-case id, for the configured demo user (bearer `DEMO_API_TOKEN`); `python -m agentops_data export-feedback --tenant demo-a` exports it.
   - A versioned 50-case evaluation corpus (`datasets/evals/v1`) covering normal, multi-source, missing-evidence, tool-misuse, prompt-injection, access, reliability and budget cases; `python -m agentops_evals run` runs it in mock mode and reports dataset version, git commit, model, prompt version and a trace id per case. All 50 pass. It scores the platform's enforcement with scripted model replies, not model quality.
 
-- An orchestration experiment (feat-008, M4.1): Research, Data Analyst and Reporting roles as LangGraph subgraphs (`orchestration="specialists"`), each limited to its own tool. `python -m agentops_evals benchmark` runs the 42 workflow cases of the evaluation corpus under both designs and writes `benchmarks/orchestration/v1/` (results JSON and `REPORT.md`). In mock mode both reach 42/42 expected outcomes and the specialists need about one more model call per run (2.74 vs 1.81), so the single workflow stays the default. Mock mode cannot compare answer quality; no hosted-model numbers exist yet.
+- An orchestration experiment (feat-008, M4.1): Research, Data Analyst and Reporting roles as LangGraph subgraphs (`orchestration="specialists"`), each limited to its own tool. `python -m agentops_evals benchmark` runs the 42 workflow cases of the evaluation corpus under both designs and writes `benchmarks/orchestration/v1/` (results JSON and `REPORT.md`). In mock mode both reach 42/42 expected outcomes and the specialists need about one more model call per run (2.74 vs 1.81), so the single workflow stays the default. Mock mode cannot compare answer quality; the separate hosted evidence is summarized below.
 
 - A replay-first demo UI (feat-009, M5.1) in `apps/web`: a static Next.js site that shows five recorded synthetic runs (the cited sample, a viewer denied by policy, missing data, a prompt injection, and a ticket written after human approval) with their report, evidence, policy decisions, approval and trace id. It makes no request to any backend or model provider. Replays are recorded with `python -m agentops_evals record-replays` into `fixtures/replays/`.
 - An optional live mode on the API: POST /v1/runs runs a task for the demo user (bearer `DEMO_API_TOKEN`), capped at `MAX_REQUESTS_PER_DEMO_USER` runs per day. In mock mode it uses a named scripted-reply file from `fixtures/llm/`.
@@ -62,6 +62,8 @@ Phase 1 complete (M0.1 to M5.1: feat-001 to feat-009). What works today:
 
 - Hosted-model support (feat-012): Gemini Flash-Lite is allowlisted as gemini/gemini-3.5-flash-lite, with tool calling, JSON-schema output and usage reporting. Live API calls need a live `LLM_MODE`, `ENABLE_LIVE_LLM=true`, `LLM_MODEL` set to that id, `GEMINI_API_KEY` and an explicit `LLM_BUDGET_USD` (default zero). Each call reserves the full input window plus bounded output at bundled LiteLLM prices; reservations are not refunded, even after a timeout. Unknown pricing or insufficient budget fails closed. This is deliberately conservative, not a provider-billing guarantee.
 - The evaluation CLI remains mock by default, even with live environment settings. `--live --budget-usd` explicitly enables hosted workflow calls and caps the entire command; corpus runs also require `--out`. Live benchmark files default to a separate directory so mock evidence stays intact. The first owner-approved live run (free tier, 2026-11-24) is recorded in `benchmarks/evals/v1/live/` and `benchmarks/orchestration/v1/live/`: corpus 11/50 and benchmark 5/42 for both orchestrations, at about USD 0.024 reported usage. The model abstained without tool calls in most workflow cases, and many expectations assume scripted mock trajectories, so these are not quality scores; see the [manual live procedure](docs/runbooks/operations.md#manual-hosted-evaluation).
+
+- A read-only retrieval benchmark (feat-013): 16 versioned synthetic queries at k=3 measure the existing hashing/pgvector search. Recall@k and MRR cover the 12 queries with accessible relevant chunks; four no-accessible-evidence queries are reported separately, not given perfect scores. Reports contain chunk ids/hashes, model and commit provenance, and forbidden-hit counts, never retrieved text. Ranking is unchanged and no model is called. The [recorded synthetic baseline](benchmarks/retrieval/v1/results.json) has Recall@3 1.0, MRR 1.0 and zero forbidden hits; this is not held-out retrieval quality. See the [procedure and limitations](docs/retrieval-baseline.md).
 
 There is no endpoint to list runs, and the UI has no live mode or approval screen. See [`docs/known-limitations.md`](docs/known-limitations.md).
 
@@ -112,6 +114,7 @@ npm run check                                              # lint, types, offlin
 uv run pytest testsuite -q -m integration                  # tenant isolation, approvals, crash recovery, checkpoints
 uv run python -m agentops_evals run                        # needs ANALYTICS_DATABASE_URL and APP_DATABASE_URL
 uv run python -m agentops_evals benchmark                  # single workflow vs specialists
+uv run python -m agentops_retrieval benchmark --git-sha "$(git rev-parse HEAD)" --out retrieval-results.json
 npm --prefix apps/web run e2e                              # replay UI only: screenshots in apps/web/test-results/shots
 ```
 
@@ -134,7 +137,8 @@ Features are declared in [`feature_list.json`](feature_list.json); their state i
 | feat-007 | M3.1 | Sanitized telemetry, feedback API, 50-case evaluation corpus |
 | feat-008 | M4.1 | Three-specialist comparison against the single-workflow baseline |
 | feat-009 | M5.1 | Replay-first Next.js demo and portfolio evidence |
-| feat-012 | Phase 2 | Budgeted Gemini hosted calls and opt-in evaluations; manual live evidence pending |
+| feat-012 | Phase 2 | Budgeted Gemini hosted calls and opt-in evaluations; manual live evidence recorded |
+| feat-013 | Phase 2 | Read-only retrieval-relevance baseline, independent of hosted-model support |
 
 ## Documentation
 

@@ -1,0 +1,21 @@
+{
+  "version": "retrieval-v1.0.0",
+  "cases": [
+    {"id":"receipt-rule","tenant_id":"demo-a","user_id":"user-a-analyst","query":"EMEA receipt requirement reduced repeat purchases of trail running shoes","relevant_chunk_ids":["doc-a-returns-policy#1"]},
+    {"id":"unused-footwear","tenant_id":"demo-a","user_id":"user-a-analyst","query":"Unused footwear refund within 30 days, worn outsole refund percentage","relevant_chunk_ids":["doc-a-returns-policy#0"]},
+    {"id":"seam-seal","tenant_id":"demo-a","user_id":"user-a-analyst","query":"Rain jacket broken seam seal replaced in first year","relevant_chunk_ids":["doc-a-returns-policy#2"]},
+    {"id":"discount-approval","tenant_id":"demo-a","user_id":"user-a-analyst","query":"Pricing committee approval for discounts above ten percent","relevant_chunk_ids":["doc-a-pricing-guidelines#0"]},
+    {"id":"freight-price-rise","tenant_id":"demo-a","user_id":"user-a-analyst","query":"NA rain jacket price rise fifteen percent freight costs committee exception","relevant_chunk_ids":["doc-a-pricing-guidelines#1"]},
+    {"id":"stove-pricing","tenant_id":"demo-a","user_id":"user-a-analyst","query":"Camping stoves global list price every region","relevant_chunk_ids":["doc-a-pricing-guidelines#2"]},
+    {"id":"public-company","tenant_id":"demo-a","user_id":"user-a-viewer","query":"Acme Outdoor Retail running hiking camping gear EMEA North America","relevant_chunk_ids":["doc-a-press-kit#0"]},
+    {"id":"board-stockists","tenant_id":"demo-a","user_id":"user-a-admin","query":"Board closing two NA camping stove stockists supplier dispute","relevant_chunk_ids":["doc-a-board-notes#0"]},
+    {"id":"harvest-audit","tenant_id":"demo-b","user_id":"user-b-analyst","query":"Olive oil supplier harvest quality audit re-audit orders","relevant_chunk_ids":["doc-b-supplier-policy#0"]},
+    {"id":"apac-orders","tenant_id":"demo-b","user_id":"user-b-analyst","query":"APAC olive oil audit failed orders paused six weeks 2026 Q3","relevant_chunk_ids":["doc-b-supplier-policy#1"]},
+    {"id":"supplier-onboarding","tenant_id":"demo-b","user_id":"user-b-analyst","query":"New supplier food safety questionnaire site visit first order","relevant_chunk_ids":["doc-b-supplier-onboarding#0"]},
+    {"id":"missed-deliveries","tenant_id":"demo-b","user_id":"user-b-analyst","query":"Suppliers miss two delivery windows quarter reviewed procurement","relevant_chunk_ids":["doc-b-supplier-onboarding#2"]},
+    {"id":"viewer-no-receipt-access","tenant_id":"demo-a","user_id":"user-a-viewer","query":"EMEA receipt return rule for trail running shoes","relevant_chunk_ids":[],"forbidden_document_ids":["doc-a-returns-policy","doc-a-pricing-guidelines","doc-a-board-notes"]},
+    {"id":"analyst-no-board-access","tenant_id":"demo-a","user_id":"user-a-analyst","query":"Restricted board stockist closures supplier dispute","relevant_chunk_ids":[],"forbidden_document_ids":["doc-a-board-notes"]},
+    {"id":"tenant-a-no-singapore-evidence","tenant_id":"demo-a","user_id":"user-a-admin","query":"Globex Singapore distribution center 2027 expansion budget","relevant_chunk_ids":[],"forbidden_document_ids":["doc-b-expansion-plan","doc-b-supplier-policy","doc-b-supplier-onboarding"]},
+    {"id":"tenant-b-no-emea-evidence","tenant_id":"demo-b","user_id":"user-b-analyst","query":"Acme EMEA receipt rule reduced trail shoe repeat purchases","relevant_chunk_ids":[],"forbidden_document_ids":["doc-a-returns-policy","doc-a-pricing-guidelines","doc-a-board-notes","doc-a-press-kit","doc-b-expansion-plan"]}
+  ]
+}

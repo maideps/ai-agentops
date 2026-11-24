@@ -1,6 +1,6 @@
 # Known limitations
 
-What AI AgentOps does not do or has not shown yet, as of feat-009. Each item names the decision record that explains it.
+What AI AgentOps does not do or has not shown yet, as of feat-013. Each item names the decision record that explains it.
 
 ## Evidence and measurement
 
@@ -8,7 +8,7 @@ What AI AgentOps does not do or has not shown yet, as of feat-009. Each item nam
 - **Free-tier rate limits surface as failures.** No retries are allowed under a budget, so provider throttling ends a case as failed with zero reported cost (four corpus cases in the first live run). Model availability can also change: `gemini-2.5-flash-lite` was withdrawn for new users and replaced (D-016 amendment).
 - **Budget reservations are conservative and process-local.** Each call reserves the full input window plus bounded output, with no refund. A small budget may refuse even a short prompt. Prices and token ceilings come from the bundled SDK map, not an invoice or provider-enforced account limit; persistent account-wide budgets remain unimplemented (D-016).
 - **Live evaluation is not a replacement quality corpus.** Gateway/reliability scenarios stay mocked, and workflow expectations include scripted errors/trajectories that a real model may not produce. Reports preserve those failures instead of claiming a quality score.
-- **Retrieval is lexical.** The hashing embedder matches shared words, not meaning; retrieval quality on real text is unmeasured (D-008).
+- **Retrieval is lexical.** The hashing embedder matches shared words, not meaning. feat-013 measures a small vocabulary-overlapping synthetic baseline, not held-out or real-text quality, and it does not measure abstention (D-008; docs/retrieval-baseline.md).
 - **The orchestration benchmark cannot show a quality win** for the specialist roles in mock mode; it shows equal outcomes at higher cost (D-012).
 
 ## Security
