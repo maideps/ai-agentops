@@ -151,6 +151,8 @@ def isolate_settings_env(monkeypatch: pytest.MonkeyPatch) -> None:
         "MAX_RUN_SECONDS",
         "MAX_OUTPUT_TOKENS",
         "MAX_REQUESTS_PER_DEMO_USER",
+        "GEMINI_API_KEY",
+        "LLM_BUDGET_USD",
         "DATABASE_URL",
         "APP_DATABASE_URL",
         "ANALYTICS_DATABASE_URL",

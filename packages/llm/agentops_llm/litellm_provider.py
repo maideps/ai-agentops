@@ -4,8 +4,13 @@ Never selected unless LLM_MODE and ENABLE_LIVE_LLM opt in (see ``selection``).
 """
 
 import json
+import math
+import threading
 import time
 from collections.abc import Awaitable, Callable
+from decimal import Decimal, InvalidOperation
+from functools import cache
+from importlib.resources import files
 from typing import Any
 
 import litellm
@@ -23,6 +28,29 @@ from agentops_core.llm import (
 )
 
 CompletionFn = Callable[..., Awaitable[Any]]
+CostEstimator = Callable[[str, int, int], float]
+
+
+@cache
+def _price_map() -> dict[str, Any]:
+    return dict(
+        json.loads(
+            files("litellm")
+            .joinpath("model_prices_and_context_window_backup.json")
+            .read_text(encoding="utf-8")
+        )
+    )
+
+
+def _litellm_cost(model: str, prompt_tokens: int, completion_tokens: int) -> float:
+    """USD cost of the given tokens from LiteLLM's bundled price map (offline)."""
+    prices = _price_map()[model]
+    input_rate = Decimal(str(prices["input_cost_per_token"]))
+    output_rate = Decimal(str(prices["output_cost_per_token"]))
+    if any(not rate.is_finite() or rate < 0 for rate in (input_rate, output_rate)):
+        raise ValueError("invalid model prices")
+    return float(input_rate * prompt_tokens + output_rate * completion_tokens)
+
 
 # Order matters: Timeout subclasses APIConnectionError, and the 400-family errors share bases.
 _ERROR_MAP: tuple[tuple[tuple[type[BaseException], ...], LLMErrorCode], ...] = (
@@ -54,6 +82,9 @@ class LiteLLMProvider:
         completion: CompletionFn | None = None,
         api_key: str | None = None,
         num_retries: int = 0,
+        budget_usd: float | None = None,
+        total_budget_usd: float | None = None,
+        cost_estimator: CostEstimator | None = None,
     ) -> None:
         self._registry = registry
         self._completion: CompletionFn = (
@@ -61,19 +92,95 @@ class LiteLLMProvider:
         )
         self._api_key = api_key
         self._num_retries = num_retries
+        for budget in (budget_usd, total_budget_usd):
+            if budget is not None and (not math.isfinite(budget) or budget < 0):
+                raise LLMError(
+                    LLMErrorCode.INVALID_REQUEST, "budget must be finite and nonnegative"
+                )
+        if (budget_usd is not None or total_budget_usd is not None) and num_retries:
+            raise LLMError(LLMErrorCode.INVALID_REQUEST, "budgeted calls cannot retry")
+        self._budget_usd = Decimal(str(budget_usd)) if budget_usd is not None else None
+        self._total_budget_usd = (
+            Decimal(str(total_budget_usd)) if total_budget_usd is not None else None
+        )
+        self._cost_estimator: CostEstimator = (
+            cost_estimator if cost_estimator is not None else _litellm_cost
+        )
+        self._spent_usd: dict[str, Decimal] = {}
+        self._reserved_usd: dict[str, Decimal] = {}
+        self._reserved_total = Decimal(0)
+        self._budget_lock = threading.Lock()
+
+    def spent_usd(self, run_id: str) -> float:
+        """Cost of reported usage at the bundled rates, not a provider invoice."""
+        return float(self._spent_usd.get(run_id, Decimal(0)))
+
+    def reserved_usd(self, run_id: str) -> float:
+        return float(self._reserved_usd.get(run_id, Decimal(0)))
 
     def capabilities(self, model: str) -> ModelCapabilities:
         return self._registry.get(model)
 
     async def generate(self, request: ModelRequest, model: str) -> ModelResponse:
         provider = self._registry.get(model).provider
+        budgeted = self._budget_usd is not None or self._total_budget_usd is not None
+        if budgeted:
+            self._reserve(request, model, provider)
         started = time.perf_counter()
         try:
             raw = await self._completion(**self._kwargs(request, model))
         except (openai.APIError, llx.BudgetExceededError) as exc:
             raise _to_llm_error(exc, provider) from None
         elapsed_ms = int((time.perf_counter() - started) * 1000)
-        return _normalize(raw, provider=provider, model=model, elapsed_ms=elapsed_ms)
+        response = _normalize(raw, provider=provider, model=model, elapsed_ms=elapsed_ms)
+        if budgeted:
+            response = self._account(request, model, response)
+        return response
+
+    def _cost(self, model: str, prompt_tokens: int, completion_tokens: int) -> Decimal:
+        try:
+            cost = self._cost_estimator(model, prompt_tokens, completion_tokens)
+        except (KeyError, TypeError, ValueError, OverflowError, InvalidOperation):
+            raise LLMError(LLMErrorCode.BUDGET_EXCEEDED, "model pricing is unavailable") from None
+        if not math.isfinite(cost) or cost < 0:
+            raise LLMError(LLMErrorCode.BUDGET_EXCEEDED, "model pricing is unbounded")
+        return Decimal(str(cost))
+
+    def _reserve(self, request: ModelRequest, model: str, provider: str) -> None:
+        # The full input window includes tools/schema overhead; word estimates cannot bound it.
+        # Never refund: timeouts, cancellation and malformed responses may still be billed.
+        bound = self._cost(
+            model, self._registry.get(model).max_context_tokens, request.max_output_tokens
+        )
+        with self._budget_lock:
+            per_run = self._reserved_usd.get(request.run_id, Decimal(0)) + bound
+            total = self._reserved_total + bound
+            if (self._budget_usd is not None and per_run > self._budget_usd) or (
+                self._total_budget_usd is not None and total > self._total_budget_usd
+            ):
+                raise LLMError(
+                    LLMErrorCode.BUDGET_EXCEEDED, "live run budget exhausted", provider=provider
+                )
+            self._reserved_usd[request.run_id] = per_run
+            self._reserved_total = total
+
+    def _account(self, request: ModelRequest, model: str, response: ModelResponse) -> ModelResponse:
+        prompt, completion = response.prompt_tokens, response.completion_tokens
+        if (
+            prompt is None
+            or completion is None
+            or not 0 <= prompt <= self._registry.get(model).max_context_tokens
+            or not 0 <= completion <= request.max_output_tokens
+        ):
+            raise LLMError(
+                LLMErrorCode.INVALID_RESPONSE,
+                "provider usage is missing or exceeds the reserved token bounds",
+                provider=response.provider,
+            )
+        cost = self._cost(model, prompt, completion)
+        with self._budget_lock:
+            self._spent_usd[request.run_id] = self._spent_usd.get(request.run_id, Decimal(0)) + cost
+        return response.model_copy(update={"estimated_cost_usd": float(cost)})
 
     def _kwargs(self, request: ModelRequest, model: str) -> dict[str, Any]:
         kwargs: dict[str, Any] = {

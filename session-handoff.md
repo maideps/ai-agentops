@@ -1,54 +1,51 @@
 # Session Handoff
 
-Fill this at session end for large sessions; keep it current otherwise.
-
 ## Current Objective
 
-- Goal: feat-013 retrieval relevance baseline is gate-verified in its independent lane. feat-012 belongs to the other agent on main; its planned appearance here reflects the approved older lane base, not main's current state.
-- Current status: feat-001 to feat-011 and feat-013 passing; no active feature in this lane. feat-013 gate at bae0993, measured implementation at dc644a3.
-- Branch / commit: lane/feat-013, based on 120d21d before feat-012 activation.
+- Goal: Land owner-approved feat-013 while preserving completed feat-012.
+- Current status: feat-001 through feat-013 passing; no active feature.
+- Branch: lane/feat-013, integrating main at 709ea00 in the lane's own worktree.
 
 ## Completed This Session
 
-- [x] Independent worktree and feature declaration/activation approved by the owner.
-- [x] Read-only retrieval benchmark and 16 synthetic queries; no ranking change or model calls.
-- [x] Twelve focused acceptance tests pass using agentops_feat013_test, not the shared test database.
-- [x] Committed benchmark: Recall@3=1.0, MRR=1.0 for 12 answerable queries; four unscored access cases; zero forbidden hits.
-- [x] Feature gate passed all four declared layers; evidence shard/trail recorded.
+- Pushed the original verified retrieval lane.
+- Reconciled both features' README, architecture, limits, quality ratings and declarations.
+- Preserved main's sessions 015/016; renumbered the retrieval session to 017.
+- Neither feature's product code was changed by conflict resolution. Combined-tree checks and publication remain the landing steps.
 
 ## Verification Evidence
 
-| Check | Command | Result | Notes |
-|---|---|---|---|
-| Retrieval acceptance | `uv run pytest testsuite/acceptance/feat_013 -q` | PASS, 12 tests | Isolated local PostgreSQL |
-| Full check | `npm run check` | PASS, 94 offline tests and nine UI e2e | Lint, types, architecture and production UI build |
-| Database regressions | `uv run pytest testsuite -q -m "integration and not live"` | PASS, 120 tests | Isolated database and actual GITHUB_SHA |
-| Feature gate | `npm run verify-feature -- feat-013` | PASS, four layers at bae0993 | Layer 3 includes unconfigured framework e2e, multi-repo and quality SKIPs; actual UI e2e passed |
-| Measured baseline | `python -m agentops_retrieval benchmark` | 1.0 Recall@3, 1.0 MRR, zero forbidden hits | benchmarks/retrieval/v1/results.json, implementation dc644a3 |
+| Check | Result | Evidence |
+|---|---|---|
+| feat-012 gate | PASS, five layers | Existing state/trail retained from main |
+| feat-012 hosted evidence | Corpus 11/50, both orchestrations 5/42 | Existing live reports retained; not quality scores |
+| feat-013 gate | PASS, four layers at bae0993 | Existing state/trail; fresh combined gate follows merge commit |
+| Retrieval baseline | Recall@3 1.0, MRR 1.0, zero forbidden hits | 12 answerable plus four unscored queries; implementation dc644a3 |
 
 ## Files Changed
 
-- See progress/015-2026-11-24.md in this lane.
+- See progress/017-2026-11-24.md for retrieval development and the next session note for landing.
+- Main's hosted model implementation, live reports and feat-012 evidence are preserved.
 
-## Decisions Made
+## Decisions
 
-- D-008 extended with retrieval measurement: keep ranking unchanged, use macro relevance metrics only for accessible positive judgments, record negative/access queries separately.
+- D-008 adds retrieval measurement without ranking changes.
+- D-016 retains the owner's Gemini 3.5 Flash-Lite choice and conservative reservations.
 
-## Blockers / Risks
+## Risks
 
-- Do not edit main or feat-012. Landing is not authorized. Preserve main's feat-012 state.
-- Corpus is synthetic/vocabulary-overlapping, not held-out relevance or abstention evidence.
-- Use agentops_feat013_test for all three AGENTOPS_TEST_* database URLs. The legacy eval git helper does not resolve worktree .git files, so set GITHUB_SHA to the actual HEAD during validation; its code is untouched.
-- At landing, reconcile shared docs and feature_list.json, renumber this lane's session 015 (main has its own 015), and regenerate PROGRESS.md.
-- ./init.sh remains unusable (D-004); use uv, the brief and npm check.
+- Neither the synthetic retrieval scores nor the hosted mock-trajectory pass rates measure held-out answer quality.
+- Budget reservations remain process-local; provider throttling and model availability remain external risks.
+- Validation uses agentops_feat013_test for all three AGENTOPS_TEST_* database URLs and actual GITHUB_SHA for worktree provenance.
+- No new hosted calls are authorized or needed for this landing.
+- ./init.sh remains unusable (D-004); use uv, brief and npm check.
 
 ## Next Session Startup
 
-1. Read `AGENTS.md`, then `docs/STANDARDS.md` (its Session Start section replaces `./init.sh`).
-2. Work only in D:\7-Maide\Projects\ai-agentops-lane-feat-013. Set the isolated test database URLs and GITHUB_SHA; read docs/retrieval-baseline.md.
-3. Read the latest note under `progress/` and this handoff.
-4. Run npm run check before editing; never activate feat-012 from this lane's older state.
+1. Read AGENTS.md, docs/STANDARDS.md, the latest progress note and this handoff.
+2. Run the harness brief and npm run check. No feature is active; declare the next one before starting.
+3. Keep provider secrets outside tracked files; any new live run needs fresh owner approval.
 
 ## Recommended Next Step
 
-- Obtain separate approval before landing the committed lane. Preserve feat-012 changes and reconcile shared docs/session numbering. No live provider call is needed or authorized for feat-013.
+- Finish combined verification and the authorized merge. After landing, consider the owner's proposed hosted-abstention/tool-schema investigation as a new feature; do not expand this merge's scope.

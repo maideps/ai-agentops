@@ -1,4 +1,4 @@
-"""Run the corpus in mock mode and score every case (NFR-002, NFR-006, NFR-007).
+"""Run the corpus and score every case (NFR-002, NFR-006, NFR-007).
 
 Each case runs inside an ``eval.case`` span whose trace id is also the run's trace id, so a
 failing case leads straight to its spans. The report records dataset_version, git_sha, model,
@@ -11,7 +11,7 @@ import uuid
 from collections import Counter
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import psycopg
 from pydantic import BaseModel, Field
@@ -23,6 +23,8 @@ from agentops_core.llm import LLMGateway
 from agentops_core.policy import POLICY_VERSION
 from agentops_evals.corpus import Case, Corpus, Expect
 from agentops_evals.scenarios import SCENARIOS, CountingProvider, Env
+from agentops_llm.hosted import GEMINI_FLASH_LITE
+from agentops_llm.litellm_provider import LiteLLMProvider
 from agentops_llm.mock import MOCK_MODEL, MockLLMProvider, MockScript
 from agentops_telemetry.tracing import span
 from agentops_tools.gateway import CallContext
@@ -56,6 +58,10 @@ class EvalReport(BaseModel):
     failed: int
     by_category: dict[str, dict[str, int]]
     results: list[CaseResult]
+    mode: Literal["mock", "live"] = "mock"
+    cost_usd_total: float = 0.0
+    reserved_usd_total: float = 0.0
+    limitations: list[str] = Field(default_factory=list)
 
 
 def git_sha(root: Path = Path()) -> str:
@@ -80,13 +86,25 @@ def git_sha(root: Path = Path()) -> str:
     return "unknown"
 
 
-def _workflow(env: Env, case: Case, run_id: str, trace_id: str) -> tuple[RunDetail, int]:
-    script = MockScript.model_validate({"run_id": run_id, "turns": case.turns})
-    provider = CountingProvider(MockLLMProvider(scripts=[script]))
+def _workflow(
+    env: Env,
+    case: Case,
+    run_id: str,
+    trace_id: str,
+    live_provider: LiteLLMProvider | None = None,
+) -> tuple[RunDetail, int]:
+    provider = CountingProvider(
+        live_provider
+        if live_provider is not None
+        else MockLLMProvider(
+            scripts=[MockScript.model_validate({"run_id": run_id, "turns": case.turns})]
+        )
+    )
+    model = GEMINI_FLASH_LITE if live_provider is not None else MOCK_MODEL
     deps = RunDependencies(
-        gateway=LLMGateway(provider, MOCK_MODEL),
+        gateway=LLMGateway(provider, model),
         llm_provider=provider.name,
-        llm_model=MOCK_MODEL,
+        llm_model=model,
         connect=lambda: psycopg.connect(env.analytics_dsn),
         embedder=env.embedder,
         tool_gateway=env.gateway(),
@@ -162,20 +180,29 @@ def _score_scenario(expect: Expect, observed: dict[str, Any]) -> list[str]:
     return failures
 
 
-def run_case(env: Env, case: Case, batch: str) -> CaseResult:
+def run_case(
+    env: Env, case: Case, batch: str, live_provider: LiteLLMProvider | None = None
+) -> CaseResult:
     run_id = f"eval-{case.id}-{batch}"
     trace_id = uuid.uuid4().hex
     attrs = {"eval.case_id": case.id, "eval.category": case.category, "agentops.run_id": run_id}
     with span("eval.case", attrs, trace_id=trace_id) as current:
         if case.kind == "workflow":
-            detail, calls = _workflow(env, case, run_id, trace_id)
+            detail, calls = _workflow(env, case, run_id, trace_id, live_provider)
             tickets = env.tickets(case.tenant_id, run_id)
             failures = _score_workflow(case.expect, detail, calls, tickets, trace_id)
             status: str | None = detail.status.value
-            observed: dict[str, Any] = {"llm_calls": calls, "tickets": tickets}
+            observed: dict[str, Any] = {
+                "llm_calls": calls,
+                "tickets": tickets,
+                "model_mode": "live" if live_provider is not None else "mock",
+                "cost_usd": live_provider.spent_usd(run_id) if live_provider else 0.0,
+                "reserved_usd": live_provider.reserved_usd(run_id) if live_provider else 0.0,
+            }
         else:
             ctx = CallContext(tenant_id=case.tenant_id, user_id=case.user_id, run_id=run_id)
             observed = SCENARIOS[str(case.scenario)](env, ctx)
+            observed["model_mode"] = "mock"
             failures = _score_scenario(case.expect, observed)
             status = observed.get("status")
         current.set_attribute("eval.passed", not failures)
@@ -193,12 +220,19 @@ def run_case(env: Env, case: Case, batch: str) -> CaseResult:
 
 
 def run_corpus(
-    corpus: Corpus, *, analytics_dsn: str, app_dsn: str, only: set[str] | None = None
+    corpus: Corpus,
+    *,
+    analytics_dsn: str,
+    app_dsn: str,
+    only: set[str] | None = None,
+    live_provider: LiteLLMProvider | None = None,
 ) -> EvalReport:
     env = Env(analytics_dsn, app_dsn)
     batch = uuid.uuid4().hex[:8]  # run ids stay unique across repeated evaluations
     started = datetime.now(UTC).isoformat()
-    results = [run_case(env, c, batch) for c in corpus.cases if only is None or c.id in only]
+    results = [
+        run_case(env, c, batch, live_provider) for c in corpus.cases if only is None or c.id in only
+    ]
     by_category: dict[str, dict[str, int]] = {}
     for result in results:
         bucket = by_category.setdefault(result.category, {"total": 0, "passed": 0})
@@ -208,8 +242,8 @@ def run_corpus(
     return EvalReport(
         dataset_version=corpus.dataset_version,
         git_sha=git_sha(),
-        provider="mock",
-        model=MOCK_MODEL,
+        provider="gemini" if live_provider is not None else "mock",
+        model=GEMINI_FLASH_LITE if live_provider is not None else MOCK_MODEL,
         prompt_version=PROMPT_VERSION,
         policy_version=POLICY_VERSION,
         started_at=started,
@@ -219,4 +253,16 @@ def run_corpus(
         failed=len(results) - passed,
         by_category=by_category,
         results=results,
+        mode="live" if live_provider is not None else "mock",
+        cost_usd_total=sum(r.observed.get("cost_usd", 0.0) for r in results),
+        reserved_usd_total=sum(r.observed.get("reserved_usd", 0.0) for r in results),
+        limitations=[
+            "Live workflow calls only; gateway/reliability scenarios remain deterministic mocks.",
+            "Expectations include scripted model errors and tool trajectories; live failures "
+            "are reported, not treated as a model-quality score.",
+            "Costs use reported tokens at bundled LiteLLM rates, not provider invoices. "
+            "Reservations include failed calls whose actual usage is unknown.",
+        ]
+        if live_provider is not None
+        else [],
     )

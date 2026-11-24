@@ -13,7 +13,13 @@ from agentops_agents.checkpoints import postgres_checkpointer
 from agentops_agents.state import RunDetail, TaskRequest
 from agentops_agents.workflow import RunDependencies, resume_task, run_task
 from agentops_core.aio import run as run_async
-from agentops_core.llm import LLMGateway, ModelCapabilities, ModelRequest, ModelResponse
+from agentops_core.llm import (
+    LLMGateway,
+    LLMProvider,
+    ModelCapabilities,
+    ModelRequest,
+    ModelResponse,
+)
 from agentops_evals.faults import FaultyTickets, SimulatedCrashError
 from agentops_llm.mock import MOCK_MODEL, MockLLMProvider, MockScript
 from agentops_retrieval.embedding import HashingEmbedder
@@ -32,10 +38,9 @@ SAMPLE_SCRIPT = Path("fixtures/llm/run-sample-q3-declines.json")
 class CountingProvider:
     """Counts real model calls, to show a resumed run repeats none."""
 
-    name = "mock"
-
-    def __init__(self, inner: MockLLMProvider) -> None:
+    def __init__(self, inner: LLMProvider) -> None:
         self.inner = inner
+        self.name = inner.name
         self.calls = 0
 
     def capabilities(self, model: str) -> ModelCapabilities:

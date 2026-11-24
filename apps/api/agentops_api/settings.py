@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     max_run_seconds: int = Field(default=90, ge=1)
     max_output_tokens: int = Field(default=500, ge=1)
     max_requests_per_demo_user: int = Field(default=5, ge=0)
+    # Hosted (live) runs: the Gemini Flash-Lite key and a hard per-run spend cap (D-016).
+    gemini_api_key: SecretStr | None = None
+    llm_budget_usd: float = Field(default=0.0, ge=0, allow_inf_nan=False)
     database_url: SecretStr | None = None
     app_database_url: SecretStr | None = None
     analytics_database_url: SecretStr | None = None
