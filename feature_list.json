@@ -383,6 +383,38 @@
           "repair": "Start Docker, check the compose healthcheck and migrations, fix failing integration tests and rerun."
         }
       ]
+    },
+    {
+      "id": "feat-012",
+      "name": "Phase 2: hosted-model live run",
+      "behavior": "The Gemini Flash-Lite hosted model (gemini/gemini-2.5-flash-lite) is registered in the deny-by-default capability registry with its real capabilities, and its key is read from GEMINI_API_KEY. The live provider is selected only with LLM_MODE plus ENABLE_LIVE_LLM=true, and a hard per-run cost budget (LLM_BUDGET_USD) aborts the run with BUDGET_EXCEEDED before the LiteLLM-reported spend crosses it. The eval corpus and benchmark run once live, explicitly opted-in and budget-capped, and their results record dataset_version, git_sha, model, prompt_version and actual spend. Requirements: FR-009, FR-010, NFR-009.",
+      "verification": "Acceptance tests run against a stubbed LiteLLM adapter with no network: the Gemini Flash-Lite model is registered and selected only on opt-in; a run whose stubbed spend would cross LLM_BUDGET_USD aborts with BUDGET_EXCEEDED before the provider call; GEMINI_API_KEY is read from the environment and never emitted in logs or errors. The owner-opted live corpus and benchmark run is documented as a manual step, not CI.",
+      "dependencies": [
+        "feat-003",
+        "feat-008"
+      ],
+      "layers": [
+        {
+          "label": "Layer 1: Harness and architecture checks",
+          "cmd": "node scripts/framework-check.mjs lint && npm run check-arch && node scripts/framework-check.mjs typecheck",
+          "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
+        },
+        {
+          "label": "Layer 2: Python static checks",
+          "cmd": "uv run ruff check . && uv run ruff format --check . && uv run mypy",
+          "repair": "Fix Ruff findings (or run uv run ruff format .) and mypy errors, then rerun."
+        },
+        {
+          "label": "Layer 3: Acceptance tests feat-012",
+          "cmd": "uv run pytest testsuite/acceptance/feat_012 -q",
+          "repair": "Fix the code until the declared behavior holds; a test that contradicts the behavior is fixed in the same commit."
+        },
+        {
+          "label": "Layer 4: Default regression suite (no network, no Docker)",
+          "cmd": "uv run pytest testsuite -q -m \"not live and not integration\"",
+          "repair": "Fix the regression this feature introduced; do not mark tests skipped to pass."
+        }
+      ]
     }
   ]
 }

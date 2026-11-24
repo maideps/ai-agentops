@@ -4,7 +4,7 @@ Fill this at session end for large sessions; keep it current otherwise.
 
 ## Current Objective
 
-- Goal: owner decisions pending (live model run, license, wording); no feature active.
+- Goal: feat-012 (hosted-model live run, Gemini Flash-Lite) declared; next is to activate and implement it. No feature active yet.
 - Current status: feat-001 to feat-011 passing (feat-011 at 9f7ae40).
 - Branch / commit: main.
 
@@ -27,7 +27,7 @@ Fill this at session end for large sessions; keep it current otherwise.
 
 ## Decisions Made
 
-- D-014 tenant-isolated run checkpoints; D-015 HTTP approvals and resume; CI actions on Node 24 pinned by SHA.
+- D-014 tenant-isolated run checkpoints; D-015 HTTP approvals and resume; CI actions on Node 24 pinned by SHA. D-016 first hosted provider = Gemini Flash-Lite (`gemini/gemini-2.5-flash-lite`), key `GEMINI_API_KEY`, per-run budget `LLM_BUDGET_USD`.
 
 ## Blockers / Risks
 
@@ -42,4 +42,4 @@ Fill this at session end for large sessions; keep it current otherwise.
 
 ## Recommended Next Step
 
-- Owner's choice: an opted-in, budget-capped hosted-model run of the corpus and benchmark (provider, key handling and budget cap TBD); CI actions off Node 20. Add new work to feature_list.json before starting.
+- Activate feat-012 (`npm run activate -- feat-012`) and implement: registry entry for `gemini/gemini-2.5-flash-lite`, `GEMINI_API_KEY` loading, `LLM_BUDGET_USD` cap (BUDGET_EXCEEDED). Run the offline acceptance tests before any opt-in live run.
