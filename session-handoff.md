@@ -4,42 +4,46 @@ Fill this at session end for large sessions; keep it current otherwise.
 
 ## Current Objective
 
-- Goal: feat-012 (hosted-model live run, Gemini Flash-Lite) declared; next is to activate and implement it. No feature active yet.
+- Goal: Complete feat-013 retrieval relevance baseline in its independent lane. feat-012 belongs to the other agent on main; its planned appearance here reflects the approved older lane base, not main's current state.
 - Current status: feat-001 to feat-011 passing (feat-011 at 9f7ae40).
-- Branch / commit: main.
+- Branch / commit: lane/feat-013, based on 120d21d before feat-012 activation.
 
 ## Completed This Session
 
-- [x] feat-009 (M5.1) replay-first static demo (5 replays, Playwright with no off-machine requests), capped live POST /v1/runs, threat model, runbooks, known limitations
-- [x] Documented reproduction commands executed (see progress/011)
+- [x] Independent worktree and feature declaration/activation approved by the owner.
+- [x] Read-only retrieval benchmark and 16 synthetic queries; no ranking change or model calls.
+- [x] Eleven focused acceptance tests pass using agentops_feat013_test, not the shared test database.
 
 ## Verification Evidence
 
 | Check | Command | Result | Notes |
 |---|---|---|---|
-| Feature gate | `npm run verify-feature -- feat-009` | PASS, 5/5 layers | 6 screenshots kept as evidence |
-| Full check | `npm run check` | PASS, 84 offline + 9 UI e2e | integration: 103 tests |
-| Eval corpus | `python -m agentops_evals run` | 50/50 at a8b8caf | |
+| Retrieval acceptance | `uv run pytest testsuite/acceptance/feat_013 -q` | PASS, 11 tests | Isolated local PostgreSQL |
+| Final check / gate | Full check, measured corpus, verify-feature | Pending final verification | Final results in progress/015 |
 
 ## Files Changed
 
-- See `progress/013-2026-11-19.md` (feat-011) and `progress/012-2026-11-19.md` (feat-010, CI).
+- See progress/015-2026-11-24.md in this lane.
 
 ## Decisions Made
 
-- D-014 tenant-isolated run checkpoints; D-015 HTTP approvals and resume; CI actions on Node 24 pinned by SHA. D-016 first hosted provider = Gemini Flash-Lite (`gemini/gemini-2.5-flash-lite`), key `GEMINI_API_KEY`, per-run budget `LLM_BUDGET_USD`.
+- D-008 extended with retrieval measurement: keep ranking unchanged, use macro relevance metrics only for accessible positive judgments, record negative/access queries separately.
 
 ## Blockers / Risks
 
-- `./init.sh` unusable (D-004; upstream #63/#64). Docker Desktop must be running for feature layers 3 and 5. LiteLLM Gemini/Groq tokenizer download on first live call (D-005). Dev databases from before session 006 need the agentops_app roles (D-009). LICENSE resolved (MIT, `LICENSE` present). GitHub repo description still says "portfolio project" (owner action on GitHub). CI is on Node 24 actions pinned by SHA (`ci.yml`). History was rewritten in session 007 (blueprint PDF removed, single author); pre-rewrite commits may stay reachable on GitHub by SHA until its garbage collection.
+- Do not edit main or feat-012. Landing is not authorized. Preserve main's feat-012 state.
+- Corpus is synthetic/vocabulary-overlapping, not held-out relevance or abstention evidence.
+- Use agentops_feat013_test for all three AGENTOPS_TEST_* database URLs. The legacy eval git helper does not resolve worktree .git files, so set GITHUB_SHA to the actual HEAD during validation; its code is untouched.
+- At landing, reconcile shared docs and feature_list.json, renumber this lane's session 015 (main has its own 015), and regenerate PROGRESS.md.
+- ./init.sh remains unusable (D-004); use uv, the brief and npm check.
 
 ## Next Session Startup
 
 1. Read `AGENTS.md`, then `docs/STANDARDS.md` (its Session Start section replaces `./init.sh`).
-2. Start Docker Desktop; `uv sync`; `node scripts/framework-check.mjs brief`. After pulling new migrations: `python -m agentops_data migrate` and `python -m agentops_agents setup-checkpoints` (owner DATABASE_URL).
+2. Work only in D:\7-Maide\Projects\ai-agentops-lane-feat-013. Set the isolated test database URLs and GITHUB_SHA; read docs/retrieval-baseline.md.
 3. Read the latest note under `progress/` and this handoff.
-4. Run `npm run check` before editing.
+4. Run npm run check before editing; never activate feat-012 from this lane's older state.
 
 ## Recommended Next Step
 
-- Activate feat-012 (`npm run activate -- feat-012`) and implement: registry entry for `gemini/gemini-2.5-flash-lite`, `GEMINI_API_KEY` loading, `LLM_BUDGET_USD` cap (BUDGET_EXCEEDED). Run the offline acceptance tests before any opt-in live run.
+- Finish the lane gate/evidence, then obtain separate approval before landing. No live provider call is needed or authorized for feat-013.

@@ -149,6 +149,13 @@ This file records significant architectural decisions, their context, alternativ
 - Positive: the whole slice runs offline and deterministically; every policy and limit path has a test.
 - Negative: hashing retrieval only matches shared words; the mock script is tied to run ids; database calls are synchronous psycopg run in worker threads; there is no HTTP endpoint for runs yet (`python -m agentops_agents run` is the entry point).
 
+**2026-11-24 measurement extension (feat-013):** Keep this search unchanged and first measure
+16 curated synthetic queries. Macro Recall@k and MRR use only the 12 queries with accessible
+relevant judgments; four no-accessible-evidence queries remain explicit, unscored access
+samples. Benchmark JSON holds chunk ids, hashes and supplied commit provenance, not text.
+No new numeric quality gate, semantic model, reranker or abstention threshold is introduced.
+This baseline is not held-out evidence or end-to-end answer quality.
+
 ### D-009: Tool gateway, approval binding and a principal-bound MCP server
 
 **Date:** 2026-11-19

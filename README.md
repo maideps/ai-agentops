@@ -60,6 +60,8 @@ Phase 1 complete (M0.1 to M5.1: feat-001 to feat-009). What works today:
 
 - Approvals over HTTP (feat-011): POST /v1/runs with `"propose_followup": true` returns `awaiting_approval` and the bound proposal; POST /v1/runs/{run_id}/approvals/{approval_id} with `{"decision": "approve"}` or `"reject"` records the decision and resumes the run (one ticket at most; a second decision is 409, another user 403, another tenant 404); GET /v1/runs/{run_id} returns the run's current detail.
 
+- A read-only retrieval benchmark (feat-013): 16 versioned synthetic queries measure the existing hashing/pgvector search. Recall@k and MRR cover the 12 queries with accessible relevant chunks; four no-accessible-evidence queries are reported separately, not given perfect scores. Reports contain chunk ids/hashes, model and commit provenance, and forbidden-hit counts, never retrieved text. Ranking is unchanged and no model is called. See the [retrieval baseline procedure and limitations](docs/retrieval-baseline.md).
+
 There is no endpoint to list runs, and the UI has no live mode or approval screen. See [`docs/known-limitations.md`](docs/known-limitations.md).
 
 ## Quick Start
@@ -109,6 +111,7 @@ npm run check                                              # lint, types, offlin
 uv run pytest testsuite -q -m integration                  # tenant isolation, approvals, crash recovery, checkpoints
 uv run python -m agentops_evals run                        # needs ANALYTICS_DATABASE_URL and APP_DATABASE_URL
 uv run python -m agentops_evals benchmark                  # single workflow vs specialists
+uv run python -m agentops_retrieval benchmark --git-sha "$(git rev-parse HEAD)" --out retrieval-results.json
 npm --prefix apps/web run e2e                              # replay UI only: screenshots in apps/web/test-results/shots
 ```
 
@@ -131,6 +134,7 @@ Features are declared in [`feature_list.json`](feature_list.json); their state i
 | feat-007 | M3.1 | Sanitized telemetry, feedback API, 50-case evaluation corpus |
 | feat-008 | M4.1 | Three-specialist comparison against the single-workflow baseline |
 | feat-009 | M5.1 | Replay-first Next.js demo and portfolio evidence |
+| feat-013 | Phase 2 | Read-only retrieval-relevance baseline, independent of hosted-model support |
 
 ## Documentation
 

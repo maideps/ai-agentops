@@ -6,7 +6,7 @@ What AI AgentOps does not do or has not shown yet, as of feat-009. Each item nam
 
 - **No hosted model has been run.** Every result (tests, the 50-case corpus, the orchestration benchmark, the replays) uses scripted model replies. The platform's enforcement is measured; answer quality is not (D-011, D-012).
 - **The live adapter has never reached a provider.** No model is registered in the capability registry, so `LiteLLMProvider` refuses every model before calling out (D-005).
-- **Retrieval is lexical.** The hashing embedder matches shared words, not meaning; retrieval quality on real text is unmeasured (D-008).
+- **Retrieval is lexical.** The hashing embedder matches shared words, not meaning. feat-013 measures a small vocabulary-overlapping synthetic baseline, not held-out or real-text quality, and it does not measure abstention (D-008; docs/retrieval-baseline.md).
 - **The orchestration benchmark cannot show a quality win** for the specialist roles in mock mode; it shows equal outcomes at higher cost (D-012).
 
 ## Security
