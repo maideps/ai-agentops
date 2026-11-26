@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { evidenceAnchor, listReplays, loadReplay } from "@/lib/replays";
 
 export const dynamicParams = false;
@@ -22,7 +23,7 @@ export default async function ReplayPage({ params }: { params: Promise<{ id: str
   return (
     <article>
       <p>
-        <a href="/">All runs</a>
+        <Link href="/">All runs</Link>
       </p>
       <h1>{entry.title}</h1>
       <p className="lede">{entry.description}</p>

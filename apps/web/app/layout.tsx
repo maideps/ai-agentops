@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import "./globals.css";
 
@@ -12,7 +13,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en">
       <body>
         <header className="site">
-          <a href="/" className="brand">AI AgentOps</a>
+          <Link href="/" className="brand">AI AgentOps</Link>
           <p className="banner" role="note">
             Replay mode: recorded synthetic runs. No model, API key or backend is called.
           </p>
