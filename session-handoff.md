@@ -16,7 +16,8 @@
 | Check | Result | Evidence |
 |---|---|---|
 | feat-020 gate | PASS, four layers at a465fa1 | .harness/state/feat-020.json and trail |
-| feat-021 gate | Rerun on the merged tree | .harness/state/feat-021.json and trail |
+| feat-020 gate (merged tree) | PASS, all layers at 01d95cd's parent a7944ee | .harness/state/feat-020.json and trail |
+| feat-021 gate (merged tree) | PASS, five layers | .harness/state/feat-021.json and trail |
 | Live corpus v1.2.0 at 92ac088 (feat-019) | live outcomes 37/41; no RATE_LIMITED | benchmarks/evals/v1.2/live-feat019/evals-live.json |
 
 ## Decisions
