@@ -46,6 +46,9 @@ Ratings are judgments, not measurements: coverage is not measured yet (quality g
   1,024-token default output, OUTPUT_TRUNCATED. Live run: 22 of 42 workflows complete (was 5),
   27 retries; corpus 11/50 because expectations follow mock trajectories. LLM adapter: test
   coverage B, type safety A, documentation B, architecture A, performance B.
+- **feat-021 passing:** per-day quota 429s fail as QUOTA_EXHAUSTED and live corpus/benchmark
+  runs stop early with not-run cases recorded. Offline tests only; no live run needed.
+  Evaluation: test coverage B, type safety A, documentation B, architecture A, performance B.
 - **feat-019 passing:** paced live calls and bounded, budget-reserved 429 retries. Live corpus
   37/41 (was 29/41) with no rate-limit failures; benchmark 37/41 single, 38/41 specialists.
   LLM adapter: test coverage B, type safety A, documentation B, architecture A, performance B.

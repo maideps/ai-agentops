@@ -2,38 +2,35 @@
 
 ## Current Objective
 
-- Goal: feat-019 (live calls stay within provider rate limits) closed and merged with feat-018 (policy-aware report citations, landed by another agent). No feature is active.
-- Current status: feat-001 through feat-019 passing.
-- Branch: feat-019-rate-limits, merged with origin/main; landing on main needs owner approval.
+- Goal: feat-021 (live evaluation stops when the provider quota runs out) closed on branch feat-021-quota-stop. No feature is active on it.
+- Current status: feat-001 through feat-019 and feat-021 passing; feat-020 (retrieval comparison, session 027) is on another agent's branch and not on main yet.
+- Branch: feat-021-quota-stop, based on main c2827a3; landing needs owner approval and should follow or merge feat-020 so session numbering stays complete.
 
 ## Completed
 
-- feat-018 (other agent, session 025): report guidance to cite supporting document passages that survive the context limit; verified offline only.
-- feat-019 (session 026): --min-call-interval pacing and bounded, budget-reserved 429 retries honoring Retry-After up to 60 s (D-016 amendment 3). Live corpus 37/41 (was 29/41) with no rate-limit failures.
+- feat-021 (session 028): per-day quota 429 → QUOTA_EXHAUSTED, never retried; live corpus and benchmark stop early (first QUOTA_EXHAUSTED or 3 consecutive rate-limited cases), record not-run cases and exit 1 (D-016 amendment 4).
 
 ## Verification
 
 | Check | Result | Evidence |
 |---|---|---|
-| feat-019 gate | Rerun on the merged tree | .harness/state/feat-019.json and trail |
-| feat-018 gate | PASS, four layers at bab2cce | progress/025-2026-11-26.md |
-| Live corpus v1.2.0 at 92ac088 | live outcomes 37/41; no RATE_LIMITED | benchmarks/evals/v1.2/live-feat019/evals-live.json |
-| Live benchmark at 92ac088 | single 37/41, specialists 38/41 | benchmarks/orchestration/v1/live-feat019/ |
+| feat-021 gate | PASS, five layers | .harness/state/feat-021.json and trail |
+| Regressions | npm run check exit 0; 171 offline, 132 integration, nine UI e2e | Offline only; no live calls |
 
 ## Decisions
 
-- D-016 amendment 3: rate limits share the two-retry limit; Retry-After up to 60 s; optional call pacing.
+- D-016 amendment 4: daily-quota 429s fail at once; live batches stop early with not-run cases recorded.
 
 ## Risks
 
-- No live run has measured feat-018's citation guidance; the feat-019 run predates it.
+- The combined live rerun (feat-018 + feat-019 + feat-021) is still pending after the 2026-11-26 quota exhaustion; create benchmarks/evals/v1.2/live-merged-018-019 before the corpus command.
+- Daily-quota detection depends on the provider naming a per-day quota; the streak rule is the fallback.
 - access-01 expects abstention, but a viewer's run may complete from permitted documents (no sales leak).
-- Retry-After above 60 s still fails a case; the 4-second interval is an estimate.
-- Citation enforcement checks included ids, not semantic support.
+- Session 027 (feat-020) is not on this branch, so the harness lint reports it missing until feat-020 lands or is merged.
 - Live runs need the owner's `.env` (unreadable to the assistant); run them from the owner's terminal with fresh cap approval.
 - Parallel agents allocate feature and session numbers independently; fetch origin/main before declaring the next feature.
 - The architecture map is a snapshot through feat-015. ./init.sh remains unusable (D-004).
 
 ## Next Step
 
-- Rerun live evidence on the merged tree (feat-018 plus feat-019, --min-call-interval 4) to measure the citation guidance, and decide whether access-01 should accept a completed report built only from permitted documents.
+- Land feat-021 after (or merged with) feat-020, then run the combined live corpus and benchmark after the quota resets and compare with 37/41.
