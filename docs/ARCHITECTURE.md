@@ -1,6 +1,6 @@
 # Architecture
 
-The full product architecture — trust boundaries, graph units, typed state, LLM gateway, MCP tool contract, execution registry, failure matrix, threat model — is specified in [`ARCHITECTURE_AND_REQUIREMENTS.md`](ARCHITECTURE_AND_REQUIREMENTS.md), which is authoritative. Coding rules are in [`STANDARDS.md`](STANDARDS.md). This page summarizes the layer model and how it is enforced in this repository.
+The full product architecture — trust boundaries, graph units, typed state, LLM gateway, MCP tool contract, execution registry, failure matrix, threat model — is specified in [`ARCHITECTURE_AND_REQUIREMENTS.md`](ARCHITECTURE_AND_REQUIREMENTS.md), which is authoritative. Coding rules are in [`STANDARDS.md`](STANDARDS.md). This page summarizes the layer model and how it is enforced in this repository. For an interactive view (components by layer, one request step by step, security controls and feature history), open [`architecture-map.html`](architecture-map.html) in a browser; it is a hand-maintained snapshot, so this page wins where they differ.
 
 ## Product Layer Model
 
