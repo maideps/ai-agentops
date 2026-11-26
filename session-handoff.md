@@ -15,7 +15,7 @@
 
 | Check | Result | Evidence |
 |---|---|---|
-| feat-023 gate | See .harness/state/feat-023.json | .harness/state/feat-023.json and trail |
+| feat-023 gate | PASS, five layers at 0f51fe2 | .harness/state/feat-023.json and trail |
 | Mock corpus evals-v1.3.0 | 50/50 (integration suite) | testsuite/acceptance/feat_007 |
 | Live corpus v1.2.0 at 92ac088 (feat-019) | live outcomes 37/41; no RATE_LIMITED | benchmarks/evals/v1.2/live-feat019/evals-live.json |
 
