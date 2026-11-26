@@ -83,4 +83,14 @@ test("the viewer replay shows the permission denial", async ({ page }) => {
 
   await expect(page.getByTestId("decision").filter({ hasText: "PERMISSION_DENIED" })).toHaveCount(1);
   await expect(page.getByTestId("status")).toContainText("abstained");
+  // feat-024: the gap the gateway recorded is stated above the report.
+  await expect(page.getByTestId("evidence-gaps")).toContainText("sales data (get_sales_summary");
+});
+
+test("a run without a denied source shows no evidence gap", async ({ page }) => {
+  guardNetwork(page);
+  await page.goto("/replays/sample-q3-declines/");
+
+  await expect(page.getByTestId("status")).toContainText("completed");
+  await expect(page.getByTestId("evidence-gaps")).toHaveCount(0);
 });

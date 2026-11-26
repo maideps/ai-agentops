@@ -18,6 +18,7 @@ export default async function ReplayPage({ params }: { params: Promise<{ id: str
   const { id } = await params;
   const { entry, detail } = loadReplay(id);
   const denied = detail.policy_decisions.filter((d) => d.decision === "deny");
+  const gaps = detail.evidence_gaps ?? [];
   return (
     <article>
       <p>
@@ -38,6 +39,17 @@ export default async function ReplayPage({ params }: { params: Promise<{ id: str
           {detail.user_id} in {detail.tenant_id}
         </dd>
       </dl>
+
+      {gaps.length ? (
+        <section aria-labelledby="gaps" className="gaps" data-testid="evidence-gaps">
+          <h2 id="gaps">Not available to this user</h2>
+          <p>
+            The answer could not use{" "}
+            {gaps.map((g) => `${g.source} (${g.tool}, ${g.reason_code})`).join(", ")}: the user&apos;s
+            role may not use {gaps.length === 1 ? "this source" : "these sources"}.
+          </p>
+        </section>
+      ) : null}
 
       <section aria-labelledby="report">
         <h2 id="report">Report</h2>

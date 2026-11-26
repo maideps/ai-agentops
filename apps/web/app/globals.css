@@ -224,6 +224,11 @@ blockquote {
   color: var(--muted);
 }
 
+.gaps {
+  border-left: 3px solid var(--warn);
+  padding-left: 12px;
+}
+
 @media (max-width: 600px) {
   .facts {
     grid-template-columns: 1fr;

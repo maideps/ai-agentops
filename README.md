@@ -180,6 +180,7 @@ Features are declared in [`feature_list.json`](feature_list.json); their state i
 | feat-021 | Phase 2 | Live evaluation stops early when the provider's daily quota runs out |
 | feat-022 | Phase 2 | Repository ready to be public: secret and local-path checks, license, security policy |
 | feat-023 | Phase 2 | Runs record the sources the user's role kept from them (evidence gaps) |
+| feat-024 | Phase 2 | Demo replays re-recorded on current code, evidence gaps shown, run ids single-use |
 
 ## Documentation
 

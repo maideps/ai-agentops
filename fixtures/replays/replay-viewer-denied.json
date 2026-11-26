@@ -26,6 +26,13 @@
       "text": "All figures and people in this dataset are fictional."
     }
   ],
+  "evidence_gaps": [
+    {
+      "reason_code": "PERMISSION_DENIED",
+      "source": "sales data",
+      "tool": "get_sales_summary"
+    }
+  ],
   "llm_calls": 2,
   "llm_model": "mock-deterministic-v1",
   "llm_provider": "mock",
@@ -61,12 +68,12 @@
       "subject": "finding:0"
     }
   ],
-  "prompt_tokens": 167,
+  "prompt_tokens": 261,
   "proposed_action": null,
   "report": null,
   "run_id": "replay-viewer-denied",
   "status": "abstained",
-  "task_text": "Analyze quarterly sales, identify the largest declines, consult relevant company policies and prepare a cited executive summary.",
+  "task_text": "Analyze quarterly sales from 2026-Q2 to 2026-Q3, identify the three largest declines, consult relevant company policies and prepare a cited executive summary.",
   "tenant_id": "demo-a",
   "thread_id": "demo-a/thread-replay-viewer-denied",
   "tool_calls_executed": 1,

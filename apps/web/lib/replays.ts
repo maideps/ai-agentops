@@ -44,6 +44,8 @@ export type RunDetail = {
     declines: DeclineRow[];
   } | null;
   evidence: Evidence[];
+  // feat-023: sources the user's role kept from the run (absent in replays recorded before it).
+  evidence_gaps?: { tool: string; source: string; reason_code: string }[];
   context: { included_evidence_ids: string[]; dropped_evidence_ids: string[]; estimated_tokens: number };
   policy_decisions: PolicyDecision[];
   errors: { code: string; message: string }[];

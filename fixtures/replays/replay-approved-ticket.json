@@ -1,9 +1,9 @@
 {
   "abstain_reason": null,
   "action_result": {
-    "approval_id": "9a95b18f-0b9c-4c7d-922c-002ad7d68e2e",
+    "approval_id": "c72b284a-f795-4c4f-87fd-4e7d42b6717e",
     "status": "created",
-    "ticket_id": "SBX-9A95B18F0B9C"
+    "ticket_id": "SBX-C72B284AF795"
   },
   "analytics": {
     "declines": [
@@ -129,6 +129,7 @@
       "text": "Customers may return unused footwear within 30 days of purchase for a full refund. Trail running shoes with visible outsole wear are refunded at 50 percent."
     }
   ],
+  "evidence_gaps": [],
   "llm_calls": 2,
   "llm_model": "mock-deterministic-v1",
   "llm_provider": "mock",
@@ -188,17 +189,17 @@
       "subject": "finding:3"
     }
   ],
-  "prompt_tokens": 276,
+  "prompt_tokens": 334,
   "proposed_action": {
     "action_hash": "14efeed1be98f73055bd685391da2471901ac93bf67e70e33da3510aee4a3ae5",
-    "approval_id": "9a95b18f-0b9c-4c7d-922c-002ad7d68e2e",
+    "approval_id": "c72b284a-f795-4c4f-87fd-4e7d42b6717e",
     "arguments": {
       "description": "Revenue fell from 56,000.00 in 2026-Q2 to 47,500.00 in 2026-Q3. The three largest declines were Trail Running Shoes in EMEA, Rain Jacket in NA and Camping Stove in NA. Proposed follow-up: review the EMEA receipt rule and the NA rain jacket price exception.",
       "priority": "high",
       "product_id": 101,
       "title": "Investigate Trail Running Shoes EMEA revenue decline (2026-Q2 to 2026-Q3)"
     },
-    "expires_at": "2026-11-24T19:47:01.011777+00:00",
+    "expires_at": "2026-11-26T21:15:46.686366+00:00",
     "policy_version": "2026-11-19.1",
     "tool": "create_followup_ticket"
   },

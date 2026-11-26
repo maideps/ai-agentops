@@ -398,7 +398,7 @@ mode accepts abstained or completed, a completed run only with the gap on record
 (`discloses_gaps`). Mock scoring stays 50/50.
 **Consequences:** A partial answer can no longer look complete in the run detail. The summary's
 wording is the model's: the scorer checks the recorded gap, not whether the prose mentions it.
-The recorded replays predate this field (and feat-014/feat-018) and were not re-recorded.
+The recorded replays predate this field (and feat-014/feat-018) and were not re-recorded here; feat-024 re-recorded them (D-021).
 
 ## D-020: Publish without rewriting history
 
@@ -419,3 +419,20 @@ and a rewrite would break clones and the commit-bound verification evidence of 2
 Changing repository visibility and account settings stays with the owner.
 **Consequences:** Old commits keep the project number and the author email. Publication is a
 settings change the owner makes after this lands.
+
+## D-021: Run ids are single-use
+
+**Date:** 2026-11-26
+**Status:** accepted
+**Context:** Re-recording the demo replays failed on the approved-ticket replay. Its fixed run
+id still had checkpoints from an earlier recording, so `run_task` continued that thread's
+stale state, including a proposal whose approval the reseed had deleted, and the gateway
+answered `APPROVAL_NOT_FOUND`. The HTTP API always generates a fresh run id, so it was not
+exposed, but any caller reusing a run id with a checkpointer would get the same silent merge.
+**Decision:** With a checkpointer, `run_task` refuses a run id whose thread already has
+checkpoints (`ValueError`); `resume_task` remains the only way to continue a run. The replay
+recorder owns its fixed replay ids and deletes their threads before recording. All demo
+replays were re-recorded on the current code (feat-024), and the replay page shows evidence
+gaps.
+**Consequences:** Recording is repeatable. Each recording changes the approved-ticket replay's
+approval id, ticket id and expiry, which are generated at run time.

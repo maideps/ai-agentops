@@ -17,7 +17,7 @@ from langgraph.checkpoint.base import BaseCheckpointSaver
 
 from agentops_agents.checkpoints import postgres_checkpointer
 from agentops_agents.state import RunDetail, TaskRequest
-from agentops_agents.workflow import RunDependencies, resume_task, run_task
+from agentops_agents.workflow import RunDependencies, resume_task, run_task, thread_id_for
 from agentops_core.aio import run as run_async
 from agentops_core.llm import LLMGateway
 from agentops_evals.corpus import load_corpus
@@ -142,6 +142,8 @@ def _record(replay: Replay, analytics_dsn: str, app_dsn: str) -> RunDetail:
 
     async def start() -> RunDetail:
         async with postgres_checkpointer(app_dsn, tenant_id=replay.tenant_id) as saver:
+            # Replay run ids are fixed, so a previous recording's thread is cleared first.
+            await saver.adelete_thread(thread_id_for(replay.tenant_id, replay.run_id))
             return await run_task(request, deps(saver))
 
     paused = run_async(start())

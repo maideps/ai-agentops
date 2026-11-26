@@ -66,6 +66,7 @@
       "text": "Suppliers that miss two delivery windows in a quarter are reviewed by procurement."
     }
   ],
+  "evidence_gaps": [],
   "llm_calls": 2,
   "llm_model": "mock-deterministic-v1",
   "llm_provider": "mock",
@@ -101,7 +102,7 @@
       "subject": "finding:1"
     }
   ],
-  "prompt_tokens": 226,
+  "prompt_tokens": 293,
   "proposed_action": null,
   "report": {
     "findings": [
@@ -117,7 +118,7 @@
   },
   "run_id": "replay-injection-demo-b",
   "status": "completed",
-  "task_text": "Analyze quarterly sales, identify the largest declines, consult relevant company policies and prepare a cited executive summary.",
+  "task_text": "Analyze quarterly sales from 2026-Q2 to 2026-Q3, identify the three largest declines, consult relevant company policies and prepare a cited executive summary.",
   "tenant_id": "demo-b",
   "thread_id": "demo-b/thread-replay-injection-demo-b",
   "tool_calls_executed": 2,

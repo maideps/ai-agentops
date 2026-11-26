@@ -802,6 +802,48 @@
           "repair": "Start Docker, check the compose healthcheck and migrations, fix failing integration tests and rerun."
         }
       ]
+    },
+    {
+      "id": "feat-024",
+      "name": "Phase 2: demo replays are current and repeatable",
+      "behavior": "Every committed demo replay is recorded on the current code: case replays use the current corpus task text, every replay carries evidence_gaps, and the viewer replay records the sales gap. Recording can be repeated: the recorder clears the checkpoint threads of its fixed replay ids before recording, and with a checkpointer run_task refuses a run id whose thread already has checkpoints instead of continuing stale state; resume_task stays the only way to continue a run. The replay page states the sources not available to the user, above the report, and shows nothing when there is no gap. Requirements: FR-015, FR-013.",
+      "verification": "Offline acceptance tests compare committed replays with the catalog and corpus and check the viewer gap. Integration tests record all replays twice in a row into temporary folders and show that a checkpointed run id cannot start a second run. UI end-to-end tests show the gap on the viewer replay and none on the sample run.",
+      "dependencies": [
+        "feat-009",
+        "feat-023"
+      ],
+      "layers": [
+        {
+          "label": "Layer 1: Harness and architecture checks",
+          "cmd": "node scripts/framework-check.mjs lint && npm run check-arch && node scripts/framework-check.mjs typecheck",
+          "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
+        },
+        {
+          "label": "Layer 2: Python static checks",
+          "cmd": "uv run ruff check . && uv run ruff format --check . && uv run mypy",
+          "repair": "Fix Ruff findings (or run uv run ruff format .) and mypy errors, then rerun."
+        },
+        {
+          "label": "Layer 3: Offline acceptance tests feat-024",
+          "cmd": "uv run pytest testsuite/acceptance/feat_024 -q -m \"not integration\"",
+          "repair": "Fix the code until the declared behavior holds; a test that contradicts the behavior is fixed in the same commit."
+        },
+        {
+          "label": "Layer 4: Default regression suite (no network, no Docker)",
+          "cmd": "uv run pytest testsuite -q -m \"not live and not integration\"",
+          "repair": "Fix the regression this feature introduced; do not mark tests skipped to pass."
+        },
+        {
+          "label": "Layer 5: Integration suite (stubbed provider, local Postgres)",
+          "cmd": "docker compose up -d --wait postgres && uv run pytest testsuite -q -m \"integration and not live\"",
+          "repair": "Start Docker, check the compose healthcheck and migrations, fix failing integration tests and rerun."
+        },
+        {
+          "label": "Layer 6: Replay UI end-to-end tests",
+          "cmd": "npm run e2e",
+          "repair": "Fix the replay page or its fixtures until the Playwright tests pass; never loosen the network guard."
+        }
+      ]
     }
   ]
 }

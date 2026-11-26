@@ -35,6 +35,7 @@
       "text": "In 2026-Q3 the NA region raised rain jacket prices by 15 percent to cover freight costs, without committee approval. The committee reviews this exception in 2026-Q4."
     }
   ],
+  "evidence_gaps": [],
   "llm_calls": 1,
   "llm_model": "mock-deterministic-v1",
   "llm_provider": "mock",
@@ -58,12 +59,12 @@
       "subject": "tool_call:call-2:search_approved_documents"
     }
   ],
-  "prompt_tokens": 72,
+  "prompt_tokens": 77,
   "proposed_action": null,
   "report": null,
   "run_id": "replay-missing-data",
   "status": "abstained",
-  "task_text": "Analyze quarterly sales, identify the largest declines, consult relevant company policies and prepare a cited executive summary.",
+  "task_text": "Analyze quarterly sales from 2025-Q3 to 2025-Q4, identify the three largest declines, consult relevant company policies and prepare a cited executive summary.",
   "tenant_id": "demo-a",
   "thread_id": "demo-a/thread-replay-missing-data",
   "tool_calls_executed": 2,

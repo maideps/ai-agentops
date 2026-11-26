@@ -767,6 +767,15 @@ async def run_task(request: TaskRequest, deps: RunDependencies) -> RunDetail:
     if request.propose_followup and (deps.checkpointer is None or deps.tool_gateway is None):
         msg = "propose_followup needs a checkpointer and a tool gateway"
         raise ValueError(msg)
+    if deps.checkpointer is not None:
+        # A new run on a thread that already has checkpoints would continue its stale state
+        # (feat-024): run ids are single-use; resume_task continues a paused run.
+        config: RunnableConfig = {
+            "configurable": {"thread_id": thread_id_for(request.tenant_id, request.run_id)}
+        }
+        if (await _Run(deps, None, 0.0).build().aget_state(config)).values:
+            msg = f"run {request.run_id!r} already exists"
+            raise ValueError(msg)
     initial: AgentRunState = {
         "run_id": request.run_id,
         "thread_id": thread_id_for(request.tenant_id, request.run_id),
