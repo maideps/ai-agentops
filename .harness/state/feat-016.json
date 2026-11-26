@@ -1,4 +1,4 @@
 {
-  "state": "planned",
-  "evidence": ""
+  "state": "passing",
+  "evidence": "{\"summary\":\"All verification layers passed via node scripts/framework-check.mjs verify-feature (SKIP reported in: Layer 3: System confirmation)\",\"timestamp\":\"2026-11-24T21:40:30.408Z\",\"commit\":\"90a0164\",\"dirty\":false,\"bound\":true,\"checksHash\":\"f4cdd5c804296d1a\",\"layers\":[{\"label\":\"Layer 1: Static checks\",\"cmd\":\"npm run lint\",\"result\":\"PASS\",\"skipReported\":false,\"durationMs\":1329,\"log\":\".harness/logs/feat-016/01-layer-1-static-checks.log\"},{\"label\":\"Layer 2: Runtime tests\",\"cmd\":\"npm run test\",\"result\":\"PASS\",\"skipReported\":false,\"durationMs\":13985,\"log\":\".harness/logs/feat-016/02-layer-2-runtime-tests.log\"},{\"label\":\"Layer 3: System confirmation\",\"cmd\":\"npm run check-arch && npm run typecheck && npm run build && npm run e2e && npm run verify-all && npm run quality\",\"result\":\"PASS\",\"skipReported\":true,\"durationMs\":19598,\"log\":\".harness/logs/feat-016/03-layer-3-system-confirmation.log\"},{\"label\":\"Layer 4: Retrieval stress acceptance\",\"cmd\":\"uv run pytest testsuite/acceptance/feat_016 -q\",\"result\":\"PASS\",\"skipReported\":false,\"durationMs\":7075,\"log\":\".harness/logs/feat-016/04-layer-4-retrieval-stress-acceptance.log\"}]}"
 }

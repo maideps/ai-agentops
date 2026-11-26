@@ -3,7 +3,7 @@
 ## Current Objective
 
 - Goal: Land retrieval stress as feat-016; hosted feat-015 remains the other agent's active feature.
-- Current status: feat-001 through feat-014 passing; feat-016 awaits fresh verification after its owner-approved renumbering.
+- Current status: feat-001 through feat-014 and feat-016 passing; hosted feat-015 remains active and owned by the other agent.
 - Branch: feat-016-retrieval-stress, in the already owned retrieval worktree. The original checkout is untouched.
 
 ## Completed This Session
@@ -31,9 +31,9 @@
 - Main allocated feat-015 to hosted-call reliability while retrieval PR #2 completed CI; the owner approved renumbering retrieval to feat-016 and replacing that conflicting PR.
 - Main's feat-015 declaration/state and every published feat-014 code/evidence file remain unchanged.
 - Frozen 28-case corpus and paired reports remain byte-identical to ba9a3c7. No ranking, CLI, source or original v1 artifact changes.
-- Retrieval tests move to testsuite/acceptance/feat_016. New state starts planned, not copied passing; obtain fresh bound evidence through verify-feature after committing code/docs.
+- Retrieval tests move to testsuite/acceptance/feat_016. New state began planned, without copied evidence, and passed its fresh four-layer gate at 90a0164 through verify-feature.
 - Preserve main's session 019; original retrieval development moves to session 020. Unpublished notes in the other checkout remain untouched and may need numbering reconciliation at their future merge.
-- Historical retrieval gate/results are recorded in progress/020-2026-11-24.md. Fresh combined checks passed: 128 offline tests, 130 isolated integration tests, nine UI e2e, 14 architecture rules and strict mypy over 111 sources. The feat-016 gate remains pending until the reconciled code/docs are committed.
+- Historical retrieval gate/results are recorded in progress/020-2026-11-24.md. Fresh combined checks passed: 128 offline tests, 130 isolated integration tests, nine UI e2e, 14 architecture rules and strict mypy over 111 sources. The feat-016 gate passed all four layers at 90a0164, with bound state/trail. Optional framework-only e2e, multi-repo and disabled quality reported SKIP.
 - Use the isolated agentops_feat015_test database and actual GITHUB_SHA. No new hosted calls or source/corpus tuning.
 
 ## Decisions

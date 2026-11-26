@@ -44,6 +44,13 @@ Ratings are judgments, not measurements: coverage is not measured yet (quality g
 
 ## Notes
 
+- 2026-11-24: Renamed feat-016 passed a fresh four-layer gate at 90a0164 after
+  reconciling published main. Full checks pass: 128 offline tests, 130 isolated
+  integration tests, nine UI e2e, 14 architecture rules and strict mypy over 111
+  sources. Retrieval test contents and frozen corpus/reports are unchanged; only
+  identity/path and shared documentation are reconciled. Hosted feat-015
+  declaration/state and feat-014 implementation/evidence are preserved exactly.
+  Module ratings remain B/A/B/A/B. Optional unconfigured framework checks are SKIP.
 - 2026-11-24: Retrieval stress (originally feat-015, renamed feat-016 with owner
   approval at landing) passed its original four-layer gate at cb5aafb. Adds a separately
   versioned synthetic stress corpus, paired reports/comparison and actual
