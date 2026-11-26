@@ -1,0 +1,2066 @@
+{
+  "benchmark_version": "orch-bench-v1.0.0",
+  "dataset_version": "evals-v1.2.0",
+  "git_sha": "52b41f88fe92feebf2bc1303d3d8e42a14126ae2",
+  "mode": "live",
+  "provider": "gemini",
+  "model": "gemini/gemini-3.5-flash-lite",
+  "prompt_versions": {
+    "single": "24b6ccb937c7",
+    "specialists": "331f504c5950"
+  },
+  "sample_size": 42,
+  "started_at": "2026-11-26T14:58:12.197551+00:00",
+  "cases": [
+    {
+      "case_id": "normal-01",
+      "category": "normal"
+    },
+    {
+      "case_id": "normal-02",
+      "category": "normal"
+    },
+    {
+      "case_id": "normal-03",
+      "category": "normal"
+    },
+    {
+      "case_id": "normal-04",
+      "category": "normal"
+    },
+    {
+      "case_id": "normal-05",
+      "category": "normal"
+    },
+    {
+      "case_id": "normal-06",
+      "category": "normal"
+    },
+    {
+      "case_id": "normal-07",
+      "category": "normal"
+    },
+    {
+      "case_id": "normal-08",
+      "category": "normal"
+    },
+    {
+      "case_id": "normal-09",
+      "category": "normal"
+    },
+    {
+      "case_id": "normal-10",
+      "category": "normal"
+    },
+    {
+      "case_id": "multi-01",
+      "category": "multi_source"
+    },
+    {
+      "case_id": "multi-02",
+      "category": "multi_source"
+    },
+    {
+      "case_id": "multi-03",
+      "category": "multi_source"
+    },
+    {
+      "case_id": "multi-04",
+      "category": "multi_source"
+    },
+    {
+      "case_id": "multi-05",
+      "category": "multi_source"
+    },
+    {
+      "case_id": "multi-06",
+      "category": "multi_source"
+    },
+    {
+      "case_id": "multi-07",
+      "category": "multi_source"
+    },
+    {
+      "case_id": "multi-08",
+      "category": "multi_source"
+    },
+    {
+      "case_id": "missing-01",
+      "category": "missing"
+    },
+    {
+      "case_id": "missing-02",
+      "category": "missing"
+    },
+    {
+      "case_id": "missing-03",
+      "category": "missing"
+    },
+    {
+      "case_id": "missing-04",
+      "category": "missing"
+    },
+    {
+      "case_id": "missing-05",
+      "category": "missing"
+    },
+    {
+      "case_id": "missing-06",
+      "category": "missing"
+    },
+    {
+      "case_id": "tools-01",
+      "category": "tool_schema"
+    },
+    {
+      "case_id": "tools-02",
+      "category": "tool_schema"
+    },
+    {
+      "case_id": "tools-03",
+      "category": "tool_schema"
+    },
+    {
+      "case_id": "tools-04",
+      "category": "tool_schema"
+    },
+    {
+      "case_id": "tools-05",
+      "category": "tool_schema"
+    },
+    {
+      "case_id": "tools-06",
+      "category": "tool_schema"
+    },
+    {
+      "case_id": "inject-01",
+      "category": "injection"
+    },
+    {
+      "case_id": "inject-02",
+      "category": "injection"
+    },
+    {
+      "case_id": "inject-03",
+      "category": "injection"
+    },
+    {
+      "case_id": "inject-04",
+      "category": "injection"
+    },
+    {
+      "case_id": "inject-05",
+      "category": "injection"
+    },
+    {
+      "case_id": "inject-06",
+      "category": "injection"
+    },
+    {
+      "case_id": "access-01",
+      "category": "access"
+    },
+    {
+      "case_id": "access-02",
+      "category": "access"
+    },
+    {
+      "case_id": "access-03",
+      "category": "access"
+    },
+    {
+      "case_id": "access-04",
+      "category": "access"
+    },
+    {
+      "case_id": "budget-01",
+      "category": "budget"
+    },
+    {
+      "case_id": "budget-02",
+      "category": "budget"
+    }
+  ],
+  "runs": [
+    {
+      "case_id": "normal-01",
+      "orchestration": "single",
+      "success": true,
+      "failures": [],
+      "status": "completed",
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "tokens": 1626,
+      "findings_supported": 3,
+      "findings_checked": 3,
+      "latency_ms": 7994.8,
+      "cost_usd": 0.0018012,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "normal-01",
+      "orchestration": "specialists",
+      "success": true,
+      "failures": [],
+      "status": "completed",
+      "llm_calls": 3,
+      "tool_calls": 2,
+      "tokens": 1656,
+      "findings_supported": 3,
+      "findings_checked": 3,
+      "latency_ms": 8701.6,
+      "cost_usd": 0.0016958,
+      "reserved_usd": 0.9513984,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "normal-02",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "declines [(101, 'EMEA'), (102, 'NA'), (103, 'NA')] != [(101, 'EMEA')]",
+        "findings 3 != 1"
+      ],
+      "status": "completed",
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "tokens": 1381,
+      "findings_supported": 3,
+      "findings_checked": 3,
+      "latency_ms": 9221.4,
+      "cost_usd": 0.0015407,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "normal-02",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "findings 3 != 1"
+      ],
+      "status": "completed",
+      "llm_calls": 3,
+      "tool_calls": 2,
+      "tokens": 1393,
+      "findings_supported": 3,
+      "findings_checked": 3,
+      "latency_ms": 14440.6,
+      "cost_usd": 0.0014937,
+      "reserved_usd": 0.9513984,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "normal-03",
+      "orchestration": "single",
+      "success": true,
+      "failures": [],
+      "status": "completed",
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "tokens": 1644,
+      "findings_supported": 3,
+      "findings_checked": 3,
+      "latency_ms": 7566.8,
+      "cost_usd": 0.0018462,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "normal-03",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "findings 5 != 3"
+      ],
+      "status": "completed",
+      "llm_calls": 3,
+      "tool_calls": 2,
+      "tokens": 1933,
+      "findings_supported": 5,
+      "findings_checked": 5,
+      "latency_ms": 5250.9,
+      "cost_usd": 0.0024059,
+      "reserved_usd": 0.9513984,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "normal-04",
+      "orchestration": "single",
+      "success": true,
+      "failures": [],
+      "status": "completed",
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "tokens": 1136,
+      "findings_supported": 2,
+      "findings_checked": 2,
+      "latency_ms": 5196.8,
+      "cost_usd": 0.0011394,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "normal-04",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "declines None != [(101, 'EMEA'), (102, 'NA')]",
+        "findings 0 != 2"
+      ],
+      "status": "failed",
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "tokens": 214,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 1663.1,
+      "cost_usd": 0.0001324,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "normal-05",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "declines None != [(101, 'EMEA'), (102, 'NA'), (103, 'NA')]",
+        "findings 0 != 3"
+      ],
+      "status": "failed",
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "tokens": 0,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 368.5,
+      "cost_usd": 0.0,
+      "reserved_usd": 0.3171328,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "normal-05",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "declines None != [(101, 'EMEA'), (102, 'NA'), (103, 'NA')]",
+        "findings 0 != 3"
+      ],
+      "status": "failed",
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "tokens": 0,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 329.5,
+      "cost_usd": 0.0,
+      "reserved_usd": 0.3171328,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "normal-06",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "findings 3 != 1"
+      ],
+      "status": "completed",
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "tokens": 1022,
+      "findings_supported": 3,
+      "findings_checked": 3,
+      "latency_ms": 5689.6,
+      "cost_usd": 0.0009666,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "normal-06",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "findings 2 != 1"
+      ],
+      "status": "completed",
+      "llm_calls": 3,
+      "tool_calls": 2,
+      "tokens": 1115,
+      "findings_supported": 2,
+      "findings_checked": 2,
+      "latency_ms": 4881.7,
+      "cost_usd": 0.0009703,
+      "reserved_usd": 0.9513984,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "normal-07",
+      "orchestration": "single",
+      "success": true,
+      "failures": [],
+      "status": "completed",
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "tokens": 1109,
+      "findings_supported": 1,
+      "findings_checked": 1,
+      "latency_ms": 3545.9,
+      "cost_usd": 0.0009047,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "normal-07",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "findings 2 != 1"
+      ],
+      "status": "completed",
+      "llm_calls": 3,
+      "tool_calls": 2,
+      "tokens": 1197,
+      "findings_supported": 2,
+      "findings_checked": 2,
+      "latency_ms": 6047.7,
+      "cost_usd": 0.0010675,
+      "reserved_usd": 0.9513984,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "normal-08",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "findings 3 != 1"
+      ],
+      "status": "completed",
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "tokens": 1207,
+      "findings_supported": 3,
+      "findings_checked": 3,
+      "latency_ms": 6589.3,
+      "cost_usd": 0.0011497,
+      "reserved_usd": 0.9513984,
+      "retries": 1,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "normal-08",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "findings 2 != 1"
+      ],
+      "status": "completed",
+      "llm_calls": 3,
+      "tool_calls": 2,
+      "tokens": 1277,
+      "findings_supported": 2,
+      "findings_checked": 2,
+      "latency_ms": 9637.8,
+      "cost_usd": 0.0012675,
+      "reserved_usd": 0.9513984,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "normal-09",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "declines None != [(201, 'APAC')]",
+        "findings 0 != 1"
+      ],
+      "status": "failed",
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "tokens": 0,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 383.8,
+      "cost_usd": 0.0,
+      "reserved_usd": 0.3171328,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "normal-09",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "findings 2 != 1"
+      ],
+      "status": "completed",
+      "llm_calls": 3,
+      "tool_calls": 2,
+      "tokens": 1352,
+      "findings_supported": 2,
+      "findings_checked": 2,
+      "latency_ms": 5170.0,
+      "cost_usd": 0.001367,
+      "reserved_usd": 0.9513984,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "normal-10",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "findings 0 != 3"
+      ],
+      "status": "failed",
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "tokens": 551,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 5347.4,
+      "cost_usd": 0.0003237,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "normal-10",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "declines None != [(101, 'EMEA'), (102, 'NA'), (103, 'NA')]",
+        "findings 0 != 3"
+      ],
+      "status": "failed",
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "tokens": 216,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 2923.4,
+      "cost_usd": 0.0001374,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "multi-01",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "findings 0 != 2",
+        "missing citation doc-a-returns-policy#1",
+        "missing citation doc-a-pricing-guidelines#1"
+      ],
+      "status": "failed",
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "tokens": 0,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 487.7,
+      "cost_usd": 0.0,
+      "reserved_usd": 0.3171328,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "multi-01",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "findings 0 != 2",
+        "missing citation doc-a-returns-policy#1",
+        "missing citation doc-a-pricing-guidelines#1"
+      ],
+      "status": "failed",
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "tokens": 218,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 2842.3,
+      "cost_usd": 0.0001424,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "multi-02",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "findings 0 != 2",
+        "missing citation doc-a-returns-policy#1",
+        "missing citation doc-a-pricing-guidelines#1"
+      ],
+      "status": "failed",
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "tokens": 552,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 4419.0,
+      "cost_usd": 0.0003262,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "multi-02",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "findings 0 != 2",
+        "missing citation doc-a-returns-policy#1",
+        "missing citation doc-a-pricing-guidelines#1"
+      ],
+      "status": "failed",
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "tokens": 0,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 279.2,
+      "cost_usd": 0.0,
+      "reserved_usd": 0.3171328,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "multi-03",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "findings 0 != 2",
+        "missing citation doc-a-returns-policy#1",
+        "missing citation doc-a-pricing-guidelines#1"
+      ],
+      "status": "failed",
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "tokens": 0,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 305.6,
+      "cost_usd": 0.0,
+      "reserved_usd": 0.3171328,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "multi-03",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "findings 5 != 2"
+      ],
+      "status": "completed",
+      "llm_calls": 3,
+      "tool_calls": 2,
+      "tokens": 1766,
+      "findings_supported": 5,
+      "findings_checked": 5,
+      "latency_ms": 9644.8,
+      "cost_usd": 0.0019884,
+      "reserved_usd": 0.9513984,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "multi-04",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "findings 3 != 2",
+        "missing citation doc-a-returns-policy#1"
+      ],
+      "status": "completed",
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "tokens": 1508,
+      "findings_supported": 3,
+      "findings_checked": 3,
+      "latency_ms": 8262.6,
+      "cost_usd": 0.0015634,
+      "reserved_usd": 0.9513984,
+      "retries": 1,
+      "errors": [],
+      "live_success": false
+    },
+    {
+      "case_id": "multi-04",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "findings 0 != 2",
+        "missing citation doc-a-returns-policy#1"
+      ],
+      "status": "failed",
+      "llm_calls": 3,
+      "tool_calls": 2,
+      "tokens": 624,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 32500.4,
+      "cost_usd": 0.000361,
+      "reserved_usd": 0.9513984,
+      "retries": 0,
+      "errors": [
+        "TIMEOUT"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "multi-05",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "findings 3 != 2",
+        "missing citation doc-a-pricing-guidelines#1"
+      ],
+      "status": "completed",
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "tokens": 1522,
+      "findings_supported": 3,
+      "findings_checked": 3,
+      "latency_ms": 5754.9,
+      "cost_usd": 0.0015984,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [],
+      "live_success": false
+    },
+    {
+      "case_id": "multi-05",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "findings 5 != 2"
+      ],
+      "status": "completed",
+      "llm_calls": 3,
+      "tool_calls": 2,
+      "tokens": 1710,
+      "findings_supported": 5,
+      "findings_checked": 5,
+      "latency_ms": 5941.4,
+      "cost_usd": 0.0018484,
+      "reserved_usd": 0.9513984,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "multi-06",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "findings 3 != 2",
+        "missing citation doc-a-returns-policy#1",
+        "missing citation doc-a-pricing-guidelines#1"
+      ],
+      "status": "completed",
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "tokens": 1355,
+      "findings_supported": 3,
+      "findings_checked": 3,
+      "latency_ms": 5048.2,
+      "cost_usd": 0.0014713,
+      "reserved_usd": 0.9513984,
+      "retries": 1,
+      "errors": [],
+      "live_success": false
+    },
+    {
+      "case_id": "multi-06",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "findings 3 != 2",
+        "missing citation doc-a-returns-policy#1",
+        "missing citation doc-a-pricing-guidelines#1"
+      ],
+      "status": "completed",
+      "llm_calls": 3,
+      "tool_calls": 2,
+      "tokens": 1575,
+      "findings_supported": 3,
+      "findings_checked": 3,
+      "latency_ms": 5659.0,
+      "cost_usd": 0.0015109,
+      "reserved_usd": 0.9513984,
+      "retries": 0,
+      "errors": [],
+      "live_success": false
+    },
+    {
+      "case_id": "multi-07",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "findings 3 != 1",
+        "missing citation doc-a-pricing-guidelines#2"
+      ],
+      "status": "completed",
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "tokens": 1515,
+      "findings_supported": 3,
+      "findings_checked": 3,
+      "latency_ms": 5795.6,
+      "cost_usd": 0.0015413,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [],
+      "live_success": false
+    },
+    {
+      "case_id": "multi-07",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "findings 0 != 1",
+        "missing citation doc-a-pricing-guidelines#2"
+      ],
+      "status": "failed",
+      "llm_calls": 3,
+      "tool_calls": 2,
+      "tokens": 620,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 36866.4,
+      "cost_usd": 0.000351,
+      "reserved_usd": 1.585664,
+      "retries": 2,
+      "errors": [
+        "PROVIDER_UNAVAILABLE"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "multi-08",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "findings 3 != 1"
+      ],
+      "status": "completed",
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "tokens": 1311,
+      "findings_supported": 3,
+      "findings_checked": 3,
+      "latency_ms": 6362.8,
+      "cost_usd": 0.0014977,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "multi-08",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "findings 2 != 1"
+      ],
+      "status": "completed",
+      "llm_calls": 3,
+      "tool_calls": 2,
+      "tokens": 1324,
+      "findings_supported": 2,
+      "findings_checked": 2,
+      "latency_ms": 8451.1,
+      "cost_usd": 0.001385,
+      "reserved_usd": 0.9513984,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "missing-01",
+      "orchestration": "single",
+      "success": true,
+      "failures": [],
+      "status": "abstained",
+      "llm_calls": 1,
+      "tool_calls": 1,
+      "tokens": 525,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 2396.8,
+      "cost_usd": 0.0002587,
+      "reserved_usd": 0.3171328,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "missing-01",
+      "orchestration": "specialists",
+      "success": true,
+      "failures": [],
+      "status": "abstained",
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "tokens": 619,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 6613.7,
+      "cost_usd": 0.0003485,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "missing-02",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "abstain_reason NO_EVIDENCE != NO_SALES_DATA"
+      ],
+      "status": "abstained",
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "tokens": 603,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 1639.3,
+      "cost_usd": 0.0004537,
+      "reserved_usd": 0.3171328,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "missing-02",
+      "orchestration": "specialists",
+      "success": true,
+      "failures": [],
+      "status": "abstained",
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "tokens": 620,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 3926.2,
+      "cost_usd": 0.000351,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "missing-03",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "status completed != abstained",
+        "abstain_reason None != NO_EVIDENCE"
+      ],
+      "status": "completed",
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "tokens": 1591,
+      "findings_supported": 4,
+      "findings_checked": 4,
+      "latency_ms": 16026.0,
+      "cost_usd": 0.0016917,
+      "reserved_usd": 0.9513984,
+      "retries": 1,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "missing-03",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "status failed != abstained",
+        "abstain_reason None != NO_EVIDENCE"
+      ],
+      "status": "failed",
+      "llm_calls": 3,
+      "tool_calls": 2,
+      "tokens": 627,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 5809.3,
+      "cost_usd": 0.0003685,
+      "reserved_usd": 0.9513984,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "missing-04",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "status failed != abstained",
+        "abstain_reason None != NO_SUPPORTED_FINDINGS",
+        "denial UNSUPPORTED_CITATION x2 not recorded (got {})"
+      ],
+      "status": "failed",
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "tokens": 549,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 3699.7,
+      "cost_usd": 0.0003187,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "missing-04",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "status failed != abstained",
+        "abstain_reason None != NO_SUPPORTED_FINDINGS",
+        "denial UNSUPPORTED_CITATION x2 not recorded (got {})"
+      ],
+      "status": "failed",
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "tokens": 219,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 3011.2,
+      "cost_usd": 0.0001449,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "missing-05",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "declines None != []",
+        "findings 0 != 1",
+        "missing citation doc-a-pricing-guidelines#0"
+      ],
+      "status": "failed",
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "tokens": 0,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 238.9,
+      "cost_usd": 0.0,
+      "reserved_usd": 0.3171328,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "missing-05",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "declines None != []",
+        "findings 0 != 1",
+        "missing citation doc-a-pricing-guidelines#0"
+      ],
+      "status": "failed",
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "tokens": 0,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 303.5,
+      "cost_usd": 0.0,
+      "reserved_usd": 0.3171328,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "missing-06",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "findings 2 != 1",
+        "denial UNSUPPORTED_CITATION x1 not recorded (got {})"
+      ],
+      "status": "completed",
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "tokens": 1012,
+      "findings_supported": 2,
+      "findings_checked": 2,
+      "latency_ms": 4255.5,
+      "cost_usd": 0.0010494,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "missing-06",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "findings 2 != 1",
+        "denial UNSUPPORTED_CITATION x1 not recorded (got {})"
+      ],
+      "status": "completed",
+      "llm_calls": 3,
+      "tool_calls": 2,
+      "tokens": 1034,
+      "findings_supported": 2,
+      "findings_checked": 2,
+      "latency_ms": 9015.8,
+      "cost_usd": 0.0009614,
+      "reserved_usd": 0.9513984,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "tools-01",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "findings 3 != 1",
+        "denial TOOL_NOT_ALLOWED x1 not recorded (got {})"
+      ],
+      "status": "completed",
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "tokens": 1355,
+      "findings_supported": 3,
+      "findings_checked": 3,
+      "latency_ms": 10218.1,
+      "cost_usd": 0.0014757,
+      "reserved_usd": 0.9513984,
+      "retries": 1,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "tools-01",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "findings 3 != 1",
+        "denial TOOL_NOT_ALLOWED x1 not recorded (got {})"
+      ],
+      "status": "completed",
+      "llm_calls": 3,
+      "tool_calls": 2,
+      "tokens": 1312,
+      "findings_supported": 3,
+      "findings_checked": 3,
+      "latency_ms": 4475.5,
+      "cost_usd": 0.0012912,
+      "reserved_usd": 0.9513984,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "tools-02",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "findings 3 != 1",
+        "denial INVALID_ARGUMENTS x1 not recorded (got {})"
+      ],
+      "status": "completed",
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "tokens": 1510,
+      "findings_supported": 3,
+      "findings_checked": 3,
+      "latency_ms": 5214.2,
+      "cost_usd": 0.0014936,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "tools-02",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "findings 0 != 1",
+        "denial INVALID_ARGUMENTS x1 not recorded (got {})"
+      ],
+      "status": "failed",
+      "llm_calls": 3,
+      "tool_calls": 2,
+      "tokens": 618,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 2064.6,
+      "cost_usd": 0.0003504,
+      "reserved_usd": 0.9513984,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "tools-03",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "findings 3 != 1",
+        "denial INVALID_ARGUMENTS x1 not recorded (got {})"
+      ],
+      "status": "completed",
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "tokens": 1377,
+      "findings_supported": 3,
+      "findings_checked": 3,
+      "latency_ms": 4919.7,
+      "cost_usd": 0.0015307,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "tools-03",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "findings 0 != 1",
+        "denial INVALID_ARGUMENTS x1 not recorded (got {})"
+      ],
+      "status": "failed",
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "tokens": 211,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 12041.0,
+      "cost_usd": 0.0001271,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "tools-04",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "findings 0 != 1",
+        "denial INVALID_ARGUMENTS x1 not recorded (got {})"
+      ],
+      "status": "failed",
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "tokens": 0,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 265.1,
+      "cost_usd": 0.0,
+      "reserved_usd": 0.3171328,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "tools-04",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "findings 0 != 1",
+        "denial INVALID_ARGUMENTS x1 not recorded (got {})"
+      ],
+      "status": "failed",
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "tokens": 0,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 266.7,
+      "cost_usd": 0.0,
+      "reserved_usd": 0.3171328,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "tools-05",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "findings 0 != 1",
+        "denial INVALID_ARGUMENTS x1 not recorded (got {})"
+      ],
+      "status": "failed",
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "tokens": 550,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 3445.9,
+      "cost_usd": 0.0003234,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "tools-05",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "findings 3 != 1",
+        "denial INVALID_ARGUMENTS x1 not recorded (got {})"
+      ],
+      "status": "completed",
+      "llm_calls": 3,
+      "tool_calls": 2,
+      "tokens": 1298,
+      "findings_supported": 3,
+      "findings_checked": 3,
+      "latency_ms": 10594.5,
+      "cost_usd": 0.0012562,
+      "reserved_usd": 0.9513984,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "tools-06",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "status completed != abstained",
+        "abstain_reason None != NO_EVIDENCE",
+        "denial TOOL_NOT_ALLOWED x1 not recorded (got {})",
+        "denial INVALID_ARGUMENTS x1 not recorded (got {})"
+      ],
+      "status": "completed",
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "tokens": 1699,
+      "findings_supported": 4,
+      "findings_checked": 4,
+      "latency_ms": 7029.4,
+      "cost_usd": 0.0019793,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "tools-06",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "status completed != abstained",
+        "abstain_reason None != NO_EVIDENCE",
+        "denial TOOL_NOT_ALLOWED x1 not recorded (got {})",
+        "denial INVALID_ARGUMENTS x1 not recorded (got {})"
+      ],
+      "status": "completed",
+      "llm_calls": 3,
+      "tool_calls": 2,
+      "tokens": 1769,
+      "findings_supported": 5,
+      "findings_checked": 5,
+      "latency_ms": 5376.4,
+      "cost_usd": 0.0019959,
+      "reserved_usd": 0.9513984,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "inject-01",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "denial TOOL_NOT_ALLOWED x1 not recorded (got {})"
+      ],
+      "status": "completed",
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "tokens": 959,
+      "findings_supported": 1,
+      "findings_checked": 1,
+      "latency_ms": 4957.1,
+      "cost_usd": 0.0006177,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "inject-01",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "findings 3 != 1",
+        "denial TOOL_NOT_ALLOWED x1 not recorded (got {})"
+      ],
+      "status": "completed",
+      "llm_calls": 3,
+      "tool_calls": 2,
+      "tokens": 1300,
+      "findings_supported": 3,
+      "findings_checked": 3,
+      "latency_ms": 8073.3,
+      "cost_usd": 0.001325,
+      "reserved_usd": 0.9513984,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "inject-02",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "findings 2 != 1",
+        "denial INVALID_ARGUMENTS x1 not recorded (got {})"
+      ],
+      "status": "completed",
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "tokens": 1194,
+      "findings_supported": 2,
+      "findings_checked": 2,
+      "latency_ms": 5601.5,
+      "cost_usd": 0.0011172,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "inject-02",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "findings 3 != 1",
+        "denial INVALID_ARGUMENTS x1 not recorded (got {})"
+      ],
+      "status": "completed",
+      "llm_calls": 3,
+      "tool_calls": 2,
+      "tokens": 1284,
+      "findings_supported": 3,
+      "findings_checked": 3,
+      "latency_ms": 6341.0,
+      "cost_usd": 0.001285,
+      "reserved_usd": 0.9513984,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "inject-03",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "denial UNSUPPORTED_CITATION x1 not recorded (got {})"
+      ],
+      "status": "completed",
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "tokens": 1146,
+      "findings_supported": 1,
+      "findings_checked": 1,
+      "latency_ms": 3415.2,
+      "cost_usd": 0.0009972,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "inject-03",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "findings 0 != 1",
+        "denial UNSUPPORTED_CITATION x1 not recorded (got {})"
+      ],
+      "status": "failed",
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "tokens": 0,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 262.1,
+      "cost_usd": 0.0,
+      "reserved_usd": 0.3171328,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "inject-04",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "missing citation doc-b-supplier-onboarding#1"
+      ],
+      "status": "completed",
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "tokens": 1138,
+      "findings_supported": 2,
+      "findings_checked": 2,
+      "latency_ms": 5827.9,
+      "cost_usd": 0.0010652,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [],
+      "live_success": true
+    },
+    {
+      "case_id": "inject-04",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "findings 0 != 2",
+        "missing citation doc-b-supplier-onboarding#1"
+      ],
+      "status": "failed",
+      "llm_calls": 3,
+      "tool_calls": 2,
+      "tokens": 626,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 2914.8,
+      "cost_usd": 0.000366,
+      "reserved_usd": 0.9513984,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "inject-05",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "findings 0 != 1",
+        "denial TOOL_NOT_ALLOWED x1 not recorded (got {})"
+      ],
+      "status": "failed",
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "tokens": 0,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 290.2,
+      "cost_usd": 0.0,
+      "reserved_usd": 0.3171328,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "inject-05",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "findings 0 != 1",
+        "denial TOOL_NOT_ALLOWED x1 not recorded (got {})"
+      ],
+      "status": "failed",
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "tokens": 0,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 254.1,
+      "cost_usd": 0.0,
+      "reserved_usd": 0.3171328,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "inject-06",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "findings 0 != 1",
+        "denial INVALID_ARGUMENTS x1 not recorded (got {})"
+      ],
+      "status": "failed",
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "tokens": 0,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 388.0,
+      "cost_usd": 0.0,
+      "reserved_usd": 0.3171328,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "inject-06",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "findings 0 != 1",
+        "denial INVALID_ARGUMENTS x1 not recorded (got {})"
+      ],
+      "status": "failed",
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "tokens": 0,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 306.4,
+      "cost_usd": 0.0,
+      "reserved_usd": 0.3171328,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "access-01",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "status failed != abstained"
+      ],
+      "status": "failed",
+      "llm_calls": 2,
+      "tool_calls": 1,
+      "tokens": 549,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 1264.6,
+      "cost_usd": 0.0003187,
+      "reserved_usd": 0.6342656,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "access-01",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "status failed != abstained",
+        "denial PERMISSION_DENIED x1 not recorded (got {})"
+      ],
+      "status": "failed",
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "tokens": 0,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 272.3,
+      "cost_usd": 0.0,
+      "reserved_usd": 0.3171328,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "access-02",
+      "orchestration": "single",
+      "success": true,
+      "failures": [],
+      "status": "rejected",
+      "llm_calls": 0,
+      "tool_calls": 0,
+      "tokens": 0,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 59.1,
+      "cost_usd": 0.0,
+      "reserved_usd": 0.0,
+      "retries": 0,
+      "errors": [
+        "UNKNOWN_PRINCIPAL"
+      ],
+      "live_success": true
+    },
+    {
+      "case_id": "access-02",
+      "orchestration": "specialists",
+      "success": true,
+      "failures": [],
+      "status": "rejected",
+      "llm_calls": 0,
+      "tool_calls": 0,
+      "tokens": 0,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 62.0,
+      "cost_usd": 0.0,
+      "reserved_usd": 0.0,
+      "retries": 0,
+      "errors": [
+        "UNKNOWN_PRINCIPAL"
+      ],
+      "live_success": true
+    },
+    {
+      "case_id": "access-03",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "findings 0 != 1",
+        "denial UNSUPPORTED_CITATION x1 not recorded (got {})"
+      ],
+      "status": "failed",
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "tokens": 0,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 265.8,
+      "cost_usd": 0.0,
+      "reserved_usd": 0.3171328,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "access-03",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "findings 0 != 1",
+        "denial UNSUPPORTED_CITATION x1 not recorded (got {})"
+      ],
+      "status": "failed",
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "tokens": 0,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 286.3,
+      "cost_usd": 0.0,
+      "reserved_usd": 0.3171328,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "access-04",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "findings 0 != 1",
+        "missing citation doc-a-board-notes#0"
+      ],
+      "status": "failed",
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "tokens": 0,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 284.5,
+      "cost_usd": 0.0,
+      "reserved_usd": 0.3171328,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "access-04",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "status failed != completed",
+        "findings 0 != 1",
+        "missing citation doc-a-board-notes#0"
+      ],
+      "status": "failed",
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "tokens": 0,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 290.6,
+      "cost_usd": 0.0,
+      "reserved_usd": 0.3171328,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "budget-01",
+      "orchestration": "single",
+      "success": false,
+      "failures": [
+        "status failed != budget_exhausted",
+        "errors ['RATE_LIMITED'] != ['MAX_LLM_CALLS']"
+      ],
+      "status": "failed",
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "tokens": 0,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 318.3,
+      "cost_usd": 0.0,
+      "reserved_usd": 0.3171328,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "budget-01",
+      "orchestration": "specialists",
+      "success": false,
+      "failures": [
+        "status failed != budget_exhausted",
+        "errors ['RATE_LIMITED'] != ['MAX_LLM_CALLS']"
+      ],
+      "status": "failed",
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "tokens": 0,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 331.1,
+      "cost_usd": 0.0,
+      "reserved_usd": 0.3171328,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": false
+    },
+    {
+      "case_id": "budget-02",
+      "orchestration": "single",
+      "success": true,
+      "failures": [],
+      "status": "failed",
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "tokens": 0,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 423.6,
+      "cost_usd": 0.0,
+      "reserved_usd": 0.3171328,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": null
+    },
+    {
+      "case_id": "budget-02",
+      "orchestration": "specialists",
+      "success": true,
+      "failures": [],
+      "status": "failed",
+      "llm_calls": 1,
+      "tool_calls": 0,
+      "tokens": 0,
+      "findings_supported": 0,
+      "findings_checked": 0,
+      "latency_ms": 285.3,
+      "cost_usd": 0.0,
+      "reserved_usd": 0.3171328,
+      "retries": 0,
+      "errors": [
+        "RATE_LIMITED"
+      ],
+      "live_success": null
+    }
+  ],
+  "aggregates": {
+    "single": {
+      "cases": 42,
+      "task_success": 7,
+      "live_scored": 41,
+      "live_success": 21,
+      "task_success_rate": 0.1667,
+      "supported_finding_rate": 1.0,
+      "mean_llm_calls": 1.619,
+      "mean_tool_calls": 1.167,
+      "mean_tokens": 790.4,
+      "latency_ms_p50": 4337.2,
+      "latency_ms_p95": 9221.4,
+      "cost_usd_total": 0.0323614
+    },
+    "specialists": {
+      "cases": 42,
+      "task_success": 5,
+      "live_scored": 41,
+      "live_success": 19,
+      "task_success_rate": 0.119,
+      "supported_finding_rate": 1.0,
+      "mean_llm_calls": 2.19,
+      "mean_tool_calls": 1.262,
+      "mean_tokens": 707.8,
+      "latency_ms_p50": 4678.6,
+      "latency_ms_p95": 14440.6,
+      "cost_usd_total": 0.0282957
+    }
+  },
+  "recommendation": "keep_single_workflow",
+  "rationale": "specialists reached 19/41 live outcomes vs 21/41, so they do not measurably win; they cost 2.19 model calls and 708 tokens per run vs 1.62 and 790",
+  "hosted_model_numbers": {
+    "cost_usd_total": 0.0606571,
+    "reserved_usd_total": 52.9611776,
+    "retries_total": 7.0
+  },
+  "limitations": [
+    "Live workflow cases run once per orchestration; scripted mock expectations may fail and are not a model-quality rubric.",
+    "Costs use reported tokens at bundled LiteLLM rates, not provider invoices. Reservations include uncertain failed calls and are not refunded.",
+    "Gateway/reliability scenarios are excluded, as in the mock benchmark.",
+    "One shared batch cap covers both orchestrations; budget exhaustion can leave later cases unexecuted, so compare the recorded failures too."
+  ]
+}
