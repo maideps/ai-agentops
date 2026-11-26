@@ -17,6 +17,7 @@ Rate each module on a scale of A (excellent) / B (good) / C (acceptable) / D (ne
 | packages/retrieval/agentops_retrieval (hashing embedder, indexing, search, CLI) | B | A | B | A | B |
 | packages/retrieval/agentops_retrieval.benchmark + datasets/retrieval/v1 | B | A | B | A | B |
 | datasets/retrieval/stress-v2 + testsuite/acceptance/feat_016 | B | A | B | A | B |
+| packages/retrieval/agentops_retrieval.comparison + testsuite/acceptance/feat_020 | B | A | B | A | B |
 | packages/tools/agentops_tools (read tools, gateway, approvals, registry, recovery, ticket service, MCP server, CLI) | A | A | B | A | B |
 | packages/telemetry/agentops_telemetry (tracing, redaction, Langfuse export) | A | A | B | A | B |
 | packages/evals/agentops_evals + datasets/evals/v1 (corpus, runner, scenarios, faults, benchmark) | A | A | B | A | B |
@@ -56,6 +57,12 @@ Ratings are judgments, not measurements: coverage is not measured yet (quality g
 
 ## Notes
 
+- 2026-11-26: feat-020 introduces a benchmark-only fixed BM25 comparison using the
+  existing permission-filtered typed reads and shared relevance metrics. Production
+  ranking, source documents, frozen queries/judgments and historical reports stay
+  unchanged. Comparison, benchmark metrics/CLI and new acceptance module ratings:
+  coverage B, type safety A, documentation B, architecture A, performance B
+  (judgments, not measured coverage/latency). No hosted calls or quality claims.
 - 2026-11-26: feat-018 adds conditional policy-citation guidance in the shared
   report node and includes its template in prompt provenance. Module ratings:
   workflow coverage B for the new prompt behavior, type safety A, documentation B,

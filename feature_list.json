@@ -665,6 +665,53 @@
           "repair": "Start Docker, check the compose healthcheck and migrations, fix failing integration tests and rerun."
         }
       ]
+    },
+    {
+      "id": "feat-020",
+      "name": "Phase 2: offline BM25 retrieval comparison",
+      "behavior": "A read-only compare command measures unchanged hashing/pgvector retrieval against one fixed BM25 lexical candidate (k1=1.2, b=0.75) on a selected frozen corpus. Both use the same repeatable-read database snapshot and caller-permitted chunks; BM25 corpus statistics exclude inaccessible documents. Existing tokenization is reused, ties use chunk id, and all candidates remain ranked without a relevance threshold. Reports record both per-query and aggregate Recall@k/MRR, forbidden hits, candidate scores distinct from vector distances, dataset/source-catalog hashes and supplied commit provenance without retrieved text. Invalid judgments fail explicitly. Run both v1 and stress-v2 on one isolated seeded index, record regressions and gains, and leave production search, datasets and historical reports unchanged. No model calls, downloads, parameter tuning or adoption claim. Requirements: FR-003, NFR-007, NFR-010.",
+      "verification": "Focused offline formula/ranking, empty-query and CLI error tests plus isolated PostgreSQL acceptance verify paired scoring, role/tenant isolation, inaccessible judgments, deterministic CLI output and read-only behavior. Record both frozen corpora at committed code with honest limitations and an explicit adoption decision.",
+      "dependencies": [
+        "feat-013",
+        "feat-016"
+      ],
+      "layers": [
+        {
+          "label": "Layer 1: Static checks",
+          "cmd": "npm run lint",
+          "repair": "Fix static-analysis issues and rerun the layer command."
+        },
+        {
+          "label": "Layer 2: Runtime tests",
+          "cmd": "npm run test",
+          "repair": "Fix failing tests and rerun the layer command."
+        },
+        {
+          "label": "Layer 3: System confirmation",
+          "cmd": "npm run check-arch && npm run typecheck && npm run build && npm run e2e && npm run verify-all && npm run quality",
+          "repair": "Resolve cross-layer issues and rerun full verification."
+        },
+        {
+          "label": "Layer 1: Static checks",
+          "cmd": "npm run lint",
+          "repair": "Fix Layer 1: Static checks failures and rerun the layer command."
+        },
+        {
+          "label": "Layer 2: Runtime tests",
+          "cmd": "npm run test",
+          "repair": "Fix Layer 2: Runtime tests failures and rerun the layer command."
+        },
+        {
+          "label": "Layer 3: System confirmation",
+          "cmd": "npm run check-arch && npm run typecheck && npm run build && npm run e2e && npm run verify-all && npm run quality",
+          "repair": "Fix Layer 3: System confirmation failures and rerun the layer command."
+        },
+        {
+          "label": "Layer 4: Retrieval comparison acceptance",
+          "cmd": "uv run pytest testsuite/acceptance/feat_020 -q",
+          "repair": "Fix Layer 4: Retrieval comparison acceptance failures and rerun the layer command."
+        }
+      ]
     }
   ]
 }

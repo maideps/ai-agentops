@@ -18,6 +18,11 @@ What AI AgentOps does not do or has not shown yet, as of feat-013. Each item nam
 - **Budget reservations are conservative and process-local.** Each call reserves the full input window plus bounded output, with no refund. A small budget may refuse even a short prompt. Prices and token ceilings come from the bundled SDK map, not an invoice or provider-enforced account limit; persistent account-wide budgets remain unimplemented (D-016).
 - **Live evaluation is not a replacement quality corpus.** Gateway/reliability scenarios stay mocked, and workflow expectations include scripted errors/trajectories that a real model may not produce. Reports preserve those failures instead of claiming a quality score.
 - **Retrieval is lexical.** The hashing embedder matches shared words, not meaning. feat-013 measures a small vocabulary-overlapping synthetic baseline, not held-out or real-text quality, and it does not measure abstention (D-008; docs/retrieval-baseline.md).
+- **BM25 is an offline experiment, not an adopted improvement.** feat-020 compares
+  one fixed lexical candidate with the vector baseline using already inspected
+  synthetic corpora. Neither understands synonyms or negation, and no score threshold
+  or abstention behavior is added. Full-catalog Python scoring is not a scalable
+  production implementation or a latency measurement.
 - **The orchestration benchmark cannot show a quality win** for the specialist roles in mock mode; it shows equal outcomes at higher cost (D-012).
 
 ## Security
