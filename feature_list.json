@@ -840,7 +840,7 @@
         },
         {
           "label": "Layer 6: Replay UI end-to-end tests",
-          "cmd": "npm run e2e",
+          "cmd": "npm --prefix apps/web run e2e",
           "repair": "Fix the replay page or its fixtures until the Playwright tests pass; never loosen the network guard."
         }
       ]
