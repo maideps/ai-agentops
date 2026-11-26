@@ -597,6 +597,39 @@
       ]
     },
     {
+      "id": "feat-018",
+      "name": "Phase 2: policy-aware report citation guidance",
+      "behavior": "When at least one document passage survives the existing report context limit, the single and specialist workflows add reporting guidance that lists only those included document evidence ids and requires relevant policy-backed findings or recommendations to cite the supporting passage in the same finding, alongside sales citations when needed. The guidance must forbid inventing policy claims or adding unsupported citations merely to satisfy the instruction. When no document passage survives, the report request keeps the existing sales/issue-only behavior. The policy guidance template participates in prompt_version; no evidence selection, ranking, citation enforcement, report schema or provider retry/budget behavior changes. Mock/replay remain offline; no hosted quality improvement is claimed without separately approved live evidence. Requirements: FR-012, NFR-006, NFR-007.",
+      "verification": "Offline captured-report-request tests verify included-only document ids, exclusion of context-dropped document ids, unchanged no-document requests, unchanged rejection of unknown citations, and prompt provenance. Actual single/specialist workflow acceptance uses scripted providers and isolated local PostgreSQL to verify guidance after real permission-filtered retrieval. Default regressions, integration tests and replay UI checks preserve existing behavior. No live call is required or authorized.",
+      "dependencies": [
+        "feat-004",
+        "feat-008",
+        "feat-017"
+      ],
+      "layers": [
+        {
+          "label": "Layer 1: Static checks",
+          "cmd": "npm run lint",
+          "repair": "Fix static-analysis issues and rerun the layer command."
+        },
+        {
+          "label": "Layer 2: Runtime tests",
+          "cmd": "npm run test",
+          "repair": "Fix failing tests and rerun the layer command."
+        },
+        {
+          "label": "Layer 3: System confirmation",
+          "cmd": "npm run check-arch && npm run typecheck && npm run build && npm run e2e && npm run verify-all && npm run quality",
+          "repair": "Resolve cross-layer issues and rerun full verification."
+        },
+        {
+          "label": "Layer 4: Policy report acceptance",
+          "cmd": "uv run pytest testsuite/acceptance/feat_018 -q",
+          "repair": "Fix Layer 4: Policy report acceptance failures and rerun the layer command."
+        }
+      ]
+    },
+    {
       "id": "feat-019",
       "name": "Phase 2: live calls stay within provider rate limits",
       "behavior": "Live evaluation commands accept --min-call-interval (seconds, default 0), and the hosted adapter spaces the start of consecutive dispatch attempts by at least that interval. A rate-limited call (HTTP 429) is retried at most twice, sharing the existing two-retry limit with transient failures: it waits for the provider's Retry-After when given and no longer than 60 seconds, otherwise 10 then 30 seconds, and a Retry-After above 60 seconds is not waited for. Every attempt still reserves budget before dispatch and is never refunded, and a retry the budget cannot cover is not sent. Timeouts, authentication, invalid requests and budget refusals stay unretried. Retry counts keep appearing in reports. Mock mode and default CI make no network calls and never wait. A new owner-approved, budget-capped live corpus and benchmark run records results for comparison with feat-017. Requirements: FR-011, NFR-009.",
