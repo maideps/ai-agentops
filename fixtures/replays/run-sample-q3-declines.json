@@ -125,6 +125,7 @@
       "text": "Customers may return unused footwear within 30 days of purchase for a full refund. Trail running shoes with visible outsole wear are refunded at 50 percent."
     }
   ],
+  "evidence_gaps": [],
   "llm_calls": 2,
   "llm_model": "mock-deterministic-v1",
   "llm_provider": "mock",

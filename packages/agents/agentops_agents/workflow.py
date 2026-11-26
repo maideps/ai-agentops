@@ -31,6 +31,7 @@ from agentops_agents.state import (
     AgentRunState,
     ContextWindow,
     Evidence,
+    EvidenceGap,
     PolicyDecision,
     Report,
     RunDetail,
@@ -97,6 +98,15 @@ POLICY_REPORT_PROMPT = (
     "in a finding or recommendation and cite the supporting document passage in the same "
     "finding, alongside sales evidence ids when needed. Do not invent a policy claim or add "
     "an unsupported citation merely to include a document."
+)
+# feat-023: what a tool the user's role may not call would have supplied.
+GAP_SOURCES: dict[str, str] = {
+    "get_sales_summary": "sales data",
+    "search_approved_documents": "company documents",
+}
+GAP_REPORT_PROMPT = (
+    "These sources were not available to this user: {sources}. Make no claim that needs "
+    "them, and say in the summary that the answer does not include them."
 )
 
 
@@ -319,6 +329,10 @@ class _Run:
         sales_executed = bool(state.get("sales_executed"))
         executed = 0
         denials: list[PolicyDecision] = []
+        gaps: dict[str, EvidenceGap] = {
+            str(item["tool"]): EvidenceGap.model_validate(item)
+            for item in state.get("evidence_gaps", [])
+        }
         for call in state.get("authorized_tool_calls", []):
             name = str(call["name"])
             try:
@@ -336,6 +350,10 @@ class _Run:
                         reason_code=denied.reason_code,
                     )
                 )
+                if denied.reason_code == "PERMISSION_DENIED":
+                    gaps.setdefault(
+                        name, EvidenceGap(tool=name, source=GAP_SOURCES.get(name, name))
+                    )
                 continue
             executed += 1
             if name == "get_sales_summary":
@@ -351,6 +369,7 @@ class _Run:
             "analytics": analytics.model_dump(mode="json") if analytics else None,
             "sales_executed": sales_executed,
             "policy_decisions": _decisions(state, denials),
+            "evidence_gaps": [gap.model_dump() for gap in gaps.values()],
         }
 
     @staticmethod
@@ -433,6 +452,9 @@ class _Run:
             prompt += "\n" + POLICY_REPORT_PROMPT.format(
                 evidence_ids=", ".join(f"[{item_id}]" for item_id in document_ids)
             )
+        gaps = [EvidenceGap.model_validate(item) for item in state.get("evidence_gaps", [])]
+        if gaps:
+            prompt += "\n" + GAP_REPORT_PROMPT.format(sources=", ".join(gap.source for gap in gaps))
         if window.dropped_evidence_ids:
             logger.info(
                 "run.context_truncated",
@@ -666,6 +688,7 @@ def _detail(state: AgentRunState, deps: RunDependencies, *, awaiting: bool) -> R
         analytics=SalesAnalytics.model_validate(analytics) if analytics else None,
         evidence=[Evidence.model_validate(item) for item in state.get("evidence", [])],
         context=ContextWindow.model_validate(state.get("context", {})),
+        evidence_gaps=[EvidenceGap.model_validate(gap) for gap in state.get("evidence_gaps", [])],
         policy_decisions=[
             PolicyDecision.model_validate(d) for d in state.get("policy_decisions", [])
         ],
@@ -806,5 +829,5 @@ def prompt_version(orchestration: Orchestration = "single") -> str:
         [PLAN_PROMPT, REPORT_PROMPT]
         if orchestration == "single"
         else [RESEARCH_PROMPT, ANALYST_PROMPT, REPORT_PROMPT]
-    ) + [QUARTERS_CONTEXT, NO_QUARTERS_CONTEXT, POLICY_REPORT_PROMPT]
+    ) + [QUARTERS_CONTEXT, NO_QUARTERS_CONTEXT, POLICY_REPORT_PROMPT, GAP_REPORT_PROMPT]
     return hashlib.sha256("\n".join(prompts).encode()).hexdigest()[:12]

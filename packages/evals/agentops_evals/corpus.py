@@ -22,6 +22,8 @@ class Expect(BaseModel):
     required_citations: list[str] = Field(default_factory=list)
     forbidden_evidence_prefixes: list[str] = Field(default_factory=list)
     denials: list[str] = Field(default_factory=list)
+    # feat-023: tools recorded as evidence gaps, in order (None: not checked).
+    evidence_gaps: list[str] | None = None
     error_codes: list[str] | None = None
     max_llm_calls: int | None = None
     # scenario observations
@@ -46,6 +48,9 @@ class LiveExpect(BaseModel):
     declines_include: list[tuple[int, str]] = Field(default_factory=list)
     min_findings: int = Field(default=0, ge=0)
     cites_documents: list[str] = Field(default_factory=list)
+    # feat-023: a completed run must have recorded these tools as evidence gaps (an answer
+    # built without them has to say so); abstaining needs no disclosure.
+    discloses_gaps: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def _outcomes_or_unscored(self) -> Self:

@@ -45,6 +45,11 @@ The conditional template is included in `prompt_version` for both orchestrations
 Context selection and deterministic citation enforcement are unchanged: this guidance
 does not prove model compliance or semantic support.
 
+When the tool gateway denies a whole tool with `PERMISSION_DENIED`, the shared execute step
+records an evidence gap (tool, source, reason) in the run detail (feat-023, D-019), and the
+report step is told which sources were unavailable. Gaps come from the gateway, not the model,
+and never name documents, which stay indistinguishable from missing ones (D-007).
+
 ## Tracing and Evaluation (D-011)
 
 `packages/telemetry` configures OpenTelemetry with every exporter behind a redaction layer; spans carry ids, counts and codes, never prompt or document text, and share the run's trace id. The workflow reads only through the tool gateway, so role permissions and the policy log cover every tool call. `packages/evals` runs the versioned corpus in `datasets/evals/` in mock mode and records dataset version, git commit, model, prompt version and policy version.

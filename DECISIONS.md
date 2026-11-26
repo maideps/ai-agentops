@@ -375,3 +375,27 @@ its 50/50 result are unchanged.
 they still do not grade prose quality or every required citation. The rubric was derived
 from each case's existing expectation by explicit rules and reviewed case by case; changing it
 means a new dataset version.
+
+
+## D-019: A run records the sources the user's role kept from it
+
+**Date:** 2026-11-26
+**Status:** accepted
+**Context:** In the feat-019 live run (`benchmarks/evals/v1.2/live-feat019`), access-01 (a viewer
+asking for a sales analysis) completed from company documents after the gateway denied the sales
+tool. Nothing leaked, but the run detail did not say that the sales data was missing, and the
+case expected only abstention, so the D-018 rubric could not tell a disclosed partial answer
+from an undisclosed one. Abstaining, or answering while stating what is missing, are both
+reasonable for a user with partial access.
+**Decision:** When the tool gateway denies a tool call with `PERMISSION_DENIED`, the workflow
+records an evidence gap (tool, source, reason) once per tool, in both orchestrations. Gaps come
+from the gateway's decision, never from the model, and appear in the run detail whatever the
+outcome. Only whole tools become gaps: documents a role cannot read stay indistinguishable from
+missing ones (D-007). When gaps exist, the report step is told which sources were unavailable,
+asked to make no claim that needs them and to say so in the summary; the template is part of
+`prompt_version`. Corpus `evals-v1.3.0`: access-01 also expects the gap in mock mode, and live
+mode accepts abstained or completed, a completed run only with the gap on record
+(`discloses_gaps`). Mock scoring stays 50/50.
+**Consequences:** A partial answer can no longer look complete in the run detail. The summary's
+wording is the model's: the scorer checks the recorded gap, not whether the prose mentions it.
+The recorded replays predate this field (and feat-014/feat-018) and were not re-recorded.

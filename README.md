@@ -73,6 +73,7 @@ Phase 1 complete (M0.1 to M5.1: feat-001 to feat-009). What works today:
   support or hosted-model compliance; no hosted quality gain is measured.
 - Rate-limit handling (feat-019): live evaluation commands accept `--min-call-interval <seconds>` to space model calls, and a rate-limited call (HTTP 429) gets up to two budget-reserved retries that honor a Retry-After of at most 60 seconds. In the fifth live run, with a 4-second interval (`benchmarks/evals/v1.2/live-feat019/`, `benchmarks/orchestration/v1/live-feat019/`), the corpus reached 37/41 live outcomes with no rate-limit failures; the remaining failures were three multi-source reports without a policy citation and a viewer run that completed from permitted documents instead of abstaining. That run predates feat-018's citation guidance.
 - Quota-aware live runs (feat-021): a 429 on a per-day quota fails at once as `QUOTA_EXHAUSTED`, and live corpus and benchmark commands stop dispatching workflow cases after it or after three consecutive rate-limited cases (`--stop-after-rate-limited`, 0 disables). Reports list the cases not run and why, the summary prints `STOPPED EARLY`, and the command exits 1.
+- Evidence gaps (feat-023): when the tool gateway denies a whole tool to the user's role (for example sales data for a viewer), the run detail lists it under `evidence_gaps`, taken from the gateway's decision rather than the model, and the report step is told to make no claim that needs that source and to say so in the summary. Corpus `evals-v1.3.0` lets the viewer case abstain or complete, a completed run only with the gap recorded. Unreadable documents are never listed, so they stay indistinguishable from missing ones.
 
 - A read-only retrieval benchmark (feat-013): 16 versioned synthetic queries at k=3 measure the existing hashing/pgvector search. Recall@k and MRR cover the 12 queries with accessible relevant chunks; four no-accessible-evidence queries are reported separately, not given perfect scores. Reports contain chunk ids/hashes, model and commit provenance, and forbidden-hit counts, never retrieved text. Ranking is unchanged and no model is called. The [recorded synthetic baseline](benchmarks/retrieval/v1/results.json) has Recall@3 1.0, MRR 1.0 and zero forbidden hits; this is not held-out retrieval quality. See the [procedure and limitations](docs/retrieval-baseline.md).
 
@@ -177,6 +178,7 @@ Features are declared in [`feature_list.json`](feature_list.json); their state i
 | feat-019 | Phase 2 | Paced live calls and bounded, budget-reserved retries for rate limits |
 | feat-020 | Phase 2 | Offline, permission-filtered BM25 comparison; production retrieval unchanged |
 | feat-021 | Phase 2 | Live evaluation stops early when the provider's daily quota runs out |
+| feat-023 | Phase 2 | Runs record the sources the user's role kept from them (evidence gaps) |
 
 ## Documentation
 

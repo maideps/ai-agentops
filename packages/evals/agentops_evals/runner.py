@@ -202,6 +202,9 @@ def _score_workflow(
         check(
             denied[reason] >= count, f"denial {reason} x{count} not recorded (got {dict(denied)})"
         )
+    if expect.evidence_gaps is not None:
+        gaps = [gap.tool for gap in detail.evidence_gaps]
+        check(gaps == expect.evidence_gaps, f"evidence gaps {gaps} != {expect.evidence_gaps}")
     if expect.error_codes is not None:
         codes = [e.code for e in detail.errors]
         check(codes == expect.error_codes, f"errors {codes} != {expect.error_codes}")
@@ -247,6 +250,9 @@ def score_live(
                 bool(cited & set(live.cites_documents)),
                 f"no finding cites any of {live.cites_documents}",
             )
+        disclosed = {gap.tool for gap in detail.evidence_gaps}
+        undisclosed = [tool for tool in live.discloses_gaps if tool not in disclosed]
+        check(not undisclosed, f"completed without disclosing gaps {undisclosed}")
     return failures
 
 

@@ -69,6 +69,18 @@ class RunError(_Model):
     message: str
 
 
+class EvidenceGap(_Model):
+    """A source the run could not use because the user's role may not call its tool (feat-023).
+
+    Recorded by the workflow from the tool gateway's PERMISSION_DENIED decision, never by the
+    model. Only whole tools appear here: documents the user cannot read stay indistinguishable
+    from missing ones (D-007)."""
+
+    tool: str
+    source: str
+    reason_code: Literal["PERMISSION_DENIED"] = "PERMISSION_DENIED"
+
+
 class ContextWindow(_Model):
     included_evidence_ids: list[str] = Field(default_factory=list)
     dropped_evidence_ids: list[str] = Field(default_factory=list)
@@ -90,6 +102,7 @@ class RunDetail(_Model):
     analytics: SalesAnalytics | None = None
     evidence: list[Evidence] = Field(default_factory=list)
     context: ContextWindow = Field(default_factory=ContextWindow)
+    evidence_gaps: list[EvidenceGap] = Field(default_factory=list)
     policy_decisions: list[PolicyDecision] = Field(default_factory=list)
     errors: list[RunError] = Field(default_factory=list)
     llm_provider: str
@@ -115,6 +128,7 @@ class AgentRunState(TypedDict, total=False):
     analytics: dict[str, object] | None
     evidence: list[dict[str, object]]
     context: dict[str, object]
+    evidence_gaps: list[dict[str, object]]
     draft_report: dict[str, object] | None
     report: dict[str, object] | None
     policy_decisions: list[dict[str, object]]

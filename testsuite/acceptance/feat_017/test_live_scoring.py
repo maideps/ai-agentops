@@ -87,7 +87,7 @@ def test_live_expectations_need_outcomes_or_unscored() -> None:
 
 def test_every_workflow_case_in_the_corpus_has_a_live_expectation() -> None:
     corpus = load_corpus()
-    assert corpus.dataset_version == "evals-v1.2.0"
+    assert corpus.dataset_version == "evals-v1.3.0"
     workflows = [c for c in corpus.cases if c.kind == "workflow"]
     assert len(workflows) == 42
     assert all(c.live is not None for c in workflows)

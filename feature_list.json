@@ -734,6 +734,43 @@
           "repair": "Start Docker, check the compose healthcheck and migrations, fix failing integration tests and rerun."
         }
       ]
+    },
+    {
+      "id": "feat-023",
+      "name": "Phase 2: runs record the sources the user's role kept from them",
+      "behavior": "When the tool gateway denies a tool call with PERMISSION_DENIED, the workflow records an evidence gap (tool, source, reason) once per tool in both orchestrations, from the gateway decision and never from the model; the run detail lists the gaps whatever the outcome. Only whole tools become gaps, so documents a role cannot read stay indistinguishable from missing ones. When gaps exist the report step is told which sources were unavailable, to make no claim that needs them and to say so in the summary; that template is part of prompt_version. Corpus evals-v1.3.0: access-01 expects the sales gap in mock mode, and live mode accepts abstained or completed, a completed run only with the gap on record. Mock scoring stays 50/50; default CI makes no network calls. Requirements: FR-012, NFR-002.",
+      "verification": "Offline acceptance tests: only PERMISSION_DENIED denials become gaps, once per tool; the report prompt names unavailable sources and is unchanged without gaps; the gap template changes prompt_version; live scoring fails a completed run without the recorded gap and passes abstention or a disclosed completion; access-01 carries the new expectations. Integration tests against the seeded database: a viewer completes from documents with the sales gap recorded in both orchestrations and no sales evidence, and an analyst run records no gap.",
+      "dependencies": [
+        "feat-017",
+        "feat-018"
+      ],
+      "layers": [
+        {
+          "label": "Layer 1: Harness and architecture checks",
+          "cmd": "node scripts/framework-check.mjs lint && npm run check-arch && node scripts/framework-check.mjs typecheck",
+          "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
+        },
+        {
+          "label": "Layer 2: Python static checks",
+          "cmd": "uv run ruff check . && uv run ruff format --check . && uv run mypy",
+          "repair": "Fix Ruff findings (or run uv run ruff format .) and mypy errors, then rerun."
+        },
+        {
+          "label": "Layer 3: Offline acceptance tests feat-023",
+          "cmd": "uv run pytest testsuite/acceptance/feat_023 -q -m \"not integration\"",
+          "repair": "Fix the code until the declared behavior holds; a test that contradicts the behavior is fixed in the same commit."
+        },
+        {
+          "label": "Layer 4: Default regression suite (no network, no Docker)",
+          "cmd": "uv run pytest testsuite -q -m \"not live and not integration\"",
+          "repair": "Fix the regression this feature introduced; do not mark tests skipped to pass."
+        },
+        {
+          "label": "Layer 5: Integration suite (stubbed provider, local Postgres)",
+          "cmd": "docker compose up -d --wait postgres && uv run pytest testsuite -q -m \"integration and not live\"",
+          "repair": "Start Docker, check the compose healthcheck and migrations, fix failing integration tests and rerun."
+        }
+      ]
     }
   ]
 }
