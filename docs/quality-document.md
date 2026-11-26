@@ -13,6 +13,7 @@ Rate each module on a scale of A (excellent) / B (good) / C (acceptable) / D (ne
 | packages/data/agentops_data (migrations, seed, typed tenant-scoped reads, CLI) | A | A | B | A | B |
 | docker-compose.yml + infra/postgres/init (Postgres 17, pgvector, roles) | B | n/a | B | A | B |
 | packages/agents/agentops_agents (graph, tools, policy, run detail, CLI) | A | A | B | A | B |
+| testsuite/acceptance/feat_018 (captured policy-report requests and real workflow paths) | B | A | B | A | B |
 | packages/retrieval/agentops_retrieval (hashing embedder, indexing, search, CLI) | B | A | B | A | B |
 | packages/retrieval/agentops_retrieval.benchmark + datasets/retrieval/v1 | B | A | B | A | B |
 | datasets/retrieval/stress-v2 + testsuite/acceptance/feat_016 | B | A | B | A | B |
@@ -52,6 +53,18 @@ Ratings are judgments, not measurements: coverage is not measured yet (quality g
 
 ## Notes
 
+- 2026-11-26: feat-018 adds conditional policy-citation guidance in the shared
+  report node and includes its template in prompt provenance. Module ratings:
+  workflow coverage B for the new prompt behavior, type safety A, documentation B,
+  architecture A and performance B; new acceptance tests B/A/B/A/B. Captured requests
+  cover context inclusion/truncation, unchanged no-document prompts and rejection
+  of citations missing from context. Both orchestrations use real permission-filtered
+  retrieval with scripted providers. Hosted compliance/quality and entailment are
+  not measured; existing benchmark reports and other replay artifacts are historical
+  and unchanged. The deterministic sample replay's mock prompt-token count is refreshed
+  from 308 to 366 through its existing recording test; all other fields are identical.
+  Full check: 153 offline tests, nine UI e2e, strict mypy over 114 sources and
+  14 architecture rules; isolated integration: 132 passed.
 - 2026-11-26: feat-016 renewed its four-layer gate at 084e0c6 on main 7028f09,
   preserving completed hosted feat-015 and architecture docs. Combined checks:
   137 offline tests, 130 isolated integration tests, nine UI e2e, 14 architecture

@@ -300,6 +300,11 @@ A transaction reserves one row with `INSERT ... ON CONFLICT`, a worker claims it
 - Context assembly uses configurable token budget, selective history, prioritization of verified evidence, bounded chunk count, and truncation logging.
 - Treat retrieved documents and tool outputs as untrusted **data**, not new system instructions.
 - If evidence does not support a claim, abstain or explain uncertainty; reject invented citations.
+- When document passages survive context truncation, report guidance lists only their
+  included evidence IDs and asks for relevant policy-backed findings to cite the supporting
+  passage in the same finding, alongside sales citations when needed (feat-018).
+  It forbids invented policy claims and unsupported citations. This is model guidance,
+  not semantic entailment enforcement; without included documents the base prompt is unchanged.
 - Benchmark baseline vector retrieval first; defer hybrid search and reranking until retrieval metrics show an issue.
 
 ## 9. Safety, security, threat model

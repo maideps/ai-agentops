@@ -2,48 +2,50 @@
 
 ## Current Objective
 
-- Goal: feat-017 (live evaluation scores answers) closed on main after merging the other agent's feat-016 (retrieval stress). No feature is active.
-- Current status: feat-001 through feat-017 passing.
-- Branch: main; local commits ahead of origin until the owner approves a push. Backup of the pre-merge work: branch backup/live-scoring-before-merge (39f8816).
+- feat-018: policy-aware report citation guidance, active on feat-018-policy-report-citations.
+- Base ed5c27d; feat-001 through feat-017 were passing before this feature.
+- Work is isolated in the previously owned retrieval worktree. Original checkout untouched.
 
-## Completed This Session
+## Completed
 
-- Interactive architecture map published and added as docs/architecture-map.html; ARCHITECTURE.md corrected for feat-015 retries.
-- feat-017 (developed as feat-016): error codes per result; live expectations on every workflow case (evals-v1.2.0, D-018); live counts in corpus and benchmark reports.
-- Merged origin/main (retrieval stress feat-016, sessions 021–023) instead of rebasing, so the measured commit 52b41f8 stays in history; renumbered this work to feat-017 and session 024.
+- Added policy guidance only when document evidence survives the existing report context limit.
+- List only included document IDs and ask relevant policy-backed findings to cite their
+  supporting passages alongside sales evidence when needed. Forbid invented policy
+  claims and unsupported citations. No-document prompts remain unchanged.
+- Both orchestrations reuse the shared report node; the new template participates in
+  prompt_version. Ranking, selection, report schema, citation enforcement and provider
+  retries/budget reservations remain unchanged.
+- Added captured-request tests and real single/specialist workflow acceptance using
+  existing scripted providers. Updated README, spec, architecture and limitations.
 
-## Verification Evidence
+## Verification
 
-| Check | Result | Evidence |
-|---|---|---|
-| feat-017 gate | Rerun on the merged tree | .harness/state/feat-017.json and trail |
-| Live corpus v1.2.0 at 52b41f8 | live outcomes 29/41; all 12 failures RATE_LIMITED | benchmarks/evals/v1.2/live/evals-live.json |
-| Live benchmark at 52b41f8 | single 21/41, specialists 19/41 | benchmarks/orchestration/v1/live-evals-v1.2/ |
-| feat-016 retrieval stress | Landed by the other agent; gate at 084e0c6 | progress/021-2026-11-24.md to 023-2026-11-26.md |
+- Baseline full check PASS: 146 offline tests, nine UI e2e and strict mypy over 113 sources.
+- New tests reproduced three missing-guidance/provenance failures before product edits.
+- Final full check PASS: 153 offline tests, nine UI e2e, strict mypy over 114 sources,
+  14 architecture rules and production build. All 132 isolated integration tests pass,
+  including both new workflow paths and corpus/benchmark regressions.
+- Isolated database: agentops_feat018_test; use its AGENTOPS_TEST_* URLs, not another
+  session's database. GITHUB_SHA must be actual HEAD in a linked worktree.
+- Committed-code feature gate and final clean-check are pending; full regression passed.
 
-## Files Changed
+## Decisions and Risks
 
-- See progress/024-2026-11-26.md (this work) and progress/021–023 (retrieval stress).
+- Documents are not necessarily policy documents: guidance is conditional on relevance/support,
+  not a requirement to add a policy finding to every report.
+- Citation enforcement still checks included identifiers, not semantic entailment.
+  Offline tests verify the request, not hosted compliance or quality.
+- Existing live reports, mock benchmark and other replay artifacts remain historical
+  evidence; none measures this prompt. The deterministic sample replay was rerecorded
+  with its existing test hook: only mock prompt_tokens changes 308 to 366, all report
+  content/citations/outcomes unchanged. No new hosted calls or spend.
+- Free-tier 429s remain unretried and may dominate future live comparisons.
+- The architecture map remains a historical snapshot through feat-015.
+- ./init.sh remains unusable (D-004); use the brief and npm check.
 
-## Decisions
+## Next Step
 
-- D-018: live evaluation scores outcomes with safety invariants; mock expectations unchanged.
-
-## Risks
-
-- Free-tier 429s are the main live failure cause and are never retried.
-- Multi-source reports sometimes cite no policy document.
-- Each case runs once; small differences are noise.
-- docs/architecture-map.html is a hand-maintained snapshot that stops at feat-015.
-- Live runs need the owner's `.env` (unreadable to the assistant); run them from the owner's terminal with fresh cap approval.
-- Parallel agents allocate feature and session numbers independently; fetch origin/main before declaring the next feature.
-- ./init.sh remains unusable (D-004); use uv, brief and npm check.
-
-## Next Session Startup
-
-1. Read AGENTS.md, docs/STANDARDS.md, the latest progress note and this handoff.
-2. Fetch origin, run the harness brief and npm run check. No feature is active; declare the next one before starting.
-
-## Recommended Next Step
-
-- Declare a feature that handles rate limits in live evaluation (pacing or a bounded, budget-reserved retry honoring Retry-After) and makes reports cite a consulted policy passage; then rerun live evidence.
+Finish full checks/regressions and review, commit code/docs, run the feat-018 gate,
+then commit bound evidence and final handoff. No push or merge is authorized by this
+feature request. Fetch remote main before any later approved publication to detect
+feature/session allocation collisions.
