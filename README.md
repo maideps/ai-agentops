@@ -88,8 +88,9 @@ retrieve only part of the judged evidence.
 
 An offline comparison command (feat-020) measures the unchanged vector retriever
 against fixed BM25 lexical scoring on either frozen corpus. It uses only permitted
-chunks in one read-only database snapshot and records both rankers' scores and metrics,
-without changing production search or calling a model. See the
+chunks in one read-only database snapshot and records both rankers' metrics, distinct
+scores/distances and source-catalog fingerprints, without changing production search
+or calling a model. See the
 [comparison procedure](docs/retrieval-baseline.md#offline-bm25-comparison).
 The [recorded experiment](benchmarks/retrieval/bm25-v1/REPORT.md) keeps v1 at 1.0/1.0
 and raises stress Recall@3/MRR to 0.8264/0.7986, but introduces individual regressions.

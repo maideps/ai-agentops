@@ -67,6 +67,12 @@ Ratings are judgments, not measurements: coverage is not measured yet (quality g
   stress BM25 is 0.8264/0.7986 versus hashing 0.7639/0.7361, with zero forbidden
   hits. Individual recall and rank regressions are retained in the report.
   Production adoption is deferred pending independent held-out evidence.
+  Final four-layer gate PASS at committed `a465fa1`, including all eight focused
+  cases (four offline, four isolated integration). Full checks pass 167 offline
+  tests, 136 isolated integration, nine UI e2e, strict mypy over 117 sources and
+  14 architecture rules. Bound state/trail recorded; optional framework e2e stub,
+  multi-repo and disabled quality are SKIP. Sprint: correctness B, completeness A,
+  cleanliness A, continuity B (existing D-004 init limitation), overall B.
 - 2026-11-26: feat-018 adds conditional policy-citation guidance in the shared
   report node and includes its template in prompt provenance. Module ratings:
   workflow coverage B for the new prompt behavior, type safety A, documentation B,

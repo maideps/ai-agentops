@@ -3,7 +3,7 @@
 ## Current Objective
 
 - Goal: feat-020 offline BM25 comparison, developed independently of live reliability/reporting.
-- Current status: feat-001 through feat-019 passing; feat-020's initial gate passed and its final deduplicated four-layer gate is pending.
+- Current status: feat-001 through feat-020 passing; feat-020's final four-layer gate passed at a465fa1.
 - Branch: feat-020-retrieval-comparison in the owned sibling worktree, based on main c2827a3. Local only; publication needs separate owner approval.
 
 ## Completed
@@ -26,7 +26,7 @@
 | Live benchmark at 92ac088 | single 37/41, specialists 38/41 | benchmarks/orchestration/v1/live-feat019/ |
 | feat-020 implementation/evidence | 2268b1d / de95e52 | benchmarks/retrieval/bm25-v1/ |
 | feat-020 checks | 167 offline, 136 isolated integration, nine UI; mypy 117 sources | progress/027-2026-11-26.md |
-| feat-020 final gate | Pending after removing repeated default layers | .harness/state/feat-020.json |
+| feat-020 final gate | PASS, four layers at a465fa1; all eight focused cases | .harness/state/feat-020.json and bound trail |
 
 ## Decisions
 
@@ -50,8 +50,7 @@
 
 ## Next Step
 
-- Finish the four-layer feat-020 gate and final clean-check, persist bound evidence
-  and handoff, then await publication approval. Fetch main before publication to
+- Await feat-020 publication approval. Fetch main before publication to
   detect concurrent feature/session id collisions; do not modify the other agent's checkout.
 - The other agent owns any newly authorized live work (feat-018 plus feat-019);
   this experiment neither reruns it nor changes access-01's expectation.
