@@ -46,7 +46,7 @@ LIMITATIONS = [
 class Aggregate(BaseModel):
     cases: int
     task_success: int
-    # feat-016, live mode: runs scored by outcome, and how many passed.
+    # feat-017, live mode: runs scored by outcome, and how many passed.
     live_scored: int = 0
     live_success: int = 0
     task_success_rate: float
@@ -230,7 +230,7 @@ def recommend(
     single: Aggregate, specialists: Aggregate, *, live: bool = False
 ) -> tuple[Literal["keep_single_workflow", "adopt_specialists"], str]:
     """Adopt the specialists only if they reach strictly more expected outcomes; ties and losses
-    keep the simpler design (spec M4.1). Live runs compare live outcomes (feat-016)."""
+    keep the simpler design (spec M4.1). Live runs compare live outcomes (feat-017)."""
     ours, theirs = (
         (single.live_success, specialists.live_success)
         if live
@@ -316,7 +316,7 @@ def _markdown(report: BenchmarkReport) -> str:
         *(
             [
                 (
-                    "Live outcome success (feat-016 rubric)",
+                    "Live outcome success (D-018 rubric)",
                     f"{single.live_success}/{single.live_scored}",
                     f"{spec.live_success}/{spec.live_scored}",
                 )

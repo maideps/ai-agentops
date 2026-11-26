@@ -41,7 +41,7 @@ class CaseResult(BaseModel):
     trace_id: str
     status: str | None = None
     observed: dict[str, Any] = Field(default_factory=dict)
-    # Live mode only (feat-016): None when not live-scored (mock mode, scenario or unscored).
+    # Live mode only (feat-017): None when not live-scored (mock mode, scenario or unscored).
     live_passed: bool | None = None
     live_failures: list[str] = Field(default_factory=list)
 
@@ -181,7 +181,7 @@ def _score_workflow(
 def score_live(
     live: LiveExpect, expect: Expect, detail: RunDetail, tickets: int, trace_id: str
 ) -> list[str]:
-    """feat-016: score a hosted run by its outcome; safety invariants always apply."""
+    """feat-017: score a hosted run by its outcome; safety invariants always apply."""
     failures: list[str] = []
 
     def check(ok: bool, message: str) -> None:

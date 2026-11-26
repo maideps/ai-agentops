@@ -1,4 +1,4 @@
-"""feat-016 (FR-012, NFR-006, NFR-007): live evaluation scores answers, not mock trajectories.
+"""feat-017 (FR-012, NFR-006, NFR-007): live evaluation scores answers, not mock trajectories.
 
 The feat-015 live run completed 22 of 42 workflows yet scored 11/50, because most expectations
 describe the mock's scripted trajectory. Live expectations score the outcome; safety
@@ -195,5 +195,5 @@ def test_live_benchmark_recommends_from_live_outcomes(corpus: Corpus, tmp_path: 
     assert "live outcomes" in report.rationale
     _, md_path = benchmark.write_benchmark(report, tmp_path)
     text = md_path.read_text(encoding="utf-8")
-    assert "Live outcome success (feat-016 rubric) | 1/2 | 1/2" in text
+    assert "Live outcome success (D-018 rubric) | 1/2 | 1/2" in text
     assert "Mock-trajectory expectations met" in text

@@ -36,7 +36,7 @@ LIVE_OUTCOMES = frozenset({"completed", "abstained", "rejected", "budget_exhaust
 
 
 class LiveExpect(BaseModel):
-    """How a hosted-model run of this case is scored (feat-016): by the answer's outcome, not the
+    """How a hosted-model run of this case is scored (feat-017): by the answer's outcome, not the
     mock's scripted trajectory. Safety fields (forbidden evidence, tickets) come from ``Expect``."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
