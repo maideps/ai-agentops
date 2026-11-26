@@ -399,3 +399,23 @@ mode accepts abstained or completed, a completed run only with the gap on record
 **Consequences:** A partial answer can no longer look complete in the run detail. The summary's
 wording is the model's: the scorer checks the recorded gap, not whether the prose mentions it.
 The recorded replays predate this field (and feat-014/feat-018) and were not re-recorded.
+
+## D-020: Publish without rewriting history
+
+**Date:** 2026-11-26
+**Status:** accepted
+**Context:** The owner asked to make the repository public. Another agent had opened
+feat-022 (publication prep) without starting it and could not continue, so this session took
+the feature over. A scan of every commit found no keys, tokens or private keys and no tracked
+`.env`, but two session notes named the owner's Google Cloud project number and email, the
+license named the harness template's contributors, and nothing stopped local machine paths
+from being committed.
+**Decision:** Fix the current tree only: remove the two details from the notes, name the owner
+as copyright holder, add `SECURITY.md` (private reporting through GitHub) and
+`docs/publishing.md`, and add architecture rule `arch-107` rejecting user-profile and local
+project paths in tracked files (templates excepted). Future commits in this clone use the
+owner's GitHub noreply address. History is not rewritten: the removed details grant no access,
+and a rewrite would break clones and the commit-bound verification evidence of 22 features.
+Changing repository visibility and account settings stays with the owner.
+**Consequences:** Old commits keep the project number and the author email. Publication is a
+settings change the owner makes after this lands.

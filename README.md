@@ -178,6 +178,7 @@ Features are declared in [`feature_list.json`](feature_list.json); their state i
 | feat-019 | Phase 2 | Paced live calls and bounded, budget-reserved retries for rate limits |
 | feat-020 | Phase 2 | Offline, permission-filtered BM25 comparison; production retrieval unchanged |
 | feat-021 | Phase 2 | Live evaluation stops early when the provider's daily quota runs out |
+| feat-022 | Phase 2 | Repository ready to be public: secret and local-path checks, license, security policy |
 | feat-023 | Phase 2 | Runs record the sources the user's role kept from them (evidence gaps) |
 
 ## Documentation
@@ -190,6 +191,7 @@ Features are declared in [`feature_list.json`](feature_list.json); their state i
 - [Decisions](DECISIONS.md)
 - [Harness usage guide](docs/USAGE.md)
 - [Harness command reference](docs/HARNESS.md)
+- [Security policy](SECURITY.md) and [publishing checks](docs/publishing.md)
 
 ## License
 

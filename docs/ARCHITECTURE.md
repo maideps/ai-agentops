@@ -113,6 +113,7 @@ Product rules live in `.harness/arch-rules.json` (ids `arch-101` and up) and run
 | arch-104 | Provider or Langfuse API key patterns in tracked product files and config |
 | arch-105 | Writes to `approvals`, `tool_executions` or `sandbox_tickets` anywhere but the tool gateway and its ticket service |
 | arch-106 | Word-count token estimation in the live adapter's budget path |
+| arch-107 | Local machine paths (user profiles, local project folders) in tracked files |
 
 Add a rule whenever review catches a mistake a pattern can describe.
 

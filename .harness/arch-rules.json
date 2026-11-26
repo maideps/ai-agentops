@@ -177,6 +177,23 @@
       "what": "The live adapter estimates billable input tokens using whitespace words.",
       "why": "Words do not bound tokens and omit tool/schema overhead; a hard pre-call reservation must cover the entire registered input window (D-016).",
       "fix": "Reserve the registered maximum input window plus bounded output using known prices; fail closed if pricing is unavailable."
+    },
+    {
+      "id": "arch-107",
+      "kind": "forbid",
+      "description": "No local machine paths in tracked files",
+      "pattern": "\\b[A-Za-z]:[\\\\/]+(Users|Documents and Settings)[\\\\/]|(^|[\\s\"'`(=])/(home|Users)/[A-Za-z][A-Za-z0-9._-]+/|\\b[A-Za-z]:[\\\\/]+\\d+-[A-Za-z]",
+      "paths": [
+        "**"
+      ],
+      "allow": [
+        "templates/**",
+        "testsuite/acceptance/feat_022/test_publication.py",
+        ".harness/arch-rules.json"
+      ],
+      "what": "A tracked file contains an absolute path from a developer machine (a user profile or a local project folder).",
+      "why": "The repository is published; local paths reveal the developer's account and folder layout and break for every other reader (feat-022).",
+      "fix": "Use a path relative to the repository root, or a placeholder such as <repo> or ~."
     }
   ]
 }

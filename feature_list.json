@@ -736,6 +736,37 @@
       ]
     },
     {
+      "id": "feat-022",
+      "name": "Phase 2: the repository is ready to be public",
+      "behavior": "Tracked files hold no provider keys, tokens, private keys, cloud project identifiers, personal email addresses or local machine paths, and no .env file is tracked; .env.example keeps every key value empty. Architecture rule arch-107 rejects user-profile and local project paths in tracked files (templates excepted) without flagging relative paths, placeholders or URLs. The license is MIT with the owner as copyright holder, SECURITY.md routes vulnerability reports to GitHub private reporting, and docs/publishing.md records what was checked and the settings only the owner changes (email privacy, private vulnerability reporting, visibility). History is not rewritten (D-020). Requirements: NFR-004.",
+      "verification": "Offline acceptance tests read the repository: MIT license naming the owner, SECURITY.md private route, ignored .env files and an example with empty key values, the publishing guide owner steps, and arch-107 matching machine paths but not relative paths, placeholders or URLs. check-arch runs arch-104 and arch-107 over tracked files.",
+      "dependencies": [
+        "feat-009"
+      ],
+      "layers": [
+        {
+          "label": "Layer 1: Harness and architecture checks",
+          "cmd": "node scripts/framework-check.mjs lint && npm run check-arch && node scripts/framework-check.mjs typecheck",
+          "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
+        },
+        {
+          "label": "Layer 2: Python static checks",
+          "cmd": "uv run ruff check . && uv run ruff format --check . && uv run mypy",
+          "repair": "Fix Ruff findings (or run uv run ruff format .) and mypy errors, then rerun."
+        },
+        {
+          "label": "Layer 3: Offline acceptance tests feat-022",
+          "cmd": "uv run pytest testsuite/acceptance/feat_022 -q -m \"not integration\"",
+          "repair": "Fix the code until the declared behavior holds; a test that contradicts the behavior is fixed in the same commit."
+        },
+        {
+          "label": "Layer 4: Default regression suite (no network, no Docker)",
+          "cmd": "uv run pytest testsuite -q -m \"not live and not integration\"",
+          "repair": "Fix the regression this feature introduced; do not mark tests skipped to pass."
+        }
+      ]
+    },
+    {
       "id": "feat-023",
       "name": "Phase 2: runs record the sources the user's role kept from them",
       "behavior": "When the tool gateway denies a tool call with PERMISSION_DENIED, the workflow records an evidence gap (tool, source, reason) once per tool in both orchestrations, from the gateway decision and never from the model; the run detail lists the gaps whatever the outcome. Only whole tools become gaps, so documents a role cannot read stay indistinguishable from missing ones. When gaps exist the report step is told which sources were unavailable, to make no claim that needs them and to say so in the summary; that template is part of prompt_version. Corpus evals-v1.3.0: access-01 expects the sales gap in mock mode, and live mode accepts abstained or completed, a completed run only with the gap on record. Mock scoring stays 50/50; default CI makes no network calls. Requirements: FR-012, NFR-002.",
