@@ -2,39 +2,37 @@
 
 ## Current Objective
 
-- Goal: feat-017 (live evaluation scores answers) closed on main after merging the other agent's feat-016 (retrieval stress). No feature is active.
-- Current status: feat-001 through feat-017 passing.
-- Branch: main; local commits ahead of origin until the owner approves a push. Backup of the pre-merge work: branch backup/live-scoring-before-merge (39f8816).
+- Goal: feat-019 (live calls stay within provider rate limits) closed and merged with feat-018 (policy-aware report citations). No feature is active.
+- Current status: feat-001 through feat-019 passing.
+- Branch: feat-019-rate-limits, merged with origin/main; landing on main needs owner approval.
 
 ## Completed This Session
 
-- Interactive architecture map published and added as docs/architecture-map.html; ARCHITECTURE.md corrected for feat-015 retries.
-- feat-017 (developed as feat-016): error codes per result; live expectations on every workflow case (evals-v1.2.0, D-018); live counts in corpus and benchmark reports.
-- Merged origin/main (retrieval stress feat-016, sessions 021–023) instead of rebasing, so the measured commit 52b41f8 stays in history; renumbered this work to feat-017 and session 024.
+- feat-019: --min-call-interval pacing and bounded, budget-reserved 429 retries honoring Retry-After up to 60 s (D-016 amendment 3).
+- Live corpus 37/41 (was 29/41) with no rate-limit failures.
 
 ## Verification Evidence
 
 | Check | Result | Evidence |
 |---|---|---|
-| feat-017 gate | Rerun on the merged tree | .harness/state/feat-017.json and trail |
-| Live corpus v1.2.0 at 52b41f8 | live outcomes 29/41; all 12 failures RATE_LIMITED | benchmarks/evals/v1.2/live/evals-live.json |
-| Live benchmark at 52b41f8 | single 21/41, specialists 19/41 | benchmarks/orchestration/v1/live-evals-v1.2/ |
-| feat-016 retrieval stress | Landed by the other agent; gate at 084e0c6 | progress/021-2026-11-24.md to 023-2026-11-26.md |
+| feat-019 gate | PASS, five layers | .harness/state/feat-019.json and trail |
+| Regressions | npm run check exit 0; 156 offline, 130 integration, nine UI e2e | Before the merge with feat-018 |
+| Live corpus v1.2.0 at 92ac088 | live outcomes 37/41; no RATE_LIMITED | benchmarks/evals/v1.2/live-feat019/evals-live.json |
+| Live benchmark at 92ac088 | single 37/41, specialists 38/41 | benchmarks/orchestration/v1/live-feat019/ |
 
 ## Files Changed
 
-- See progress/024-2026-11-26.md (this work) and progress/021–023 (retrieval stress).
+- See progress/026-2026-11-26.md; feat-018 is in progress/025-2026-11-26.md.
 
 ## Decisions
 
-- D-018: live evaluation scores outcomes with safety invariants; mock expectations unchanged.
+- D-016 amendment 3: rate limits share the two-retry limit; Retry-After up to 60 s; optional call pacing.
 
 ## Risks
 
-- Free-tier 429s are the main live failure cause and are never retried.
-- Multi-source reports sometimes cite no policy document.
-- Each case runs once; small differences are noise.
-- docs/architecture-map.html is a hand-maintained snapshot that stops at feat-015.
+- The feat-019 live run did not include feat-018's citation guidance; the merged tree is not yet measured live.
+- access-01 expects abstention, but a viewer's run may complete from permitted documents (no sales leak).
+- Retry-After above 60 s still fails a case; the 4-second interval is an estimate.
 - Live runs need the owner's `.env` (unreadable to the assistant); run them from the owner's terminal with fresh cap approval.
 - Parallel agents allocate feature and session numbers independently; fetch origin/main before declaring the next feature.
 - ./init.sh remains unusable (D-004); use uv, brief and npm check.
@@ -46,4 +44,4 @@
 
 ## Recommended Next Step
 
-- Declare a feature that handles rate limits in live evaluation (pacing or a bounded, budget-reserved retry honoring Retry-After) and makes reports cite a consulted policy passage; then rerun live evidence.
+- Rerun live evidence on the merged tree (feat-018 plus feat-019, --min-call-interval 4) and decide whether access-01 should accept a completed report built only from permitted documents.
