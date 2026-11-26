@@ -44,7 +44,7 @@ class ModelRequest(_Frozen):
     tools: list[ToolDefinition] = Field(default_factory=list)
     response_schema: ResponseSchema | None = None
     required_capabilities: frozenset[Capability] = frozenset()
-    max_output_tokens: int = Field(default=500, ge=1)
+    max_output_tokens: int = Field(default=1024, ge=1)
     timeout_seconds: int = Field(default=30, ge=1, le=300)
 
     def needed_capabilities(self) -> frozenset[Capability]:

@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     max_tool_calls_per_run: int = Field(default=8, ge=0)
     max_graph_steps: int = Field(default=16, ge=1)
     max_run_seconds: int = Field(default=90, ge=1)
-    max_output_tokens: int = Field(default=500, ge=1)
+    max_output_tokens: int = Field(default=1024, ge=1)
     max_requests_per_demo_user: int = Field(default=5, ge=0)
     # Hosted (live) runs: the Gemini Flash-Lite key and a hard per-run spend cap (D-016).
     gemini_api_key: SecretStr | None = None

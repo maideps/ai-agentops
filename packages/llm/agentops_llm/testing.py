@@ -69,3 +69,35 @@ def stub_completion(script: list[dict[str, Any]]) -> CompletionFn:
         )
 
     return completion
+
+
+def stub_outcomes(outcomes: list[str]) -> tuple[CompletionFn, list[int]]:
+    """An ``acompletion`` stand-in for retry tests (feat-015) and the list of its attempts.
+
+    Each outcome is ``"ok"``, ``"length"`` (a reply cut at the output limit), ``"CONNECTION"``
+    (a network failure such as a DNS error) or an ``LLMErrorCode`` value to raise.
+    """
+    attempts: list[int] = []
+
+    async def completion(**kwargs: Any) -> Any:
+        attempts.append(1)
+        outcome = outcomes[len(attempts) - 1]
+        model = str(kwargs["model"])
+        if outcome == "CONNECTION":
+            raise llx.APIConnectionError(message="stubbed outage", llm_provider="stub", model=model)
+        if outcome not in ("ok", "length"):
+            raise _litellm_error(LLMErrorCode(outcome), model)
+        return litellm.ModelResponse(
+            id=f"stub-{len(attempts)}",
+            model=model,
+            choices=[
+                {
+                    "index": 0,
+                    "finish_reason": "stop" if outcome == "ok" else "length",
+                    "message": {"role": "assistant", "content": "{}"},
+                }
+            ],
+            usage={"prompt_tokens": 100, "completion_tokens": 20, "total_tokens": 120},
+        )
+
+    return completion, attempts

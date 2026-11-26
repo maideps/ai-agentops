@@ -36,4 +36,6 @@ def scripted_litellm_provider(script: Script) -> LiteLLMProvider:
     return LiteLLMProvider(
         registry=CapabilityRegistry([_CAPABILITIES]),
         completion=stub_completion(script),
+        # One scripted turn is one reply, as for the mock; retry policy is feat-015's suite.
+        transient_retries=0,
     )

@@ -171,7 +171,7 @@ class ModelRequest(BaseModel):
     messages: list[dict]
     response_schema_name: str | None = None
     required_capabilities: set[str] = set()
-    max_output_tokens: int = 500
+    max_output_tokens: int = 1024
     timeout_seconds: int = 30
 
 class ModelResponse(BaseModel):

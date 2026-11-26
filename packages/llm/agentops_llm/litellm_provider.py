@@ -3,11 +3,12 @@
 Never selected unless LLM_MODE and ENABLE_LIVE_LLM opt in (see ``selection``).
 """
 
+import asyncio
 import json
 import math
 import threading
 import time
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Sequence
 from decimal import Decimal, InvalidOperation
 from functools import cache
 from importlib.resources import files
@@ -64,6 +65,14 @@ _ERROR_MAP: tuple[tuple[tuple[type[BaseException], ...], LLMErrorCode], ...] = (
 )
 
 
+# feat-015: failures where the request most likely never ran, worth another attempt. Timeouts
+# subclass APIConnectionError but may have been billed; rate limits need a longer wait.
+def _is_transient(exc: BaseException) -> bool:
+    if isinstance(exc, llx.Timeout):
+        return False
+    return isinstance(exc, (llx.ServiceUnavailableError, llx.APIConnectionError))
+
+
 def _to_llm_error(exc: BaseException, provider: str) -> LLMError:
     for types, code in _ERROR_MAP:
         if isinstance(exc, types):
@@ -85,6 +94,9 @@ class LiteLLMProvider:
         budget_usd: float | None = None,
         total_budget_usd: float | None = None,
         cost_estimator: CostEstimator | None = None,
+        transient_retries: int = 2,
+        backoff_seconds: Sequence[float] = (1.0, 2.0),
+        sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
     ) -> None:
         self._registry = registry
         self._completion: CompletionFn = (
@@ -106,6 +118,12 @@ class LiteLLMProvider:
         self._cost_estimator: CostEstimator = (
             cost_estimator if cost_estimator is not None else _litellm_cost
         )
+        if transient_retries < 0 or len(backoff_seconds) < transient_retries:
+            raise LLMError(LLMErrorCode.INVALID_REQUEST, "each retry needs a backoff delay")
+        self._transient_retries = transient_retries
+        self._backoff_seconds = tuple(backoff_seconds)
+        self._sleep = sleep
+        self._retries: dict[str, int] = {}
         self._spent_usd: dict[str, Decimal] = {}
         self._reserved_usd: dict[str, Decimal] = {}
         self._reserved_total = Decimal(0)
@@ -118,23 +136,50 @@ class LiteLLMProvider:
     def reserved_usd(self, run_id: str) -> float:
         return float(self._reserved_usd.get(run_id, Decimal(0)))
 
+    def retries(self, run_id: str) -> int:
+        """Transient-failure retries dispatched for this run (feat-015)."""
+        return self._retries.get(run_id, 0)
+
     def capabilities(self, model: str) -> ModelCapabilities:
         return self._registry.get(model)
 
     async def generate(self, request: ModelRequest, model: str) -> ModelResponse:
         provider = self._registry.get(model).provider
         budgeted = self._budget_usd is not None or self._total_budget_usd is not None
-        if budgeted:
-            self._reserve(request, model, provider)
-        started = time.perf_counter()
-        try:
-            raw = await self._completion(**self._kwargs(request, model))
-        except (openai.APIError, llx.BudgetExceededError) as exc:
-            raise _to_llm_error(exc, provider) from None
+        attempt = 0
+        last: LLMError | None = None
+        while True:
+            started = time.perf_counter()
+            try:
+                if budgeted:
+                    # Every attempt reserves like a new call: a refused one may still be billed.
+                    self._reserve(request, model, provider)
+                if attempt:
+                    with self._budget_lock:
+                        self._retries[request.run_id] = self._retries.get(request.run_id, 0) + 1
+                raw = await self._completion(**self._kwargs(request, model))
+                break
+            except LLMError as refused:
+                if last is None:
+                    raise
+                # The budget cannot cover another attempt: report the provider failure.
+                raise last from refused
+            except (openai.APIError, llx.BudgetExceededError) as exc:
+                last = _to_llm_error(exc, provider)
+                if attempt >= self._transient_retries or not _is_transient(exc):
+                    raise last from None
+            await self._sleep(self._backoff_seconds[attempt])
+            attempt += 1
         elapsed_ms = int((time.perf_counter() - started) * 1000)
         response = _normalize(raw, provider=provider, model=model, elapsed_ms=elapsed_ms)
         if budgeted:
             response = self._account(request, model, response)
+        if getattr(raw.choices[0], "finish_reason", None) == "length":
+            raise LLMError(
+                LLMErrorCode.OUTPUT_TRUNCATED,
+                f"reply stopped at max_output_tokens={request.max_output_tokens}",
+                provider=provider,
+            )
         return response
 
     def _cost(self, model: str, prompt_tokens: int, completion_tokens: int) -> Decimal:

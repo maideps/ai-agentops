@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Visual companion to docs/ARCHITECTURE.md (authoritative). Snapshot of main; update it when a feature changes the architecture. Open in a browser. -->
+<title>AgentOps Map</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&display=swap">
+<style>
+/* Layout: sticky tab bar; left = layered component map (always visible), right = panel for the active view. Stacks on phones. */
+:root {
+  --bg: #f3f5f4;
+  --surface: #ffffff;
+  --ink: #17201d;
+  --muted: #5b6a64;
+  --line: #d5ddd9;
+  --accent: #0f7a64;
+  --accent-soft: #dcefe9;
+  --warn: #b5541c;
+  --l-pres: #e6eefb; --l-pres-ink: #2a4f8f;
+  --l-app: #e4f3ec;  --l-app-ink: #1d6b4f;
+  --l-dom: #f4ecdc;  --l-dom-ink: #8a5a12;
+  --l-inf: #ece8f6;  --l-inf-ink: #5a4691;
+  --l-ext: #eef0ef;  --l-ext-ink: #4b5753;
+  --dim: 0.32;
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111715; --surface: #18201d; --ink: #e5ece9; --muted: #98a7a1; --line: #2c3833;
+    --accent: #4fcfae; --accent-soft: #173a31; --warn: #f0965e;
+    --l-pres: #1b2638; --l-pres-ink: #9dbcf2;
+    --l-app: #17302a;  --l-app-ink: #86d9b6;
+    --l-dom: #33291a;  --l-dom-ink: #e9c07a;
+    --l-inf: #262139;  --l-inf-ink: #c3b4f2;
+    --l-ext: #1f2724;  --l-ext-ink: #b6c2bd;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111715; --surface: #18201d; --ink: #e5ece9; --muted: #98a7a1; --line: #2c3833;
+  --accent: #4fcfae; --accent-soft: #173a31; --warn: #f0965e;
+  --l-pres: #1b2638; --l-pres-ink: #9dbcf2;
+  --l-app: #17302a;  --l-app-ink: #86d9b6;
+  --l-dom: #33291a;  --l-dom-ink: #e9c07a;
+  --l-inf: #262139;  --l-inf-ink: #c3b4f2;
+  --l-ext: #1f2724;  --l-ext-ink: #b6c2bd;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 48px;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+code, .mono { font-family: var(--f-mono); font-size: 0.86em; }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.wrap { max-width: 1240px; margin: 0 auto; }
+header.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; padding-block: 28px 16px; }
+header.top h1 { font-size: clamp(1.7rem, 3.2vw, 2.4rem); }
+header.top p { margin: 4px 0 0; color: var(--muted); max-width: 62ch; }
+.stamp { font-family: var(--f-mono); font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; white-space: nowrap; }
+
+nav.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); display: flex; gap: 4px; padding-block: 8px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+nav.tabs a { text-decoration: none; color: var(--muted); font-weight: 500; padding: 8px 14px; border-radius: 8px; white-space: nowrap; }
+nav.tabs a[aria-current="page"] { color: var(--ink); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
+
+.grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 24px; margin-top: 20px; align-items: start; }
+@media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* --- map --- */
+.map { display: grid; gap: 10px; }
+.band { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 10px; align-items: stretch; }
+.band-label { border-radius: 10px; padding: 10px; display: flex; flex-direction: column; justify-content: center; }
+.band-label b { font-family: var(--f-display); font-size: 15px; }
+.band-label span { font-size: 12px; opacity: 0.85; }
+.band-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+@media (max-width: 480px) { .band { grid-template-columns: minmax(0, 1fr); } .band-label { flex-direction: row; gap: 8px; align-items: baseline; } }
+.b-pres .band-label { background: var(--l-pres); color: var(--l-pres-ink); }
+.b-app .band-label { background: var(--l-app); color: var(--l-app-ink); }
+.b-dom .band-label { background: var(--l-dom); color: var(--l-dom-ink); }
+.b-inf .band-label { background: var(--l-inf); color: var(--l-inf-ink); }
+.b-ext .band-label { background: var(--l-ext); color: var(--l-ext-ink); }
+
+.node { text-align: left; font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; cursor: pointer; transition: opacity .2s, border-color .2s, box-shadow .2s, transform .2s; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.node:hover { border-color: var(--accent); }
+.node .n-name { font-weight: 600; }
+.node .n-path { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); overflow-wrap: anywhere; }
+.node .n-role { font-size: 12.5px; color: var(--muted); }
+.node.is-selected { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.map.has-lit .node { opacity: var(--dim); }
+.map.has-lit .node.is-lit { opacity: 1; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.map-hint { font-size: 12.5px; color: var(--muted); margin: 2px 0 0; }
+
+/* --- panel --- */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; min-width: 0; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 64px); max-height: calc(100vh - 88px); overflow: auto; }
+@media (max-width: 860px) { .panel { position: static; max-height: none; } }
+.panel h2 { font-size: 1.35rem; }
+.eyebrow { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; margin: 14px 0; font-size: 14px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-family: var(--f-mono); font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--ink); border: 0; cursor: pointer; }
+.chip.static { cursor: default; }
+ul.files { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 6px; }
+ul.files li { display: grid; grid-template-columns: minmax(0, 14ch) minmax(0, 1fr); gap: 10px; font-size: 13.5px; }
+ul.files code { overflow-wrap: anywhere; }
+.section { margin-top: 18px; }
+.section h3 { font-size: 1rem; margin-bottom: 6px; }
+.muted { color: var(--muted); }
+
+/* walkthrough */
+.steps { display: flex; gap: 4px; flex-wrap: wrap; margin: 12px 0; }
+.steps button { font: inherit; font-family: var(--f-mono); font-size: 12px; width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); cursor: pointer; }
+.steps button[aria-current="step"] { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.steps button.done { color: var(--ink); border-color: var(--accent); }
+.request { font-family: var(--f-mono); font-size: 12.5px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; overflow-x: auto; white-space: pre; }
+.nav-row { display: flex; gap: 8px; margin-top: 16px; }
+.btn { font: inherit; font-weight: 500; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.btn:disabled { opacity: 0.4; cursor: default; }
+.graphline { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin: 10px 0 2px; font-family: var(--f-mono); font-size: 11.5px; }
+.graphline span.g { padding: 2px 7px; border-radius: 6px; border: 1px solid var(--line); color: var(--muted); }
+.graphline span.g.on { border-color: var(--accent); color: var(--ink); background: var(--accent-soft); }
+.graphline i { color: var(--muted); font-style: normal; }
+.callout { border-left: 3px solid var(--warn); padding: 6px 12px; background: var(--bg); border-radius: 0 8px 8px 0; font-size: 14px; margin-top: 12px; }
+
+/* security + timeline */
+.list { display: grid; gap: 8px; margin-top: 12px; }
+.item { text-align: left; font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; cursor: pointer; display: grid; gap: 2px; }
+.item:hover { border-color: var(--accent); }
+.item[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.item .t { font-weight: 600; }
+.item .d { font-size: 13.5px; color: var(--muted); }
+.item .meta { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); }
+.tl-item { display: grid; grid-template-columns: 5.5ch minmax(0, 1fr); gap: 10px; }
+.tl-id { font-family: var(--f-mono); font-size: 12px; color: var(--accent); padding-top: 2px; }
+.phase { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-top: 14px; }
+
+footer { margin-top: 32px; font-size: 12.5px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+body { margin: 0; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>AgentOps Map</h1>
+      <p>The platform layer by layer: what each part does, how a request travels, where security applies and how it was built, feature by feature.</p>
+    </div>
+    <span class="stamp">main @ eed6d60 · 15 features · D-001…D-017</span>
+  </header>
+
+  <nav class="tabs" aria-label="Views">
+    <a href="#components" data-view="components">Components</a>
+    <a href="#request" data-view="request">A request, step by step</a>
+    <a href="#security" data-view="security">Security</a>
+    <a href="#history" data-view="history">History</a>
+  </nav>
+
+  <div class="grid">
+    <section aria-label="Component map">
+      <div class="map" id="map"></div>
+      <p class="map-hint">Layers depend only on the layers below them. Select a component to see its details.</p>
+    </section>
+    <aside class="panel" id="panel" aria-live="polite"></aside>
+  </div>
+
+  <footer>Built from docs/ARCHITECTURE.md, DECISIONS.md, feature_list.json and the code on main on 26 Nov 2026. Paths are relative to the repository root.</footer>
+</div>
+
+<script>
+const LAYERS = [
+  { id: "ext-top", cls: "b-ext", name: "Outside", sub: "who calls" },
+  { id: "pres", cls: "b-pres", name: "Presentation", sub: "apps/" },
+  { id: "app", cls: "b-app", name: "Application", sub: "orchestrates" },
+  { id: "dom", cls: "b-dom", name: "Domain", sub: "contracts" },
+  { id: "inf", cls: "b-inf", name: "Infrastructure", sub: "implements" },
+  { id: "ext-bot", cls: "b-ext", name: "External", sub: "services" },
+];
+
+const C = {
+  user: { layer: "ext-top", name: "User", path: "browser / HTTP client", role: "Analyst, viewer or admin of one tenant",
+    what: "Whoever asks for an analysis. A demo token fixes their tenant and user; the model never decides who they are.",
+    files: [], decisions: ["D-011", "D-013"], features: ["feat-007", "feat-011"] },
+  api: { layer: "pres", name: "API", path: "apps/api", role: "FastAPI: runs, approvals, feedback",
+    what: "Accepts tasks, resolves the identity behind the token, applies the per-demo-user quota, picks the mock or the real model, and returns the run detail.",
+    endpoints: ["POST /v1/runs", "GET /v1/runs/{run_id}", "POST /v1/runs/{run_id}/approvals/{approval_id}", "POST /v1/runs/{run_id}/feedback", "GET /health/live", "GET /health/ready"],
+    files: [["runs.py", "create, fetch and resume runs"], ["auth.py", "demo token → tenant and user"], ["settings.py", "limits, LLM mode, budget"], ["feedback.py", "thumbs up or down per run"], ["problems.py", "RFC 7807 errors"]],
+    decisions: ["D-011", "D-013", "D-015", "D-016"], features: ["feat-001", "feat-007", "feat-009", "feat-011", "feat-012"] },
+  web: { layer: "pres", name: "Web demo", path: "apps/web", role: "Next.js, replays only",
+    what: "Shows runs recorded in advance, with no model calls at all. It has no live mode and no approval screen.",
+    endpoints: ["/ (catalog)", "/replays/[id]"],
+    files: [["app/page.tsx", "replay catalog"], ["app/replays/[id]", "one recorded run"], ["lib/replays.ts", "reads fixtures/replays"]],
+    decisions: ["D-013"], features: ["feat-009"] },
+  agents: { layer: "app", name: "Workflow", path: "packages/agents", role: "Bounded LangGraph graph",
+    what: "The brain of a run: it validates, plans, authorizes and runs tools, writes the report, filters citations and pauses for ticket approval. Every step is bounded by limits on model calls, tool calls, graph steps and time.",
+    graph: true,
+    files: [["workflow.py", "graph nodes, prompts, quarter context"], ["policy.py", "tool allowlist and citation filter"], ["checkpoints.py", "run state in Postgres, per tenant"], ["tools.py", "tool definitions the model sees"], ["state.py", "RunLimits, RunStatus, RunDetail"]],
+    decisions: ["D-008", "D-010", "D-012", "D-014", "D-017"], features: ["feat-004", "feat-006", "feat-008", "feat-010", "feat-011", "feat-014"] },
+  tools: { layer: "app", name: "Tool gateway", path: "packages/tools", role: "The only door to data and writes",
+    what: "Decides every tool call: allowlist, the role's permissions, strict arguments and, for the ticket, an approval bound to the exact hash of the arguments. Every decision goes to policy_events.",
+    endpoints: ["get_sales_summary", "search_approved_documents", "get_issue_details", "create_followup_ticket (sandbox)"],
+    files: [["gateway.py", "allowlist, roles, approvals, logging"], ["read_tools.py", "typed read tools"], ["tickets.py", "idempotent sandbox ticket service"], ["mcp_server.py", "first-party MCP server per user"]],
+    decisions: ["D-009", "D-010"], features: ["feat-005", "feat-006", "feat-014"] },
+  evals: { layer: "app", name: "Evaluation", path: "packages/evals", role: "Corpus, benchmark, replays",
+    what: "Runs the versioned 50-case corpus (evals-v1.1.0) in mock or live mode, compares the single workflow with specialists, and records the demo replays.",
+    files: [["runner.py", "corpus: status, citations, cost, retries"], ["benchmark.py", "single vs specialists"], ["corpus.py", "loads datasets/evals/v1"], ["scenarios.py", "deterministic scenarios"], ["replays.py", "records fixtures/replays"]],
+    decisions: ["D-011", "D-012", "D-016", "D-017"], features: ["feat-007", "feat-008", "feat-009", "feat-012", "feat-014", "feat-015"] },
+  core: { layer: "dom", name: "Core", path: "packages/core", role: "Contracts and ports, no SDKs",
+    what: "Defines what a model request, a response, a tool call and a normalized error are. The LLMGateway checks capabilities before calling. It imports no framework or SDK.",
+    files: [["llm/contracts.py", "ModelRequest, ModelResponse, ToolCall"], ["llm/errors.py", "codes: RATE_LIMITED, OUTPUT_TRUNCATED…"], ["llm/", "LLMProvider port and LLMGateway"], ["policy.py", "policy version"]],
+    decisions: ["D-005"], features: ["feat-003"] },
+  llm: { layer: "inf", name: "LLM providers", path: "packages/llm", role: "Mock, selection, budgeted Gemini",
+    what: "Implements the LLM port. The mock answers from scripts; the LiteLLM adapter (the only code allowed to import LiteLLM) reserves budget before every attempt, retries a 503 up to twice and flags truncated replies.",
+    files: [["selection.py", "LLM_MODE + ENABLE_LIVE_LLM"], ["mock.py", "scripted replies"], ["hosted.py", "registry: gemini-3.5-flash-lite"], ["litellm_provider.py", "reservations, retries, truncation"], ["testing.py", "network-free stubs"]],
+    decisions: ["D-005", "D-016"], features: ["feat-003", "feat-012", "feat-015"] },
+  data: { layer: "inf", name: "Data", path: "packages/data", role: "Migrations, seed, tenant-scoped reads",
+    what: "Creates the schema, loads the synthetic data, and offers typed reads that set the tenant on every transaction so row-level security filters.",
+    files: [["migrations/", "0001 to 0006"], ["access.py", "reads with the tenant set"], ["seed.py", "synthetic data for demo-a and demo-b"], ["quota.py", "per-demo-user quota"], ["feedback.py", "feedback storage"]],
+    decisions: ["D-007"], features: ["feat-002"] },
+  retrieval: { layer: "inf", name: "Retrieval", path: "packages/retrieval", role: "Search over permitted documents",
+    what: "Indexes chunks with a deterministic offline embedder and searches with pgvector only among documents the user's role may read.",
+    files: [["embedding.py", "offline HashingEmbedder"], ["indexing.py", "chunks and indexes"], ["search.py", "permission-filtered search"], ["benchmark.py", "Recall@k and MRR"]],
+    decisions: ["D-008"], features: ["feat-004", "feat-013"] },
+  telemetry: { layer: "inf", name: "Telemetry", path: "packages/telemetry", role: "Redacted OpenTelemetry traces",
+    what: "Each run, step, model call and tool call produces a span under the same trace id. Spans carry ids, counts and codes, never prompt or document text.",
+    files: [["tracing.py", "spans and the run's trace id"], ["redaction.py", "redaction layer"]],
+    decisions: ["D-011"], features: ["feat-007"] },
+  postgres: { layer: "ext-bot", name: "PostgreSQL + pgvector", path: "docker compose", role: "Data, permissions, checkpoints",
+    what: "Stores sales, documents and embeddings, approvals, executions, tickets, the policy log and run checkpoints. Row-level security separates tenants.",
+    endpoints: ["agentops (owner, migrations)", "agentops_analytics (read-only, RLS)", "agentops_app (gateway: approvals and tickets)"],
+    files: [["business_sales", "sales by product, region, quarter"], ["documents, document_chunks", "policies and their chunks"], ["approvals, tool_executions", "approvals and the write registry"], ["sandbox_tickets", "created tickets"], ["policy_events", "every decision, append-only"], ["checkpoints*", "state of paused runs"]],
+    decisions: ["D-007", "D-010", "D-014"], features: ["feat-002", "feat-006", "feat-010"] },
+  gemini: { layer: "ext-bot", name: "Gemini", path: "gemini/gemini-3.5-flash-lite", role: "Real model, opt-in only",
+    what: "The only allowlisted hosted model. Used only when LLM_MODE and ENABLE_LIVE_LLM turn it on, with GEMINI_API_KEY and an explicit budget. CI and the demo never call it.",
+    files: [], decisions: ["D-016", "D-017"], features: ["feat-012", "feat-014", "feat-015"] },
+};
+
+const GRAPH = ["validate_request", "plan", "authorize_tools", "execute_tools", "synthesize_report", "output_policy", "propose_action", "await_approval", "execute_action", "finalize"];
+
+const STEPS = [
+  { t: "The request reaches the API", lit: ["user", "api", "data"], g: [],
+    d: "The demo token becomes a tenant and a user; the request body never decides them. The demo user's quota is charged and the provider is chosen: the mock by default, Gemini only when LLM_MODE and ENABLE_LIVE_LLM turn it on." },
+  { t: "validate_request: who are you?", lit: ["agents", "data", "postgres"], g: ["validate_request"],
+    d: "The user's role is looked up in their tenant. An unknown user, or one from another tenant, ends as rejected before any model call (corpus case access-02)." },
+  { t: "plan: the model proposes tools", lit: ["agents", "core", "llm", "gemini", "data"], g: ["plan"],
+    d: "The prompt carries the task, the available tools and, since feat-014, the tenant's quarters: \"covers 2026-Q1…2026-Q4; if the task names no period, compare the two most recent\". The model only proposes calls; it runs nothing." },
+  { t: "Budget before every attempt", lit: ["llm", "gemini"], g: ["plan"],
+    d: "Before sending, the adapter reserves the worst case: 1,048,576 input tokens plus 1,024 output tokens, about USD 0.317. If Gemini returns a 503 or the network fails, it retries up to twice (1 s, 2 s) and reserves again for each attempt. Nothing is refunded." },
+  { t: "authorize_tools: the model is not in charge", lit: ["agents"], g: ["authorize_tools"],
+    d: "Every proposed call must pass the allowlist and a strict argument schema. Disallowed tools (run_sql) or invalid arguments are denied and logged. Tenant and user come from the run, never from arguments." },
+  { t: "execute_tools: everything through the gateway", lit: ["agents", "tools", "data", "retrieval", "postgres"], g: ["execute_tools"],
+    d: "The gateway applies the role's permissions: a viewer cannot read sales. get_sales_summary reads through the read-only login with RLS; search only sees permitted documents. With no data, the run abstains (NO_SALES_DATA or NO_EVIDENCE)." },
+  { t: "synthesize_report: a cited report", lit: ["agents", "llm", "gemini"], g: ["synthesize_report"],
+    d: "The evidence enters the context (sales first, up to 1,500 tokens) and the model returns JSON with a summary and findings, each citing evidence ids. A reply cut off at the limit fails as OUTPUT_TRUNCATED." },
+  { t: "output_policy: citations checked", lit: ["agents"], g: ["output_policy"],
+    d: "Findings that cite evidence the model never had in its context are dropped. If none remain, the run abstains with NO_SUPPORTED_FINDINGS instead of delivering unsupported claims." },
+  { t: "propose_action and await_approval: pause", lit: ["agents", "tools", "postgres"], g: ["propose_action", "await_approval"],
+    d: "If a follow-up ticket was requested, the gateway creates an approval bound to the user, the run, the tool, the policy version and the exact hash of the arguments. The run pauses in a Postgres checkpoint and the API answers awaiting_approval." },
+  { t: "A person approves and the run continues", lit: ["user", "api", "agents", "tools", "postgres"], g: ["execute_action"],
+    d: "POST …/approvals/{approval_id} with approve or reject resumes the run from its checkpoint, in any process. The write goes through the tool_executions registry and creates at most one SBX-… ticket; a second decision returns 409." },
+  { t: "finalize: detail and trace", lit: ["agents", "telemetry", "api"], g: ["finalize"],
+    d: "The run ends with an explicit status (completed, abstained, rejected, budget_exhausted, timed_out or failed) and a trace id. All spans share that id and hold no sensitive text." },
+];
+
+const SECURITY = [
+  { t: "Tenant isolation", lit: ["data", "postgres", "agents", "api"], meta: "D-007 · D-014",
+    d: "Row-level security in Postgres, the tenant set per transaction, the tenant taken from the identity, and checkpoints separated by tenant. With no tenant set, a query returns no rows." },
+  { t: "The model only proposes", lit: ["agents", "tools", "core"], meta: "D-008 · D-009",
+    d: "No model reply is an authorization. An allowlist, strict schemas that forbid extra fields (a smuggled tenant_id is invalid) and the final decision in the gateway." },
+  { t: "Role permissions", lit: ["tools", "retrieval", "data"], meta: "D-009 · D-011",
+    d: "The gateway applies the role's permissions on every read and search filters by access label. A forbidden document and a missing one look the same." },
+  { t: "Injection defense", lit: ["agents", "tools"], meta: "corpus: injection",
+    d: "Documents are data, never instructions. If a malicious passage gets the model to ask for SQL, another tenant or the write tool, policy denies it and logs it." },
+  { t: "Checked citations", lit: ["agents"], meta: "FR-012",
+    d: "A finding survives only if it cites evidence that was in the context. With no supported findings, the run abstains." },
+  { t: "Human approval bound to a hash", lit: ["tools", "api", "postgres"], meta: "D-009 · D-015",
+    d: "The only write (a sandbox ticket) needs an approval bound to the user, the run, the policy version and the hash of the exact arguments, consumed in the same transaction." },
+  { t: "Idempotent writes", lit: ["tools", "postgres"], meta: "D-010",
+    d: "The tool_executions registry guarantees at most one ticket per approval, even with concurrent retries or a crash mid-write." },
+  { t: "Limits and budget", lit: ["agents", "llm"], meta: "D-016 · FR-011",
+    d: "At most 6 model calls, 8 tool calls, 16 steps and 90 s per run. In live mode, a worst-case reservation before every attempt and at most two retries." },
+  { t: "Traces without secrets", lit: ["telemetry"], meta: "D-011",
+    d: "Every exporter goes through a redaction layer. Spans carry ids, counts and codes, never prompts, documents or keys." },
+  { t: "Secrets outside the code", lit: ["llm", "api"], meta: "arch-104",
+    d: "The Gemini key arrives only through the environment, never appears in errors, and an architecture rule blocks key patterns in tracked files." },
+  { t: "Architecture rules", lit: ["llm", "agents", "tools", "core"], meta: "arch-101…106",
+    d: "LiteLLM only in packages/llm, no subprocesses, no swallowed exceptions, sensitive writes only in the gateway, no word-count token estimates. Checked on every run of the checks." },
+];
+
+const FEATURES = [
+  { id: "feat-001", ph: "Phase 1", t: "Application skeleton", lit: ["api"], d: "FastAPI with health checks, environment with uv and Docker." },
+  { id: "feat-002", ph: "Phase 1", t: "Synthetic data and persistence", lit: ["data", "postgres"], d: "Two tenants, RLS, a read-only login and typed reads." },
+  { id: "feat-003", ph: "Phase 1", t: "LLM port and mock", lit: ["core", "llm"], d: "Model contracts, normalized errors and a scripted provider." },
+  { id: "feat-004", ph: "Phase 1", t: "First end-to-end graph", lit: ["agents", "retrieval"], d: "Sales plus documents, a cited report and abstention." },
+  { id: "feat-005", ph: "Phase 1", t: "MCP server and policy gateway", lit: ["tools"], d: "Allowlist, roles, hash-bound approvals and policy_events." },
+  { id: "feat-006", ph: "Phase 1", t: "Idempotency and recovery", lit: ["tools", "agents", "postgres"], d: "Execution registry, reconciliation and checkpoints." },
+  { id: "feat-007", ph: "Phase 1", t: "Traces, security and feedback", lit: ["telemetry", "evals", "api"], d: "Redacted spans, a feedback endpoint and the 50-case corpus." },
+  { id: "feat-008", ph: "Phase 1", t: "Specialist comparison", lit: ["agents", "evals"], d: "Research and Data Analyst subgraphs against the single workflow." },
+  { id: "feat-009", ph: "Phase 1", t: "Demo and evidence", lit: ["web", "evals"], d: "Replay-only Next.js demo and reviewer documentation." },
+  { id: "feat-010", ph: "Phase 2", t: "Tenant-isolated checkpoints", lit: ["agents", "postgres"], d: "Thread id derived from the tenant and RLS on checkpoints." },
+  { id: "feat-011", ph: "Phase 2", t: "Approvals over HTTP", lit: ["api", "agents", "tools"], d: "Approve or reject and resume a run through the API." },
+  { id: "feat-012", ph: "Phase 2", t: "First Gemini run", lit: ["llm", "gemini", "evals"], d: "A real model with budget reservations; switch to 3.5 Flash-Lite." },
+  { id: "feat-013", ph: "Phase 2", t: "Retrieval benchmark", lit: ["retrieval"], d: "16 synthetic queries: Recall@3 1.0 and MRR 1.0." },
+  { id: "feat-014", ph: "Phase 2", t: "Planning knows the quarters", lit: ["agents", "tools", "evals"], d: "Live abstentions fell from 36 to 2; corpus evals-v1.1.0." },
+  { id: "feat-015", ph: "Phase 2", t: "Reliable model calls", lit: ["llm", "evals"], d: "Bounded retries and 1,024 tokens: completed reports rose from 5 to 22." },
+];
+
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const mapEl = $("#map"), panel = $("#panel");
+let view = "components", selected = "agents", step = 0, secIdx = -1, featIdx = -1;
+
+function renderMap() {
+  mapEl.innerHTML = LAYERS.map((L) => {
+    const items = Object.entries(C).filter(([, c]) => c.layer === L.id);
+    return `<div class="band ${L.cls}"><div class="band-label"><b>${L.name}</b><span>${L.sub}</span></div><div class="band-items">${
+      items.map(([id, c]) => `<button class="node" data-id="${id}" type="button"><span class="n-name">${esc(c.name)}</span><span class="n-path">${esc(c.path)}</span><span class="n-role">${esc(c.role)}</span></button>`).join("")
+    }</div></div>`;
+  }).join("");
+  mapEl.querySelectorAll(".node").forEach((b) => b.addEventListener("click", () => { selected = b.dataset.id; go("components"); }));
+}
+
+function light(ids) {
+  mapEl.classList.toggle("has-lit", !!ids);
+  mapEl.querySelectorAll(".node").forEach((n) => {
+    n.classList.toggle("is-lit", !!ids && ids.includes(n.dataset.id));
+    n.classList.toggle("is-selected", view === "components" && n.dataset.id === selected);
+  });
+}
+
+function compPanel() {
+  const c = C[selected];
+  const list = (arr) => arr.map((x) => `<span class="chip static">${esc(x)}</span>`).join("");
+  panel.innerHTML = `
+    <div class="eyebrow">${esc(LAYERS.find((l) => l.id === c.layer).name)}</div>
+    <h2>${esc(c.name)}</h2>
+    <p class="mono muted" style="margin:2px 0 0">${esc(c.path)}</p>
+    <p>${esc(c.what)}</p>
+    ${c.graph ? `<div class="section"><h3>Graph nodes</h3><div class="graphline">${GRAPH.map((g, i) => `<span class="g on">${g}</span>${i < GRAPH.length - 1 ? "<i>→</i>" : ""}`).join("")}</div><p class="muted" style="font-size:13px">With the specialists orchestration, plan/authorize/execute are replaced by the research and analyst subgraphs plus aggregate_evidence.</p></div>` : ""}
+    ${c.endpoints ? `<div class="section"><h3>${selected === "postgres" ? "Logins" : selected === "tools" ? "Tools" : "Routes"}</h3><div class="chips">${list(c.endpoints)}</div></div>` : ""}
+    ${c.files.length ? `<div class="section"><h3>${selected === "postgres" ? "Tables" : "Key files"}</h3><ul class="files">${c.files.map(([f, d]) => `<li><code>${esc(f)}</code><span>${esc(d)}</span></li>`).join("")}</ul></div>` : ""}
+    <dl class="kv"><dt>Decisions</dt><dd><div class="chips">${list(c.decisions)}</div></dd>
+    <dt>Features</dt><dd><div class="chips">${c.features.map((f) => `<button class="chip" type="button" data-feat="${f}">${f}</button>`).join("")}</div></dd></dl>`;
+  panel.querySelectorAll("[data-feat]").forEach((b) => b.addEventListener("click", () => { featIdx = FEATURES.findIndex((f) => f.id === b.dataset.feat); go("history"); }));
+  light(null);
+}
+
+function walkPanel() {
+  const s = STEPS[step];
+  panel.innerHTML = `
+    <div class="eyebrow">Request · step ${step + 1} of ${STEPS.length}</div>
+    <h2>${esc(s.t)}</h2>
+    <div class="request">POST /v1/runs
+{"task_text": "Analyze quarterly sales from 2026-Q2 to
+  2026-Q3, identify the three largest declines…",
+ "propose_followup": true}</div>
+    <div class="steps" role="group" aria-label="Steps">${STEPS.map((_, i) => `<button type="button" data-step="${i}" ${i === step ? 'aria-current="step"' : ""} class="${i < step ? "done" : ""}" aria-label="Step ${i + 1}">${i + 1}</button>`).join("")}</div>
+    <div class="graphline" aria-label="Position in the graph">${GRAPH.map((g, i) => `<span class="g ${s.g.includes(g) ? "on" : ""}">${g}</span>${i < GRAPH.length - 1 ? "<i>→</i>" : ""}`).join("")}</div>
+    <p>${esc(s.d)}</p>
+    <p class="muted" style="font-size:13px">Active components: ${s.lit.map((id) => esc(C[id].name)).join(", ")}.</p>
+    ${step === 5 ? `<div class="callout">Before feat-014, Gemini asked for 2023-Q3 to 2024-Q3, these tools returned nothing and almost every live run ended here as abstained.</div>` : ""}
+    <div class="nav-row"><button class="btn" type="button" id="prev" ${step === 0 ? "disabled" : ""}>Previous</button><button class="btn primary" type="button" id="next" ${step === STEPS.length - 1 ? "disabled" : ""}>Next</button></div>`;
+  panel.querySelectorAll("[data-step]").forEach((b) => b.addEventListener("click", () => { step = +b.dataset.step; walkPanel(); }));
+  $("#prev").addEventListener("click", () => { step--; walkPanel(); });
+  $("#next").addEventListener("click", () => { step++; walkPanel(); });
+  light(s.lit);
+}
+
+function secPanel() {
+  panel.innerHTML = `
+    <div class="eyebrow">Security</div>
+    <h2>Where each control applies</h2>
+    <p class="muted">Select a control to light up the components that enforce it.</p>
+    <div class="list">${SECURITY.map((s, i) => `<button class="item" type="button" data-i="${i}" aria-pressed="${i === secIdx}"><span class="t">${esc(s.t)}</span><span class="d">${esc(s.d)}</span><span class="meta">${esc(s.meta)}</span></button>`).join("")}</div>`;
+  panel.querySelectorAll(".item").forEach((b) => b.addEventListener("click", () => { secIdx = secIdx === +b.dataset.i ? -1 : +b.dataset.i; secPanel(); }));
+  light(secIdx >= 0 ? SECURITY[secIdx].lit : null);
+}
+
+function featPanel() {
+  let html = "", phase = "";
+  FEATURES.forEach((f, i) => {
+    if (f.ph !== phase) { phase = f.ph; html += `<div class="phase">${phase}</div>`; }
+    html += `<button class="item tl-item" type="button" data-i="${i}" aria-pressed="${i === featIdx}"><span class="tl-id">${f.id.slice(5)}</span><span><span class="t">${esc(f.t)}</span><br><span class="d">${esc(f.d)}</span></span></button>`;
+  });
+  panel.innerHTML = `<div class="eyebrow">History</div><h2>Fifteen features</h2><p class="muted">Select a feature to see which parts of the system it touched.</p><div class="list">${html}</div>`;
+  panel.querySelectorAll(".item").forEach((b) => b.addEventListener("click", () => { featIdx = featIdx === +b.dataset.i ? -1 : +b.dataset.i; featPanel(); }));
+  light(featIdx >= 0 ? FEATURES[featIdx].lit : null);
+  const active = panel.querySelector('[aria-pressed="true"]');
+  if (active) active.scrollIntoView({ block: "nearest" });
+}
+
+const VIEWS = { components: compPanel, request: walkPanel, security: secPanel, history: featPanel };
+function go(v, fromHash) {
+  view = VIEWS[v] ? v : "components";
+  document.querySelectorAll("nav.tabs a").forEach((a) => { if (a.dataset.view === view) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  VIEWS[view]();
+  if (!fromHash && location.hash !== "#" + view) { try { history.replaceState(null, "", "#" + view); } catch (e) { /* hash routing is a convenience */ } }
+}
+window.addEventListener("hashchange", () => go(location.hash.slice(1), true));
+renderMap();
+go(location.hash.slice(1) || "components", true);
+</script>
+
+</body>
+</html>
