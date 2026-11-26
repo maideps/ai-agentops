@@ -160,7 +160,7 @@ body { margin: 0; }
       <h1>AgentOps Map</h1>
       <p>The platform layer by layer: what each part does, how a request travels, where security applies and how it was built, feature by feature.</p>
     </div>
-    <span class="stamp">main @ eed6d60 · 15 features · D-001…D-017</span>
+    <span class="stamp">main after feat-024 · 24 features · D-001…D-021</span>
   </header>
 
   <nav class="tabs" aria-label="Views">
@@ -201,40 +201,40 @@ const C = {
     files: [["runs.py", "create, fetch and resume runs"], ["auth.py", "demo token → tenant and user"], ["settings.py", "limits, LLM mode, budget"], ["feedback.py", "thumbs up or down per run"], ["problems.py", "RFC 7807 errors"]],
     decisions: ["D-011", "D-013", "D-015", "D-016"], features: ["feat-001", "feat-007", "feat-009", "feat-011", "feat-012"] },
   web: { layer: "pres", name: "Web demo", path: "apps/web", role: "Next.js, replays only",
-    what: "Shows runs recorded in advance, with no model calls at all. It has no live mode and no approval screen.",
+    what: "Shows runs recorded in advance, with no model calls at all: report, evidence, policy decisions, approval and trace, plus any source the user's role kept from the run. It has no live mode and no approval screen.",
     endpoints: ["/ (catalog)", "/replays/[id]"],
     files: [["app/page.tsx", "replay catalog"], ["app/replays/[id]", "one recorded run"], ["lib/replays.ts", "reads fixtures/replays"]],
-    decisions: ["D-013"], features: ["feat-009"] },
+    decisions: ["D-013", "D-021"], features: ["feat-009", "feat-024"] },
   agents: { layer: "app", name: "Workflow", path: "packages/agents", role: "Bounded LangGraph graph",
-    what: "The brain of a run: it validates, plans, authorizes and runs tools, writes the report, filters citations and pauses for ticket approval. Every step is bounded by limits on model calls, tool calls, graph steps and time.",
+    what: "The brain of a run: it validates, plans, authorizes and runs tools, records any source the gateway denied as an evidence gap, writes the report, filters citations and pauses for ticket approval. Every step is bounded by limits on model calls, tool calls, graph steps and time, and each run id is used once.",
     graph: true,
-    files: [["workflow.py", "graph nodes, prompts, quarter context"], ["policy.py", "tool allowlist and citation filter"], ["checkpoints.py", "run state in Postgres, per tenant"], ["tools.py", "tool definitions the model sees"], ["state.py", "RunLimits, RunStatus, RunDetail"]],
-    decisions: ["D-008", "D-010", "D-012", "D-014", "D-017"], features: ["feat-004", "feat-006", "feat-008", "feat-010", "feat-011", "feat-014"] },
+    files: [["workflow.py", "graph nodes, prompts, quarter context, evidence gaps"], ["policy.py", "tool allowlist and citation filter"], ["checkpoints.py", "run state in Postgres, per tenant"], ["tools.py", "tool definitions the model sees"], ["state.py", "RunLimits, RunStatus, RunDetail, EvidenceGap"]],
+    decisions: ["D-008", "D-010", "D-012", "D-014", "D-017", "D-019", "D-021"], features: ["feat-004", "feat-006", "feat-008", "feat-010", "feat-011", "feat-014", "feat-018", "feat-023", "feat-024"] },
   tools: { layer: "app", name: "Tool gateway", path: "packages/tools", role: "The only door to data and writes",
     what: "Decides every tool call: allowlist, the role's permissions, strict arguments and, for the ticket, an approval bound to the exact hash of the arguments. Every decision goes to policy_events.",
     endpoints: ["get_sales_summary", "search_approved_documents", "get_issue_details", "create_followup_ticket (sandbox)"],
     files: [["gateway.py", "allowlist, roles, approvals, logging"], ["read_tools.py", "typed read tools"], ["tickets.py", "idempotent sandbox ticket service"], ["mcp_server.py", "first-party MCP server per user"]],
-    decisions: ["D-009", "D-010"], features: ["feat-005", "feat-006", "feat-014"] },
+    decisions: ["D-009", "D-010", "D-019"], features: ["feat-005", "feat-006", "feat-014", "feat-023"] },
   evals: { layer: "app", name: "Evaluation", path: "packages/evals", role: "Corpus, benchmark, replays",
-    what: "Runs the versioned 50-case corpus (evals-v1.1.0) in mock or live mode, compares the single workflow with specialists, and records the demo replays.",
-    files: [["runner.py", "corpus: status, citations, cost, retries"], ["benchmark.py", "single vs specialists"], ["corpus.py", "loads datasets/evals/v1"], ["scenarios.py", "deterministic scenarios"], ["replays.py", "records fixtures/replays"]],
-    decisions: ["D-011", "D-012", "D-016", "D-017"], features: ["feat-007", "feat-008", "feat-009", "feat-012", "feat-014", "feat-015"] },
+    what: "Runs the versioned 50-case corpus (evals-v1.3.0) in mock mode, or live with outcome scoring, safety invariants and an early stop when the provider quota runs out; compares the single workflow with specialists; records the demo replays.",
+    files: [["runner.py", "corpus: mock and live scoring, early stop"], ["benchmark.py", "single vs specialists"], ["corpus.py", "loads datasets/evals/v1"], ["scenarios.py", "deterministic scenarios"], ["replays.py", "records fixtures/replays"]],
+    decisions: ["D-011", "D-012", "D-016", "D-017", "D-018", "D-019", "D-021"], features: ["feat-007", "feat-008", "feat-009", "feat-012", "feat-014", "feat-015", "feat-017", "feat-019", "feat-021", "feat-023", "feat-024"] },
   core: { layer: "dom", name: "Core", path: "packages/core", role: "Contracts and ports, no SDKs",
     what: "Defines what a model request, a response, a tool call and a normalized error are. The LLMGateway checks capabilities before calling. It imports no framework or SDK.",
-    files: [["llm/contracts.py", "ModelRequest, ModelResponse, ToolCall"], ["llm/errors.py", "codes: RATE_LIMITED, OUTPUT_TRUNCATED…"], ["llm/", "LLMProvider port and LLMGateway"], ["policy.py", "policy version"]],
-    decisions: ["D-005"], features: ["feat-003"] },
+    files: [["llm/contracts.py", "ModelRequest, ModelResponse, ToolCall"], ["llm/errors.py", "codes: RATE_LIMITED, QUOTA_EXHAUSTED, OUTPUT_TRUNCATED…"], ["llm/", "LLMProvider port and LLMGateway"], ["policy.py", "policy version"]],
+    decisions: ["D-005"], features: ["feat-003", "feat-015", "feat-021"] },
   llm: { layer: "inf", name: "LLM providers", path: "packages/llm", role: "Mock, selection, budgeted Gemini",
-    what: "Implements the LLM port. The mock answers from scripts; the LiteLLM adapter (the only code allowed to import LiteLLM) reserves budget before every attempt, retries a 503 up to twice and flags truncated replies.",
-    files: [["selection.py", "LLM_MODE + ENABLE_LIVE_LLM"], ["mock.py", "scripted replies"], ["hosted.py", "registry: gemini-3.5-flash-lite"], ["litellm_provider.py", "reservations, retries, truncation"], ["testing.py", "network-free stubs"]],
-    decisions: ["D-005", "D-016"], features: ["feat-003", "feat-012", "feat-015"] },
+    what: "Implements the LLM port. The mock answers from scripts; the LiteLLM adapter (the only code allowed to import LiteLLM) reserves budget before every attempt, can space calls apart, retries a 503, a connection error or a per-minute rate limit up to twice, fails a daily-quota 429 at once and flags truncated replies.",
+    files: [["selection.py", "LLM_MODE + ENABLE_LIVE_LLM"], ["mock.py", "scripted replies"], ["hosted.py", "registry: gemini-3.5-flash-lite"], ["litellm_provider.py", "reservations, pacing, retries, quota, truncation"], ["testing.py", "network-free stubs"]],
+    decisions: ["D-005", "D-016"], features: ["feat-003", "feat-012", "feat-015", "feat-019", "feat-021"] },
   data: { layer: "inf", name: "Data", path: "packages/data", role: "Migrations, seed, tenant-scoped reads",
     what: "Creates the schema, loads the synthetic data, and offers typed reads that set the tenant on every transaction so row-level security filters.",
     files: [["migrations/", "0001 to 0006"], ["access.py", "reads with the tenant set"], ["seed.py", "synthetic data for demo-a and demo-b"], ["quota.py", "per-demo-user quota"], ["feedback.py", "feedback storage"]],
     decisions: ["D-007"], features: ["feat-002"] },
   retrieval: { layer: "inf", name: "Retrieval", path: "packages/retrieval", role: "Search over permitted documents",
-    what: "Indexes chunks with a deterministic offline embedder and searches with pgvector only among documents the user's role may read.",
-    files: [["embedding.py", "offline HashingEmbedder"], ["indexing.py", "chunks and indexes"], ["search.py", "permission-filtered search"], ["benchmark.py", "Recall@k and MRR"]],
-    decisions: ["D-008"], features: ["feat-004", "feat-013"] },
+    what: "Indexes chunks with a deterministic offline embedder and searches with pgvector only among documents the user's role may read. Offline benchmarks measure it on two synthetic query sets and against BM25; production ranking is unchanged.",
+    files: [["embedding.py", "offline HashingEmbedder"], ["indexing.py", "chunks and indexes"], ["search.py", "permission-filtered search"], ["benchmark.py", "Recall@k and MRR"], ["comparison.py", "read-only BM25 comparison"]],
+    decisions: ["D-008"], features: ["feat-004", "feat-013", "feat-016", "feat-020"] },
   telemetry: { layer: "inf", name: "Telemetry", path: "packages/telemetry", role: "Redacted OpenTelemetry traces",
     what: "Each run, step, model call and tool call produces a span under the same trace id. Spans carry ids, counts and codes, never prompt or document text.",
     files: [["tracing.py", "spans and the run's trace id"], ["redaction.py", "redaction layer"]],
@@ -246,7 +246,7 @@ const C = {
     decisions: ["D-007", "D-010", "D-014"], features: ["feat-002", "feat-006", "feat-010"] },
   gemini: { layer: "ext-bot", name: "Gemini", path: "gemini/gemini-3.5-flash-lite", role: "Real model, opt-in only",
     what: "The only allowlisted hosted model. Used only when LLM_MODE and ENABLE_LIVE_LLM turn it on, with GEMINI_API_KEY and an explicit budget. CI and the demo never call it.",
-    files: [], decisions: ["D-016", "D-017"], features: ["feat-012", "feat-014", "feat-015"] },
+    files: [], decisions: ["D-016", "D-017", "D-018"], features: ["feat-012", "feat-014", "feat-015", "feat-017", "feat-019", "feat-021"] },
 };
 
 const GRAPH = ["validate_request", "plan", "authorize_tools", "execute_tools", "synthesize_report", "output_policy", "propose_action", "await_approval", "execute_action", "finalize"];
@@ -259,13 +259,13 @@ const STEPS = [
   { t: "plan: the model proposes tools", lit: ["agents", "core", "llm", "gemini", "data"], g: ["plan"],
     d: "The prompt carries the task, the available tools and, since feat-014, the tenant's quarters: \"covers 2026-Q1…2026-Q4; if the task names no period, compare the two most recent\". The model only proposes calls; it runs nothing." },
   { t: "Budget before every attempt", lit: ["llm", "gemini"], g: ["plan"],
-    d: "Before sending, the adapter reserves the worst case: 1,048,576 input tokens plus 1,024 output tokens, about USD 0.317. If Gemini returns a 503 or the network fails, it retries up to twice (1 s, 2 s) and reserves again for each attempt. Nothing is refunded." },
+    d: "Before sending, the adapter reserves the worst case: 1,048,576 input tokens plus 1,024 output tokens, about USD 0.317, and it can wait a minimum interval between calls. A 503, a network failure or a per-minute rate limit is retried up to twice, reserving again each time; a daily-quota 429 fails at once as QUOTA_EXHAUSTED. Nothing is refunded." },
   { t: "authorize_tools: the model is not in charge", lit: ["agents"], g: ["authorize_tools"],
     d: "Every proposed call must pass the allowlist and a strict argument schema. Disallowed tools (run_sql) or invalid arguments are denied and logged. Tenant and user come from the run, never from arguments." },
   { t: "execute_tools: everything through the gateway", lit: ["agents", "tools", "data", "retrieval", "postgres"], g: ["execute_tools"],
-    d: "The gateway applies the role's permissions: a viewer cannot read sales. get_sales_summary reads through the read-only login with RLS; search only sees permitted documents. With no data, the run abstains (NO_SALES_DATA or NO_EVIDENCE)." },
+    d: "The gateway applies the role's permissions: a viewer cannot read sales. get_sales_summary reads through the read-only login with RLS; search only sees permitted documents. A tool the role may not use is recorded as an evidence gap. With no data, the run abstains (NO_SALES_DATA or NO_EVIDENCE)." },
   { t: "synthesize_report: a cited report", lit: ["agents", "llm", "gemini"], g: ["synthesize_report"],
-    d: "The evidence enters the context (sales first, up to 1,500 tokens) and the model returns JSON with a summary and findings, each citing evidence ids. A reply cut off at the limit fails as OUTPUT_TRUNCATED." },
+    d: "The evidence enters the context (sales first, up to 1,500 tokens). The prompt names the policy passages that fit and any source the user could not use, and the model returns JSON with a summary and findings, each citing evidence ids. A reply cut off at the limit fails as OUTPUT_TRUNCATED." },
   { t: "output_policy: citations checked", lit: ["agents"], g: ["output_policy"],
     d: "Findings that cite evidence the model never had in its context are dropped. If none remain, the run abstains with NO_SUPPORTED_FINDINGS instead of delivering unsupported claims." },
   { t: "propose_action and await_approval: pause", lit: ["agents", "tools", "postgres"], g: ["propose_action", "await_approval"],
@@ -273,7 +273,7 @@ const STEPS = [
   { t: "A person approves and the run continues", lit: ["user", "api", "agents", "tools", "postgres"], g: ["execute_action"],
     d: "POST …/approvals/{approval_id} with approve or reject resumes the run from its checkpoint, in any process. The write goes through the tool_executions registry and creates at most one SBX-… ticket; a second decision returns 409." },
   { t: "finalize: detail and trace", lit: ["agents", "telemetry", "api"], g: ["finalize"],
-    d: "The run ends with an explicit status (completed, abstained, rejected, budget_exhausted, timed_out or failed) and a trace id. All spans share that id and hold no sensitive text." },
+    d: "The run ends with an explicit status (completed, abstained, rejected, budget_exhausted, timed_out or failed), its evidence gaps and a trace id. All spans share that id and hold no sensitive text." },
 ];
 
 const SECURITY = [
@@ -285,6 +285,8 @@ const SECURITY = [
     d: "The gateway applies the role's permissions on every read and search filters by access label. A forbidden document and a missing one look the same." },
   { t: "Injection defense", lit: ["agents", "tools"], meta: "corpus: injection",
     d: "Documents are data, never instructions. If a malicious passage gets the model to ask for SQL, another tenant or the write tool, policy denies it and logs it." },
+  { t: "Evidence gaps on record", lit: ["tools", "agents", "web"], meta: "D-019",
+    d: "When the gateway denies a whole tool to the user's role, the run records the missing source itself, so a partial answer cannot look complete. Unreadable documents are never listed." },
   { t: "Checked citations", lit: ["agents"], meta: "FR-012",
     d: "A finding survives only if it cites evidence that was in the context. With no supported findings, the run abstains." },
   { t: "Human approval bound to a hash", lit: ["tools", "api", "postgres"], meta: "D-009 · D-015",
@@ -292,13 +294,13 @@ const SECURITY = [
   { t: "Idempotent writes", lit: ["tools", "postgres"], meta: "D-010",
     d: "The tool_executions registry guarantees at most one ticket per approval, even with concurrent retries or a crash mid-write." },
   { t: "Limits and budget", lit: ["agents", "llm"], meta: "D-016 · FR-011",
-    d: "At most 6 model calls, 8 tool calls, 16 steps and 90 s per run. In live mode, a worst-case reservation before every attempt and at most two retries." },
+    d: "At most 6 model calls, 8 tool calls, 16 steps and 90 s per run. In live mode, a worst-case reservation before every attempt, at most two retries, and evaluation batches that stop when the daily quota runs out." },
   { t: "Traces without secrets", lit: ["telemetry"], meta: "D-011",
     d: "Every exporter goes through a redaction layer. Spans carry ids, counts and codes, never prompts, documents or keys." },
   { t: "Secrets outside the code", lit: ["llm", "api"], meta: "arch-104",
-    d: "The Gemini key arrives only through the environment, never appears in errors, and an architecture rule blocks key patterns in tracked files." },
-  { t: "Architecture rules", lit: ["llm", "agents", "tools", "core"], meta: "arch-101…106",
-    d: "LiteLLM only in packages/llm, no subprocesses, no swallowed exceptions, sensitive writes only in the gateway, no word-count token estimates. Checked on every run of the checks." },
+    d: "The Gemini key arrives only through the environment, never appears in errors. Architecture rules block key patterns and local machine paths in the tracked files of this public repository." },
+  { t: "Architecture rules", lit: ["llm", "agents", "tools", "core"], meta: "arch-101…107",
+    d: "LiteLLM only in packages/llm, no subprocesses, no swallowed exceptions, sensitive writes only in the gateway, no word-count token estimates, no local paths. Checked on every run of the checks." },
 ];
 
 const FEATURES = [
@@ -317,6 +319,15 @@ const FEATURES = [
   { id: "feat-013", ph: "Phase 2", t: "Retrieval benchmark", lit: ["retrieval"], d: "16 synthetic queries: Recall@3 1.0 and MRR 1.0." },
   { id: "feat-014", ph: "Phase 2", t: "Planning knows the quarters", lit: ["agents", "tools", "evals"], d: "Live abstentions fell from 36 to 2; corpus evals-v1.1.0." },
   { id: "feat-015", ph: "Phase 2", t: "Reliable model calls", lit: ["llm", "evals"], d: "Bounded retries and 1,024 tokens: completed reports rose from 5 to 22." },
+  { id: "feat-016", ph: "Phase 2", t: "Retrieval stress queries", lit: ["retrieval"], d: "28 harder synthetic questions: Recall@3 0.76 and MRR 0.74, no forbidden hits." },
+  { id: "feat-017", ph: "Phase 2", t: "Live scoring by outcome", lit: ["evals", "gemini"], d: "Live runs scored on answers plus safety invariants: 29/41, every failure a rate limit." },
+  { id: "feat-018", ph: "Phase 2", t: "Policy citation guidance", lit: ["agents"], d: "The report prompt names the policy passages that fit the context." },
+  { id: "feat-019", ph: "Phase 2", t: "Rate-limit handling", lit: ["llm", "evals", "gemini"], d: "Paced calls and bounded 429 retries: 37/41 live, no rate-limit failures." },
+  { id: "feat-020", ph: "Phase 2", t: "BM25 comparison", lit: ["retrieval"], d: "Offline BM25 against vector search: better on stress queries, not adopted." },
+  { id: "feat-021", ph: "Phase 2", t: "Stop at the daily quota", lit: ["llm", "evals", "gemini"], d: "QUOTA_EXHAUSTED ends a live batch early and lists the cases not run." },
+  { id: "feat-022", ph: "Phase 2", t: "Ready to be public", lit: [], d: "No secrets in history, owner license, security policy, a rule against local paths." },
+  { id: "feat-023", ph: "Phase 2", t: "Evidence gaps", lit: ["tools", "agents", "evals"], d: "A denied source is recorded and passed to the report; access-01 may answer with the gap on record." },
+  { id: "feat-024", ph: "Phase 2", t: "Current demo replays", lit: ["web", "evals", "agents"], d: "Replays re-recorded on current code, gaps shown, run ids single-use." },
 ];
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -396,7 +407,7 @@ function featPanel() {
     if (f.ph !== phase) { phase = f.ph; html += `<div class="phase">${phase}</div>`; }
     html += `<button class="item tl-item" type="button" data-i="${i}" aria-pressed="${i === featIdx}"><span class="tl-id">${f.id.slice(5)}</span><span><span class="t">${esc(f.t)}</span><br><span class="d">${esc(f.d)}</span></span></button>`;
   });
-  panel.innerHTML = `<div class="eyebrow">History</div><h2>Fifteen features</h2><p class="muted">Select a feature to see which parts of the system it touched.</p><div class="list">${html}</div>`;
+  panel.innerHTML = `<div class="eyebrow">History</div><h2>${FEATURES.length} features</h2><p class="muted">Select a feature to see which parts of the system it touched.</p><div class="list">${html}</div>`;
   panel.querySelectorAll(".item").forEach((b) => b.addEventListener("click", () => { featIdx = featIdx === +b.dataset.i ? -1 : +b.dataset.i; featPanel(); }));
   light(featIdx >= 0 ? FEATURES[featIdx].lit : null);
   const active = panel.querySelector('[aria-pressed="true"]');

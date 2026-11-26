@@ -1,106 +1,82 @@
 # AI AgentOps
 
-A provider-agnostic, security-first agentic AI platform. It analyzes synthetic sales data, retrieves permission-filtered evidence, writes cited reports and proposes follow-up actions that run only after human approval, exactly once. It runs mock-first, with no paid model calls by default.
+A security-first agentic AI platform you can run on a laptop without any API key. An agent analyzes synthetic sales data, retrieves only the documents the user may read, writes a report in which every finding cites its evidence, and proposes a follow-up ticket that is written only after a person approves it, exactly once. It runs on a scripted mock model by default; a real model (Gemini Flash-Lite) is opt-in, budgeted and measured.
+
+The point of the project is the platform around the model: the model proposes, the server decides. Tenant isolation, role permissions, approvals, idempotent writes, limits, redacted traces and evaluation are enforced by code and tests, not by the prompt.
 
 ## Table of Contents
 
-- [Status](#status)
+- [What It Does](#what-it-does)
+- [Architecture](#architecture)
+- [Measured Results](#measured-results)
 - [Quick Start](#quick-start)
 - [Usage](#usage)
+- [Reproduce the Tests](#reproduce-the-tests)
+- [Development](#development)
 - [Roadmap](#roadmap)
 - [Documentation](#documentation)
 - [License](#license)
 
-## Status
+## What It Does
 
-Phase 1 complete (M0.1 to M5.1: feat-001 to feat-009). What works today:
+**A bounded agent workflow.** One LangGraph graph validates the user, plans tool calls, authorizes them, runs them, writes a cited report, filters unsupported citations and, when asked, pauses for approval of a follow-up ticket. Each run is limited to 6 model calls, 8 tool calls, 16 graph steps and 90 seconds, and always ends with an explicit status: completed, abstained, rejected, budget exhausted, timed out or failed. An experimental orchestration splits planning into Research and Data Analyst subgraphs; the single workflow stays the default.
 
-- FastAPI health endpoints: GET /health/live returns `{"status": "ok"}`; GET /health/ready checks PostgreSQL when configured.
-- Settings from environment variables with `LLM_MODE=mock` and `ENABLE_LIVE_LLM=false` by default; `hosted_free`/`live_paid` refuse to start without `ENABLE_LIVE_LLM=true`. Provider keys in the environment never switch the mode.
-- JSON logs for the app's own events (uvicorn's access log is still plain text).
-- A keyless, offline test suite: tests cannot open non-loopback connections or DNS lookups.
-- A provider-independent model layer (feat-003, M1.1), used by the workflow and HTTP API:
-  - `agentops_core.llm`: typed `ModelRequest`/`ModelResponse`, the `LLMProvider` port, a capability registry that rejects unknown models, and `LLMGateway`, which refuses a request needing tool calling, structured output or streaming the model lacks (`MODEL_CAPABILITY_UNSUPPORTED`) before any provider call, and validates structured output against its JSON Schema.
-  - `agentops_llm.mock.MockLLMProvider`: deterministic replies scripted per run id, loadable from JSON files, zero cost.
-  - `agentops_llm.litellm_provider.LiteLLMProvider`: LiteLLM SDK adapter that normalizes text, tool calls, usage and errors (`RATE_LIMITED`, `AUTH_FAILED`, `TIMEOUT`, `CAPABILITY_UNSUPPORTED`, `PROVIDER_UNAVAILABLE`, `BUDGET_EXCEEDED`, `INVALID_REQUEST`, `INVALID_RESPONSE`).
-  - `agentops_llm.selection.select_provider`: mock by default, replay refuses every model call, and hosted or paid modes need `ENABLE_LIVE_LLM=true`.
+**The model only proposes.** Every tool call goes through a server-side gateway: an allowlist, the user's role permissions (a viewer cannot read sales), strict arguments that never carry a tenant or user, and an append-only policy log. A finding that cites evidence the model never saw is dropped; with nothing supported left, the run abstains. A prompt-injection payload in a retrieved document is treated as data, and the actions it asks for are refused.
 
-- Synthetic data in PostgreSQL 17 + pgvector (feat-002, M0.2), from `datasets/synthetic/`: two tenants (`demo-a`, `demo-b`), four users with viewer/analyst/admin roles, 64 quarterly sales rows and seven documents split into 16 citable chunks (`<document-id>#<n>`).
-  - Row-level security keeps each tenant's rows invisible to the other; the read-only analytics login cannot insert, update, delete, truncate, alter or drop anything.
-  - Typed reads in `agentops_data.access`: `revenue_by_quarter`, `quarterly_sales`, `documents_for_user` and `document_chunks`, filtered by the user's role (viewer sees public documents, analyst public and internal, admin everything).
-  - GET /health/ready checks the database when `DATABASE_URL` is set and answers 503 `not_ready` when it is unreachable.
+**Partial answers say so.** When the gateway denies a whole source to the user's role, the run records it as an evidence gap, and the report step is told not to claim what needs it. Documents a role cannot read are never listed, so they stay indistinguishable from missing ones.
 
-- The first end-to-end workflow (feat-004, M1.2), run from the command line in mock mode: one LangGraph graph takes the sample task, plans tool calls with the scripted mock model, lets policy allow or deny each call, reads the sales declines and the documents the user may see, and returns a JSON run detail with a cited report.
-  - For `demo-a`'s analyst it reports the three largest 2026-Q2→Q3 declines (Trail Running Shoes EMEA −4,000, Rain Jacket NA −3,000, Camping Stove NA −2,000), citing sales records and policy passages.
-  - The run detail records each policy decision: a non-allowlisted tool, a tool call carrying another tenant's id, and a finding that cites a restricted document are all denied.
-  - It abstains when the requested quarters have no data, and ends with an explicit status when an LLM-call, tool-call, step or time limit is reached.
-  - Document retrieval uses a deterministic offline embedding (word hashing), so runs are reproducible; the sample run is recorded in `fixtures/replays/`.
+**Writes happen once, after approval.** The only write is a sandbox ticket. It needs an approval bound to the user, the run, the policy version and the hash of the exact arguments, consumed in the same transaction. An execution registry and reconciliation keep it to one ticket under concurrent retries or a crash mid-write. Paused runs are checkpointed in PostgreSQL per tenant and resume in any process.
 
-- A first-party MCP server and tool gateway (feat-005, M2.1): `get_sales_summary`, `search_approved_documents`, `get_issue_details` and the sandbox write `create_followup_ticket`, served over stdio by `python -m agentops_tools serve` for one principal and run.
-  - The gateway checks every call: allowlisted tool, the user's role permissions (a viewer cannot read sales), strict arguments with no tenant or user fields, and records each decision in an append-only policy log.
-  - A ticket is written only with an approval of that exact ticket by the same user for the same run, under the current policy version and before it expires (15 minutes); the approval is used up by the write. Forged, pending, rejected, expired, changed, replayed or borrowed approvals write nothing.
-  - A synthetic `demo-b` document contains a prompt-injection payload; it is returned as ordinary data, and the actions it asks for are refused.
+**Tenants are isolated in the database.** PostgreSQL row-level security keys every tenant table, the analytics login is read-only, and checkpoints carry the tenant in their thread id.
 
-- Recovery and resumable runs (feat-006, M2.2):
-  - Every ticket write goes through an execution registry (reserved, executing, then succeeded, failed or uncertain). Concurrent retries of one approval, a crash right after the ticket service commits, and a lost response before or after the commit all end with exactly one ticket; `python -m agentops_tools recover --tenant demo-a` reconciles stuck writes by their ticket reference before retrying. This holds for the sandbox ticket service, which is idempotent on that reference; it is not a universal exactly-once guarantee.
-  - A run started with `propose_followup` proposes one follow-up ticket for the largest decline, requests an approval and pauses (`awaiting_approval`). Its state is checkpointed in PostgreSQL, so it can be resumed after a restart; it writes the ticket only if the approval was granted through the gateway, and does not repeat any model or tool call.
+**Real-model calls are opt-in and capped.** Gemini runs only with a live mode, `ENABLE_LIVE_LLM=true`, a key and an explicit budget. Before every attempt the adapter reserves the worst case. It can space calls apart, retries server errors, connection errors and per-minute rate limits at most twice, and fails a daily-quota error at once. Tests and the demo never call a provider.
 
-- Observability, feedback and evaluation (feat-007, M3.1):
-  - OpenTelemetry spans for the API, each run step, model calls, policy checks, tool calls, retrieval and evaluation cases, all under the run's trace id. Spans carry ids and counts only, and every exporter passes a redaction layer (keys, tokens, URL passwords, e-mail addresses). Export to Langfuse is opt-in (`LANGFUSE_ENABLED=true` plus `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY`).
-  - The workflow's reads now go through the tool gateway too, so role permissions apply to them (a viewer cannot read sales) and every tool call is in the policy log.
-  - POST /v1/runs/{run_id}/feedback stores a thumbs up or down, with an optional comment and evaluation-case id, for the configured demo user (bearer `DEMO_API_TOKEN`); `python -m agentops_data export-feedback --tenant demo-a` exports it.
-  - A versioned 50-case evaluation corpus (`datasets/evals/v1`) covering normal, multi-source, missing-evidence, tool-misuse, prompt-injection, access, reliability and budget cases; `python -m agentops_evals run` runs it in mock mode and reports dataset version, git commit, model, prompt version and a trace id per case. All 50 pass. It scores the platform's enforcement with scripted model replies, not model quality.
+**Everything is traced and evaluated.** OpenTelemetry spans share each run's trace id and pass a redaction layer: ids, counts and codes, never prompts, documents or keys. A versioned 50-case evaluation corpus checks normal, multi-source, missing-data, tool-misuse, injection, access, reliability and budget cases. Live runs are scored on outcomes plus safety invariants, and stop early when the provider's daily quota runs out.
 
-- An orchestration experiment (feat-008, M4.1): Research, Data Analyst and Reporting roles as LangGraph subgraphs (`orchestration="specialists"`), each limited to its own tool. `python -m agentops_evals benchmark` runs the 42 workflow cases of the evaluation corpus under both designs and writes `benchmarks/orchestration/v1/` (results JSON and `REPORT.md`). In mock mode both reach 42/42 expected outcomes and the specialists need about one more model call per run (2.74 vs 1.81), so the single workflow stays the default. Mock mode cannot compare answer quality; the separate hosted evidence is summarized below.
+**A replay-first demo.** A static Next.js site shows five recorded runs (a cited analysis, a viewer denied sales data, missing data, a prompt injection, and a ticket written after approval) with their report, evidence, evidence gaps, policy decisions, approval and trace. It sends no request to any backend or model provider.
 
-- A replay-first demo UI (feat-009, M5.1) in `apps/web`: a static Next.js site that shows five recorded synthetic runs (the cited sample, a viewer denied by policy, missing data, a prompt injection, and a ticket written after human approval) with their report, evidence, policy decisions, approval and trace id. It makes no request to any backend or model provider. Replays are recorded with `python -m agentops_evals record-replays` into `fixtures/replays/`.
-- An optional live mode on the API: POST /v1/runs runs a task for the demo user (bearer `DEMO_API_TOKEN`), capped at `MAX_REQUESTS_PER_DEMO_USER` runs per day. In mock mode it uses a named scripted-reply file from `fixtures/llm/`.
+## Architecture
 
-- Tenant-isolated run checkpoints (feat-010): a paused run's saved state carries its tenant in the thread id (`<tenant>/thread-<run_id>`) and is protected by row-level security, so another tenant can neither read nor resume it.
+```text
+Presentation    apps/api (FastAPI)              apps/web (replay demo)
+Application     packages/agents (workflow)      packages/tools (gateway, MCP)    packages/evals
+Domain          packages/core (contracts and ports, no SDKs)
+Infrastructure  packages/llm   packages/data   packages/retrieval   packages/telemetry
+External        PostgreSQL 17 + pgvector        Gemini (opt-in)
+```
 
-- Approvals over HTTP (feat-011): POST /v1/runs with `"propose_followup": true` returns `awaiting_approval` and the bound proposal; POST /v1/runs/{run_id}/approvals/{approval_id} with `{"decision": "approve"}` or `"reject"` records the decision and resumes the run (one ticket at most; a second decision is 409, another user 403, another tenant 404); GET /v1/runs/{run_id} returns the run's current detail.
+Layers depend only on the layers below them, and architecture rules checked on every run of `npm run check` keep it that way (for example, LiteLLM may be imported only in `packages/llm`).
 
-- Hosted-model support (feat-012): Gemini Flash-Lite is allowlisted as gemini/gemini-3.5-flash-lite, with tool calling, JSON-schema output and usage reporting. Live API calls need a live `LLM_MODE`, `ENABLE_LIVE_LLM=true`, `LLM_MODEL` set to that id, `GEMINI_API_KEY` and an explicit `LLM_BUDGET_USD` (default zero). Each call reserves the full input window plus bounded output at bundled LiteLLM prices; reservations are not refunded, even after a timeout. Unknown pricing or insufficient budget fails closed. This is deliberately conservative, not a provider-billing guarantee.
-- The evaluation CLI remains mock by default, even with live environment settings. `--live --budget-usd` explicitly enables hosted workflow calls and caps the entire command; corpus runs also require `--out`. Live benchmark files default to a separate directory so mock evidence stays intact. The first owner-approved live run (free tier, 2026-11-24) is recorded in `benchmarks/evals/v1/live/` and `benchmarks/orchestration/v1/live/`: corpus 11/50 and benchmark 5/42 for both orchestrations, at about USD 0.024 reported usage. The model abstained without tool calls in most workflow cases, and many expectations assume scripted mock trajectories, so these are not quality scores; see the [manual live procedure](docs/runbooks/operations.md#manual-hosted-evaluation).
-- Planning knows the data's quarters (feat-014): before the planning call the workflow tells the model which sales quarters the tenant has and to compare the two most recent when the task names no period; `get_sales_summary` takes both quarters or neither (neither means the two most recent). The corpus is now `evals-v1.1.0`, whose tasks name the period their expectations assume. The second live run (`benchmarks/evals/v1.1/live/`, `benchmarks/orchestration/v1/live-evals-v1.1/`) abstained twice instead of 36 times and reached report writing in 30 of 42 workflows; most report calls then failed on provider overload (HTTP 503) or local network outages, so pass rates stayed low (corpus 11/50, benchmark 4/42 and 2/42).
-- Hosted-call reliability (feat-015): the adapter retries an HTTP 503 or connection error at most twice (1 s, 2 s), reserving budget for every attempt; timeouts and other errors are not retried (rate limits are, since feat-019). The default output limit is 1,024 tokens and a reply cut at the limit fails as `OUTPUT_TRUNCATED`. Reports record retries. In the third live run (`benchmarks/evals/v1.1/live-feat015/`, `benchmarks/orchestration/v1/live-feat015/`) completed workflows rose from 5 to 22 with 27 retries; the corpus stayed at 11/50 because most remaining expectations check scripted trajectories, and the benchmark (single 2/42, specialists 4/42) is too small to choose a design.
-- Live evaluation scores answers (feat-017): each workflow case in corpus `evals-v1.2.0` has a live expectation (acceptable outcomes, expected declines included, surviving findings, cited policy documents) plus safety invariants, and every result records its error codes. In the fourth live run (`benchmarks/evals/v1.2/live/`, `benchmarks/orchestration/v1/live-evals-v1.2/`) the corpus reached 29/41 live outcomes, and all 12 failures were free-tier rate limits; the benchmark reached 21/41 (single) and 19/41 (specialists), where the non-rate-limit failures were multi-source reports that cited no policy document.
-- Policy-aware reporting (feat-018): when document passages fit the report context,
-  both orchestrations receive guidance to cite supporting passages in relevant
-  policy-backed findings, alongside sales citations when needed, without inventing
-  policy claims or unsupported citations. The no-document prompt and citation
-  enforcement are unchanged. Scripted request tests verify the guidance, not semantic
-  support or hosted-model compliance; no hosted quality gain is measured.
-- Rate-limit handling (feat-019): live evaluation commands accept `--min-call-interval <seconds>` to space model calls, and a rate-limited call (HTTP 429) gets up to two budget-reserved retries that honor a Retry-After of at most 60 seconds. In the fifth live run, with a 4-second interval (`benchmarks/evals/v1.2/live-feat019/`, `benchmarks/orchestration/v1/live-feat019/`), the corpus reached 37/41 live outcomes with no rate-limit failures; the remaining failures were three multi-source reports without a policy citation and a viewer run that completed from permitted documents instead of abstaining. That run predates feat-018's citation guidance.
-- Quota-aware live runs (feat-021): a 429 on a per-day quota fails at once as `QUOTA_EXHAUSTED`, and live corpus and benchmark commands stop dispatching workflow cases after it or after three consecutive rate-limited cases (`--stop-after-rate-limited`, 0 disables). Reports list the cases not run and why, the summary prints `STOPPED EARLY`, and the command exits 1.
-- Evidence gaps (feat-023): when the tool gateway denies a whole tool to the user's role (for example sales data for a viewer), the run detail lists it under `evidence_gaps`, taken from the gateway's decision rather than the model, and the report step is told to make no claim that needs that source and to say so in the summary. Corpus `evals-v1.3.0` lets the viewer case abstain or complete, a completed run only with the gap recorded. Unreadable documents are never listed, so they stay indistinguishable from missing ones.
+- [`docs/architecture-map.html`](docs/architecture-map.html): an interactive map of the components, one request step by step, where each security control applies, and the feature history. Clone the repository and open it in a browser.
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): the layer model, enforced rules and design notes.
+- [`docs/ARCHITECTURE_AND_REQUIREMENTS.md`](docs/ARCHITECTURE_AND_REQUIREMENTS.md): the full specification, including the threat model and failure matrix.
 
-- A read-only retrieval benchmark (feat-013): 16 versioned synthetic queries at k=3 measure the existing hashing/pgvector search. Recall@k and MRR cover the 12 queries with accessible relevant chunks; four no-accessible-evidence queries are reported separately, not given perfect scores. Reports contain chunk ids/hashes, model and commit provenance, and forbidden-hit counts, never retrieved text. Ranking is unchanged and no model is called. The [recorded synthetic baseline](benchmarks/retrieval/v1/results.json) has Recall@3 1.0, MRR 1.0 and zero forbidden hits; this is not held-out retrieval quality. See the [procedure and limitations](docs/retrieval-baseline.md).
+## Measured Results
 
-There is no endpoint to list runs, and the UI has no live mode or approval screen. See [`docs/known-limitations.md`](docs/known-limitations.md).
+All data is synthetic. Mock-mode results check the platform's enforcement with scripted model replies; they say nothing about model quality.
 
-The optional [retrieval stress corpus](docs/retrieval-baseline.md#stress-corpus-v2)
-(feat-016) adds 28 synthetic questions: paraphrases, multi-chunk answers, distracting
-topics and access-negative cases. Select it with `--dataset`; the default v1 corpus
-and ranking are unchanged. The [paired comparison](benchmarks/retrieval/stress-v2/REPORT.md)
-records stress Recall@3 0.7639 and MRR 0.7361 versus v1 1.0/1.0, with zero forbidden
-hits in both. Neither corpus measures held-out real-world quality.
-Of 24 answerable stress questions, four retrieve no relevant chunks and four more
-retrieve only part of the judged evidence.
+| Measurement | Result | Evidence |
+|---|---|---|
+| Evaluation corpus, mock mode (`evals-v1.3.0`) | 50/50 | `uv run python -m agentops_evals run` |
+| Single workflow vs specialists, mock mode | 42/42 each; specialists use about one more model call per run (2.74 vs 1.81) | [report](benchmarks/orchestration/v1/REPORT.md) |
+| Retrieval, synthetic v1 queries | Recall@3 1.0, MRR 1.0, no forbidden hits | [results](benchmarks/retrieval/v1/results.json) |
+| Retrieval, harder stress queries | Recall@3 0.76, MRR 0.74; BM25 reaches 0.83 and 0.80 with individual regressions and is not adopted | [stress](benchmarks/retrieval/stress-v2/REPORT.md), [BM25](benchmarks/retrieval/bm25-v1/REPORT.md) |
 
-An offline comparison command (feat-020) measures the unchanged vector retriever
-against fixed BM25 lexical scoring on either frozen corpus. It uses only permitted
-chunks in one read-only database snapshot and records both rankers' metrics, distinct
-scores/distances and source-catalog fingerprints, without changing production search
-or calling a model. See the
-[comparison procedure](docs/retrieval-baseline.md#offline-bm25-comparison).
-The [recorded experiment](benchmarks/retrieval/bm25-v1/REPORT.md) keeps v1 at 1.0/1.0
-and raises stress Recall@3/MRR to 0.8264/0.7986, but introduces individual regressions.
-BM25 is not adopted; independent held-out evidence is still needed.
+Five owner-approved runs with Gemini 3.5 Flash-Lite on the free tier (2026-11-24 to 2026-11-26). Each fixed the main failure of the one before:
+
+| Run | Live result | What limited it | Fixed by |
+|---|---|---|---|
+| 1 | corpus 11/50 | the model invented quarters with no data and abstained | feat-014: planning is told the available quarters |
+| 2 | corpus 11/50 | abstentions fell from 36 to 2, but report calls failed on provider overload (HTTP 503) | feat-015: bounded retries |
+| 3 | corpus 11/50, 22/42 workflows completed | expectations scored the mock's scripted trajectory, not the answer | feat-017: outcome-based live scoring |
+| 4 | 29/41 live outcomes | all 12 failures were free-tier rate limits | feat-019: pacing and rate-limit retries |
+| 5 | 37/41 live outcomes; benchmark 37/41 single, 38/41 specialists | three multi-source reports cited no policy document; a viewer's run answered from permitted documents instead of abstaining | feat-018 and feat-023, not yet measured live |
+
+Run 5 is in `benchmarks/evals/v1.2/live-feat019/` and `benchmarks/orchestration/v1/live-feat019/`. The benchmark's rule recommends specialists by that one case; the single workflow remains the default until a repeated run confirms the difference. See [known limitations](docs/known-limitations.md) for what these numbers do not show.
 
 ## Quick Start
 
-Prerequisites: Python 3.13, [uv](https://docs.astral.sh/uv/), Docker, Node.js ≥ 18 (development harness and the demo UI) and Git.
+Prerequisites: Python 3.13, [uv](https://docs.astral.sh/uv/), Docker, Node.js 18 or later (development harness and the demo UI) and Git.
 
 ```bash
 uv sync                                                    # install dependencies into .venv
@@ -111,51 +87,68 @@ uv run python -m agentops_data seed                        # load datasets/synth
 uv run python -m agentops_retrieval index                  # embed chunks (after every seed)
 uv run python -m agentops_agents setup-checkpoints         # run checkpoint tables (schema owner)
 export ANALYTICS_DATABASE_URL=postgresql://agentops_analytics:change-me-analytics@127.0.0.1:15432/agentops
-uv run python -m agentops_agents run --run-id run-sample-q3-declines --tenant demo-a --user user-a-analyst "Analyze quarterly sales and explain the three largest declines"
 export APP_DATABASE_URL=postgresql://agentops_app:change-me-app@127.0.0.1:15432/agentops
-uv run python -m agentops_tools serve --tenant demo-a --user user-a-analyst --run-id run-1   # MCP over stdio
-uv run python -m agentops_evals run --out evals-report.json   # 50-case evaluation, mock mode
-uv run uvicorn agentops_api.app:create_app --factory       # serve the API on http://127.0.0.1:8000
-curl http://127.0.0.1:8000/health/ready
-npm run check                                              # lint, types, offline tests, harness checks
-uv run pytest testsuite -q -m integration                  # tests against the local database
+uv run python -m agentops_agents run --run-id run-sample-q3-declines --tenant demo-a --user user-a-analyst "Analyze quarterly sales and explain the three largest declines"
 ```
 
-The compose file uses throwaway local passwords (`POSTGRES_PASSWORD`, `ANALYTICS_DB_PASSWORD`, `APP_DB_PASSWORD` override them). Database roles are created only when the data volume is first created; after changing `infra/postgres/init/`, recreate it with `docker compose down -v`.
+The last command prints the run detail as JSON: for `demo-a`'s analyst, the three largest 2026-Q2 to Q3 declines (Trail Running Shoes EMEA −4,000, Rain Jacket NA −3,000, Camping Stove NA −2,000), each finding citing sales records and policy passages, and every policy decision of the run.
 
-Settings come from environment variables only; copy `.env.example` to `.env` and pass it with `--env-file .env` to use a file. Do not run `./init.sh` yet: it would install into the system Python (D-004 in `DECISIONS.md`).
+The compose file uses throwaway local passwords (`POSTGRES_PASSWORD`, `ANALYTICS_DB_PASSWORD`, `APP_DB_PASSWORD` override them). Database roles are created only with the data volume; after changing `infra/postgres/init/`, recreate it with `docker compose down -v`. Settings come from environment variables; copy `.env.example` to `.env` and pass it with `--env-file .env` to use a file. Do not run `./init.sh`: it would install into the system Python (D-004 in `DECISIONS.md`).
+
+For the demo UI alone, only Node is needed: `npm ci --prefix apps/web`, `npm --prefix apps/web run build`, `npm --prefix apps/web run serve`, then open http://127.0.0.1:4173/.
 
 ## Usage
 
-Development follows the harness loop in [`AGENTS.md`](AGENTS.md): pick the next feature, activate it, implement it, commit, then verify it through the gate.
+**HTTP API.** Start it with `uv run uvicorn agentops_api.app:create_app --factory` (http://127.0.0.1:8000).
+
+| Route | What it does |
+|---|---|
+| GET /health/live, GET /health/ready | liveness; readiness checks PostgreSQL when `DATABASE_URL` is set |
+| POST /v1/runs | runs a task for the demo user (bearer `DEMO_API_TOKEN`), capped at `MAX_REQUESTS_PER_DEMO_USER` runs a day; with `"propose_followup": true` it returns `awaiting_approval` and the bound proposal |
+| GET /v1/runs/{run_id} | the run's current detail, from its checkpoint |
+| POST /v1/runs/{run_id}/approvals/{approval_id} | `{"decision": "approve"}` or `"reject"` resumes the run; a second decision is 409, another user 403, another tenant 404 |
+| POST /v1/runs/{run_id}/feedback | stores a thumbs up or down with an optional comment |
+
+**Command line.**
 
 ```bash
-npm run activate -- feat-001
-npm run verify-feature -- feat-001
-npm run lane-suggest       # which planned features could run in parallel
+uv run python -m agentops_tools serve --tenant demo-a --user user-a-analyst --run-id run-1   # MCP server over stdio
+uv run python -m agentops_tools recover --tenant demo-a           # reconcile stuck ticket writes
+uv run python -m agentops_evals run --out evals-report.json       # 50-case corpus, mock mode
+uv run python -m agentops_evals benchmark                         # single workflow vs specialists
+uv run python -m agentops_evals record-replays                    # re-record the demo replays
+uv run python -m agentops_retrieval benchmark --git-sha "$(git rev-parse HEAD)" --out retrieval-results.json
+uv run python -m agentops_retrieval compare --help                # vector search vs BM25, read-only
+uv run python -m agentops_data export-feedback --tenant demo-a
 ```
 
-## Reproduce the key tests
+**Live model (opt-in).** The evaluation commands stay on the mock unless given `--live` and `--budget-usd` (a live corpus run also needs `--out`), with `LLM_MODE=hosted_free`, `ENABLE_LIVE_LLM=true` and `GEMINI_API_KEY` set. The API additionally needs `LLM_MODEL=gemini/gemini-3.5-flash-lite` and an explicit `LLM_BUDGET_USD`. `--min-call-interval` spaces calls for free-tier limits and `--stop-after-rate-limited` sets the early-stop streak. The budget cap covers the whole command and reservations are deliberately conservative. See the [manual live procedure](docs/runbooks/operations.md#manual-hosted-evaluation).
+
+## Reproduce the Tests
 
 ```bash
 docker compose up -d --wait postgres
 uv sync
 npm ci --prefix apps/web && npx --prefix apps/web playwright install chromium
-npm run check                                              # lint, types, offline tests, harness checks, replay UI e2e
-uv run pytest testsuite -q -m integration                  # tenant isolation, approvals, crash recovery, checkpoints
-uv run python -m agentops_evals run                        # needs ANALYTICS_DATABASE_URL and APP_DATABASE_URL
-uv run python -m agentops_evals benchmark                  # single workflow vs specialists
-uv run python -m agentops_retrieval benchmark --git-sha "$(git rev-parse HEAD)" --out retrieval-results.json
+npm run check                                              # lint, types, offline tests, architecture rules, replay UI e2e
+uv run pytest testsuite -q -m integration                  # tenant isolation, approvals, crash recovery, checkpoints, replays
 npm --prefix apps/web run e2e                              # replay UI only: screenshots in apps/web/test-results/shots
 ```
 
-For the demo UI alone, nothing but Node is needed: `npm ci --prefix apps/web`, `npm --prefix apps/web run build`, `npm --prefix apps/web run serve`, then open http://127.0.0.1:4173/.
+The default test suite is keyless and offline: tests cannot open non-loopback connections or DNS lookups.
 
-Further reading: [threat model](docs/threat-model.md), [deployment checklist](docs/runbooks/deployment-checklist.md), [operations runbook](docs/runbooks/operations.md), [known limitations](docs/known-limitations.md).
+## Development
+
+The repository is built feature by feature with an agent harness: each feature is declared in [`feature_list.json`](feature_list.json), implemented on a branch and accepted only when its verification gate passes. Gate evidence is in `.harness/state/`, sessions in `progress/` and decisions in [`DECISIONS.md`](DECISIONS.md). See [`AGENTS.md`](AGENTS.md) and the [command reference](docs/HARNESS.md).
+
+```bash
+npm run activate -- feat-001
+npm run verify-feature -- feat-001
+```
 
 ## Roadmap
 
-Features are declared in [`feature_list.json`](feature_list.json); their state is in `.harness/state/` and summarized in [`PROGRESS.md`](PROGRESS.md).
+Phase 1 (M0 to M5) is the release scope of the specification; Phase 2 hardens it with evidence from real-model runs. Progress is summarized in [`PROGRESS.md`](PROGRESS.md).
 
 | Feature | Milestone | Slice |
 |---|---|---|
@@ -165,33 +158,39 @@ Features are declared in [`feature_list.json`](feature_list.json); their state i
 | feat-004 | M1.2 | First LangGraph workflow: SQL + retrieval → cited report, abstention |
 | feat-005 | M2.1 | First-party MCP server, policy gateway, approval binding, sandbox ticket |
 | feat-006 | M2.2 | Postgres checkpointing, execution registry, crash recovery, reconciliation |
-| feat-007 | M3.1 | Sanitized telemetry, feedback API, 50-case evaluation corpus |
+| feat-007 | M3.1 | Redacted telemetry, feedback API, 50-case evaluation corpus |
 | feat-008 | M4.1 | Three-specialist comparison against the single-workflow baseline |
 | feat-009 | M5.1 | Replay-first Next.js demo and portfolio evidence |
-| feat-012 | Phase 2 | Budgeted Gemini hosted calls and opt-in evaluations; manual live evidence recorded |
-| feat-013 | Phase 2 | Read-only retrieval-relevance baseline, independent of hosted-model support |
-| feat-014 | Phase 2 | Planning states the tenant's sales quarters; corpus v1.1.0 tasks name their period |
-| feat-015 | Phase 2 | Bounded, budget-reserved retries for transient provider failures; 1,024-token output |
-| feat-016 | Phase 2 | Versioned retrieval stress queries and a same-index v1 comparison |
-| feat-017 | Phase 2 | Live evaluation scores outcomes (evals-v1.2.0) and records error codes per case |
-| feat-018 | Phase 2 | Context-aware policy citation guidance in both report paths; offline verification |
-| feat-019 | Phase 2 | Paced live calls and bounded, budget-reserved retries for rate limits |
-| feat-020 | Phase 2 | Offline, permission-filtered BM25 comparison; production retrieval unchanged |
-| feat-021 | Phase 2 | Live evaluation stops early when the provider's daily quota runs out |
-| feat-022 | Phase 2 | Repository ready to be public: secret and local-path checks, license, security policy |
-| feat-023 | Phase 2 | Runs record the sources the user's role kept from them (evidence gaps) |
-| feat-024 | Phase 2 | Demo replays re-recorded on current code, evidence gaps shown, run ids single-use |
+| feat-010 | Phase 2 | Tenant-isolated run checkpoints |
+| feat-011 | Phase 2 | Approvals over HTTP and run resume |
+| feat-012 | Phase 2 | Budgeted Gemini calls and opt-in live evaluation |
+| feat-013 | Phase 2 | Read-only retrieval relevance baseline |
+| feat-014 | Phase 2 | Planning is told the tenant's sales quarters |
+| feat-015 | Phase 2 | Bounded retries for transient provider failures; 1,024-token output |
+| feat-016 | Phase 2 | Retrieval stress queries and comparison |
+| feat-017 | Phase 2 | Live evaluation scores outcomes, not mock trajectories |
+| feat-018 | Phase 2 | Policy citation guidance in the report prompt |
+| feat-019 | Phase 2 | Paced live calls and rate-limit retries |
+| feat-020 | Phase 2 | Offline BM25 comparison; production retrieval unchanged |
+| feat-021 | Phase 2 | Live evaluation stops when the daily quota runs out |
+| feat-022 | Phase 2 | Repository ready to be public |
+| feat-023 | Phase 2 | Runs record the sources the user's role kept from them |
+| feat-024 | Phase 2 | Demo replays current and repeatable; run ids single-use |
+
+Next: a live run that measures feat-018 and feat-023 together.
 
 ## Documentation
 
-- [Requirements and architecture (authoritative)](docs/ARCHITECTURE_AND_REQUIREMENTS.md)
-- [Engineering handoff and milestones](docs/CLAUDE_CODE_HANDOFF.md)
-- [Project standards and non-negotiable rules](docs/STANDARDS.md)
 - [Product overview](docs/PRODUCT.md)
-- [Architecture summary and enforced rules](docs/ARCHITECTURE.md)
+- [Requirements and architecture (authoritative)](docs/ARCHITECTURE_AND_REQUIREMENTS.md)
+- [Architecture summary and enforced rules](docs/ARCHITECTURE.md) and the [interactive map](docs/architecture-map.html)
+- [Threat model](docs/threat-model.md)
+- [Known limitations](docs/known-limitations.md)
+- [Operations runbook](docs/runbooks/operations.md) and [deployment checklist](docs/runbooks/deployment-checklist.md)
+- [Retrieval baseline](docs/retrieval-baseline.md)
+- [Project standards](docs/STANDARDS.md) and [engineering handoff](docs/CLAUDE_CODE_HANDOFF.md)
 - [Decisions](DECISIONS.md)
-- [Harness usage guide](docs/USAGE.md)
-- [Harness command reference](docs/HARNESS.md)
+- [Harness usage guide](docs/USAGE.md) and [command reference](docs/HARNESS.md)
 - [Security policy](SECURITY.md) and [publishing checks](docs/publishing.md)
 
 ## License

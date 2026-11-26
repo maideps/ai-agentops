@@ -49,4 +49,5 @@ After adding or updating a session note, regenerate this file with `node scripts
 - [Session 029 — 2026-11-26 — feat-023 runs record the sources the user's role kept from them](progress/029-2026-11-26.md)
 - [Session 030 — 2026-11-26 — feat-022 the repository is ready to be public](progress/030-2026-11-26.md)
 - [Session 031 — 2026-11-26 — feat-024 demo replays are current and repeatable](progress/031-2026-11-26.md)
+- [Session 032 — 2026-11-26 — README and architecture map rewritten for public readers](progress/032-2026-11-26.md)
 <!-- END GENERATED PROGRESS -->
