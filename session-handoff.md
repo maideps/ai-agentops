@@ -18,7 +18,7 @@
 
 | Check | Result | Evidence |
 |---|---|---|
-| feat-024 gate | See .harness/state/feat-024.json | .harness/state/feat-024.json and trail |
+| feat-024 gate | PASS, six layers incl. replay UI e2e | .harness/state/feat-024.json and trail |
 | feat-022 gate | PASS, four layers at 7dca999 | .harness/state/feat-022.json and trail |
 | feat-023 gate | PASS, five layers at 0f51fe2 | .harness/state/feat-023.json and trail |
 | Mock corpus evals-v1.3.0 | 50/50 (integration suite) | testsuite/acceptance/feat_007 |
