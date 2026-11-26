@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { listReplays, loadReplay } from "@/lib/replays";
 
 export default function CatalogPage() {
@@ -12,10 +13,10 @@ export default function CatalogPage() {
       <ul className="catalog">
         {replays.map(({ entry, detail }) => (
           <li key={entry.id} data-testid="replay-card">
-            <a href={`/replays/${entry.id}/`}>
+            <Link href={`/replays/${entry.id}/`}>
               <span className="title">{entry.title}</span>
               <span className={`status status-${detail.status}`}>{detail.status}</span>
-            </a>
+            </Link>
             <p>{entry.description}</p>
             <p className="meta">
               {detail.tenant_id} · {detail.user_id} · trace <code>{detail.trace_id}</code>

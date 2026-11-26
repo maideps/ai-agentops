@@ -4,6 +4,8 @@ A security-first agentic AI platform you can run on a laptop without any API key
 
 The point of the project is the platform around the model: the model proposes, the server decides. Tenant isolation, role permissions, approvals, idempotent writes, limits, redacted traces and evaluation are enforced by code and tests, not by the prompt.
 
+**Live demo:** [maideps.github.io/ai-agentops](https://maideps.github.io/ai-agentops/), five recorded runs (a cited report, a policy denial, missing data, a prompt injection and an approved ticket) replayed in the browser. No model, API key or backend is called.
+
 ## Table of Contents
 
 - [What It Does](#what-it-does)
