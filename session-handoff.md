@@ -2,8 +2,8 @@
 
 ## Current Objective
 
-- feat-018: policy-aware report citation guidance, active on feat-018-policy-report-citations.
-- Base ed5c27d; feat-001 through feat-017 were passing before this feature.
+- feat-018: policy-aware report citation guidance, passing on feat-018-policy-report-citations.
+- Base ed5c27d; feat-001 through feat-018 passing, none active.
 - Work is isolated in the previously owned retrieval worktree. Original checkout untouched.
 
 ## Completed
@@ -27,7 +27,9 @@
   including both new workflow paths and corpus/benchmark regressions.
 - Isolated database: agentops_feat018_test; use its AGENTOPS_TEST_* URLs, not another
   session's database. GITHUB_SHA must be actual HEAD in a linked worktree.
-- Committed-code feature gate and final clean-check are pending; full regression passed.
+- All four feat-018 gate layers PASS at committed bab2cce, including nine focused
+  acceptance cases. Bound state/trail recorded; final clean-check/session-end follow
+  the evidence commit. Optional unconfigured framework checks report SKIP.
 
 ## Decisions and Risks
 
@@ -45,7 +47,7 @@
 
 ## Next Step
 
-Finish full checks/regressions and review, commit code/docs, run the feat-018 gate,
-then commit bound evidence and final handoff. No push or merge is authorized by this
-feature request. Fetch remote main before any later approved publication to detect
-feature/session allocation collisions.
+Obtain separate approval before pushing/merging this passing branch. Fetch remote
+main before any approved publication to detect feature/session allocation collisions.
+No hosted call is authorized; a later quality comparison needs fresh owner-approved
+caps. Rate-limit handling is separate scope. See progress/025-2026-11-26.md.

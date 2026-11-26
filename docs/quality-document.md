@@ -65,6 +65,11 @@ Ratings are judgments, not measurements: coverage is not measured yet (quality g
   from 308 to 366 through its existing recording test; all other fields are identical.
   Full check: 153 offline tests, nine UI e2e, strict mypy over 114 sources and
   14 architecture rules; isolated integration: 132 passed.
+  Four-layer feat-018 gate PASS at committed bab2cce, including all nine focused
+  acceptance cases; bound state/trail recorded. Sprint correctness B (test typing
+  and coupled replay count fixes), completeness A, cleanliness A, continuity B
+  (documented harness startup limitation), overall B. Optional unconfigured
+  framework e2e, multi-repo and disabled quality are SKIP, not verification.
 - 2026-11-26: feat-016 renewed its four-layer gate at 084e0c6 on main 7028f09,
   preserving completed hosted feat-015 and architecture docs. Combined checks:
   137 offline tests, 130 isolated integration tests, nine UI e2e, 14 architecture

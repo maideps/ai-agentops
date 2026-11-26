@@ -69,7 +69,8 @@ Phase 1 complete (M0.1 to M5.1: feat-001 to feat-009). What works today:
   both orchestrations receive guidance to cite supporting passages in relevant
   policy-backed findings, alongside sales citations when needed, without inventing
   policy claims or unsupported citations. The no-document prompt and citation
-  enforcement are unchanged. This is tested offline; no hosted quality gain is measured.
+  enforcement are unchanged. Scripted request tests verify the guidance, not semantic
+  support or hosted-model compliance; no hosted quality gain is measured.
 
 - A read-only retrieval benchmark (feat-013): 16 versioned synthetic queries at k=3 measure the existing hashing/pgvector search. Recall@k and MRR cover the 12 queries with accessible relevant chunks; four no-accessible-evidence queries are reported separately, not given perfect scores. Reports contain chunk ids/hashes, model and commit provenance, and forbidden-hit counts, never retrieved text. Ranking is unchanged and no model is called. The [recorded synthetic baseline](benchmarks/retrieval/v1/results.json) has Recall@3 1.0, MRR 1.0 and zero forbidden hits; this is not held-out retrieval quality. See the [procedure and limitations](docs/retrieval-baseline.md).
 
