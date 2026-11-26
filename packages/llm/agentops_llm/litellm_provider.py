@@ -66,11 +66,34 @@ _ERROR_MAP: tuple[tuple[tuple[type[BaseException], ...], LLMErrorCode], ...] = (
 
 
 # feat-015: failures where the request most likely never ran, worth another attempt. Timeouts
-# subclass APIConnectionError but may have been billed; rate limits need a longer wait.
+# subclass APIConnectionError but may have been billed. Rate limits (feat-019) are retried
+# separately, with a longer wait.
 def _is_transient(exc: BaseException) -> bool:
     if isinstance(exc, llx.Timeout):
         return False
     return isinstance(exc, (llx.ServiceUnavailableError, llx.APIConnectionError))
+
+
+# feat-019: a provider's Retry-After beyond this is not waited for; the case fails instead.
+MAX_RETRY_AFTER_SECONDS = 60.0
+
+
+def _retry_after(exc: BaseException) -> float | None:
+    """Seconds from a Retry-After header, if the provider sent a numeric one."""
+    for headers in (
+        getattr(exc, "headers", None),
+        getattr(getattr(exc, "response", None), "headers", None),
+    ):
+        if not headers:
+            continue
+        for name, value in dict(headers).items():
+            if str(name).lower() == "retry-after":
+                try:
+                    seconds = float(value)
+                except (TypeError, ValueError):
+                    return None
+                return seconds if math.isfinite(seconds) and seconds >= 0 else None
+    return None
 
 
 def _to_llm_error(exc: BaseException, provider: str) -> LLMError:
@@ -97,6 +120,9 @@ class LiteLLMProvider:
         transient_retries: int = 2,
         backoff_seconds: Sequence[float] = (1.0, 2.0),
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+        rate_limit_backoff_seconds: Sequence[float] = (10.0, 30.0),
+        min_call_interval: float = 0.0,
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self._registry = registry
         self._completion: CompletionFn = (
@@ -118,8 +144,16 @@ class LiteLLMProvider:
         self._cost_estimator: CostEstimator = (
             cost_estimator if cost_estimator is not None else _litellm_cost
         )
-        if transient_retries < 0 or len(backoff_seconds) < transient_retries:
+        if transient_retries < 0 or min(len(backoff_seconds), len(rate_limit_backoff_seconds)) < (
+            transient_retries
+        ):
             raise LLMError(LLMErrorCode.INVALID_REQUEST, "each retry needs a backoff delay")
+        if not math.isfinite(min_call_interval) or min_call_interval < 0:
+            raise LLMError(LLMErrorCode.INVALID_REQUEST, "min_call_interval must be >= 0")
+        self._rate_limit_backoff = tuple(rate_limit_backoff_seconds)
+        self._min_call_interval = min_call_interval
+        self._clock = clock
+        self._next_slot = float("-inf")
         self._transient_retries = transient_retries
         self._backoff_seconds = tuple(backoff_seconds)
         self._sleep = sleep
@@ -137,8 +171,30 @@ class LiteLLMProvider:
         return float(self._reserved_usd.get(run_id, Decimal(0)))
 
     def retries(self, run_id: str) -> int:
-        """Transient-failure retries dispatched for this run (feat-015)."""
+        """Retries dispatched for this run after transient failures or rate limits."""
         return self._retries.get(run_id, 0)
+
+    async def _pace(self) -> None:
+        """feat-019: start consecutive attempts at least ``min_call_interval`` seconds apart."""
+        if self._min_call_interval <= 0:
+            return
+        with self._budget_lock:
+            now = self._clock()
+            slot = max(now, self._next_slot)
+            self._next_slot = slot + self._min_call_interval
+        if slot > now:
+            await self._sleep(slot - now)
+
+    def _retry_delay(self, exc: BaseException, attempt: int) -> float | None:
+        """Seconds to wait before retrying, or None when this failure is not retried."""
+        if attempt >= self._transient_retries:
+            return None
+        if isinstance(exc, llx.RateLimitError):
+            given = _retry_after(exc)
+            if given is None:
+                return self._rate_limit_backoff[attempt]
+            return given if given <= MAX_RETRY_AFTER_SECONDS else None
+        return self._backoff_seconds[attempt] if _is_transient(exc) else None
 
     def capabilities(self, model: str) -> ModelCapabilities:
         return self._registry.get(model)
@@ -157,6 +213,7 @@ class LiteLLMProvider:
                 if attempt:
                     with self._budget_lock:
                         self._retries[request.run_id] = self._retries.get(request.run_id, 0) + 1
+                await self._pace()
                 raw = await self._completion(**self._kwargs(request, model))
                 break
             except LLMError as refused:
@@ -166,9 +223,10 @@ class LiteLLMProvider:
                 raise last from refused
             except (openai.APIError, llx.BudgetExceededError) as exc:
                 last = _to_llm_error(exc, provider)
-                if attempt >= self._transient_retries or not _is_transient(exc):
+                delay = self._retry_delay(exc, attempt)
+                if delay is None:
                     raise last from None
-            await self._sleep(self._backoff_seconds[attempt])
+            await self._sleep(delay)
             attempt += 1
         elapsed_ms = int((time.perf_counter() - started) * 1000)
         response = _normalize(raw, provider=provider, model=model, elapsed_ms=elapsed_ms)

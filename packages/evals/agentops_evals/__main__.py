@@ -23,7 +23,7 @@ from agentops_llm.hosted import hosted_provider
 from agentops_llm.litellm_provider import LiteLLMProvider
 
 
-def _live_provider(budget_usd: float) -> LiteLLMProvider:
+def _live_provider(budget_usd: float, min_call_interval: float = 0.0) -> LiteLLMProvider:
     if (
         os.environ.get("LLM_MODE") not in ("hosted_free", "live_paid")
         or os.environ.get("ENABLE_LIVE_LLM", "").lower() != "true"
@@ -33,7 +33,10 @@ def _live_provider(budget_usd: float) -> LiteLLMProvider:
             "--live requires a live LLM_MODE and ENABLE_LIVE_LLM=true",
         )
     return hosted_provider(
-        os.environ.get("GEMINI_API_KEY"), budget_usd, total_budget_usd=budget_usd
+        os.environ.get("GEMINI_API_KEY"),
+        budget_usd,
+        total_budget_usd=budget_usd,
+        min_call_interval=min_call_interval,
     )
 
 
@@ -45,6 +48,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out-dir", type=Path)
     parser.add_argument("--live", action="store_true")
     parser.add_argument("--budget-usd", type=float)
+    parser.add_argument(
+        "--min-call-interval",
+        type=float,
+        default=0.0,
+        help="live only: minimum seconds between model calls, to stay under provider rate limits",
+    )
     args = parser.parse_args(argv)
 
     live_provider = None
@@ -55,13 +64,17 @@ def main(argv: list[str] | None = None) -> int:
             parser.error("--live requires a finite positive --budget-usd")
         if args.command == "run" and args.out is None:
             parser.error("--live run requires --out to preserve failures and usage")
+        if not math.isfinite(args.min_call_interval) or args.min_call_interval < 0:
+            parser.error("--min-call-interval must be a finite number of seconds >= 0")
         try:
-            live_provider = _live_provider(args.budget_usd)
+            live_provider = _live_provider(args.budget_usd, args.min_call_interval)
         except LLMError as exc:
             print(f"{exc.code.value}: {exc.message}", file=sys.stderr)
             return 2
     elif args.budget_usd is not None:
         parser.error("--budget-usd requires --live")
+    elif args.min_call_interval:
+        parser.error("--min-call-interval requires --live")
 
     analytics, app = os.environ.get("ANALYTICS_DATABASE_URL"), os.environ.get("APP_DATABASE_URL")
     if not analytics or not app:

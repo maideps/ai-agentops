@@ -336,6 +336,13 @@ prohibited. The default output limit is 1,024 tokens (reservation USD 0.3171328 
 and a reply stopped at that limit fails as `OUTPUT_TRUNCATED` after its usage is costed.
 Evaluation reports record retries per case and in total. Worst-case ceilings now triple with
 retries; command caps bound actual reservations either way.
+**Amendment 3 (2026-11-26, feat-019, owner-approved):** In the feat-017 live run every corpus
+failure was a free-tier HTTP 429. Rate limits now share the two-retry limit: the adapter waits for
+a numeric Retry-After of at most 60 seconds, otherwise 10 then 30 seconds, and does not wait for a
+longer Retry-After (the case fails as `RATE_LIMITED`). Each attempt still reserves budget first
+and is never refunded. Live evaluation commands also accept `--min-call-interval` (default 0),
+which spaces the start of consecutive attempts so a run can stay under the provider's per-minute
+quota. Timeouts, authentication, invalid requests and budget refusals remain unretried.
 
 ### D-018: Live evaluation scores outcomes; mock expectations stay as they are
 

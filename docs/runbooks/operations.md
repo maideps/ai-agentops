@@ -64,7 +64,10 @@ call reserves all 1,048,576 input tokens plus the requested maximum output; at t
 1,024 output tokens this is USD 0.3171328. Reservations are never refunded, including after
 failures. No SDK retries are permitted; the adapter itself retries a 503 or connection error at
 most twice (feat-015), and each attempt reserves again, so a cap that covers every first attempt
-(about USD 78.33 corpus, USD 156.66 benchmark) can still stop late cases after many retries. Use a provider-side account cap too: SDK prices/ceilings are
+(about USD 78.33 corpus, USD 156.66 benchmark) can still stop late cases after many retries.
+Rate limits (429) share those two retries and honor a Retry-After of up to 60 seconds
+(feat-019). On the free tier, add `--min-call-interval <seconds>` to either live command to space
+model calls, for example 4 seconds to stay near 15 requests per minute. Use a provider-side account cap too: SDK prices/ceilings are
 external assumptions, and these counters do not survive a process restart.
 
 The corpus writes every result (including failures) and exits 1 when any expectation fails.

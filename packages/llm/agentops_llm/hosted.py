@@ -37,7 +37,11 @@ def hosted_registry() -> CapabilityRegistry:
 
 
 def hosted_provider(
-    api_key: str | None, budget_usd: float, *, total_budget_usd: float | None = None
+    api_key: str | None,
+    budget_usd: float,
+    *,
+    total_budget_usd: float | None = None,
+    min_call_interval: float = 0.0,
 ) -> "LiteLLMProvider":
     from agentops_llm.litellm_provider import LiteLLMProvider
 
@@ -48,4 +52,5 @@ def hosted_provider(
         api_key=api_key,
         budget_usd=budget_usd,
         total_budget_usd=total_budget_usd,
+        min_call_interval=min_call_interval,
     )

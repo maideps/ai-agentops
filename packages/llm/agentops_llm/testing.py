@@ -75,7 +75,8 @@ def stub_outcomes(outcomes: list[str]) -> tuple[CompletionFn, list[int]]:
     """An ``acompletion`` stand-in for retry tests (feat-015) and the list of its attempts.
 
     Each outcome is ``"ok"``, ``"length"`` (a reply cut at the output limit), ``"CONNECTION"``
-    (a network failure such as a DNS error) or an ``LLMErrorCode`` value to raise.
+    (a network failure such as a DNS error), ``"RATE_LIMITED@<seconds>"`` (a 429 carrying a
+    Retry-After header, feat-019) or an ``LLMErrorCode`` value to raise.
     """
     attempts: list[int] = []
 
@@ -85,6 +86,13 @@ def stub_outcomes(outcomes: list[str]) -> tuple[CompletionFn, list[int]]:
         model = str(kwargs["model"])
         if outcome == "CONNECTION":
             raise llx.APIConnectionError(message="stubbed outage", llm_provider="stub", model=model)
+        if outcome.startswith("RATE_LIMITED@"):
+            raise llx.RateLimitError(
+                message="stubbed 429",
+                llm_provider="stub",
+                model=model,
+                headers={"Retry-After": outcome.split("@", 1)[1]},
+            )
         if outcome not in ("ok", "length"):
             raise _litellm_error(LLMErrorCode(outcome), model)
         return litellm.ModelResponse(

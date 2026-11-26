@@ -86,10 +86,8 @@ def test_connection_errors_are_retried_but_timeouts_are_not() -> None:
     assert len(attempts) == 1
 
 
-@pytest.mark.parametrize(
-    "code",
-    [LLMErrorCode.RATE_LIMITED, LLMErrorCode.INVALID_REQUEST, LLMErrorCode.AUTH_FAILED],
-)
+# Rate limits were also attempted once here until feat-019 gave them their own bounded retry.
+@pytest.mark.parametrize("code", [LLMErrorCode.INVALID_REQUEST, LLMErrorCode.AUTH_FAILED])
 def test_non_transient_errors_are_attempted_once(code: LLMErrorCode) -> None:
     provider, attempts, sleeps = _provider([code.value, "ok"])
     with pytest.raises(LLMError) as raised:
