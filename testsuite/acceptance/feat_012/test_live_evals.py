@@ -177,7 +177,7 @@ def test_cli_failed_live_benchmark_preserves_results_and_exits_nonzero(
 ) -> None:
     monkeypatch.setenv("ANALYTICS_DATABASE_URL", "unused")
     monkeypatch.setenv("APP_DATABASE_URL", "unused")
-    monkeypatch.setattr(cli, "_live_provider", lambda budget: _provider())
+    monkeypatch.setattr(cli, "_live_provider", lambda budget, interval=0.0: _provider())
     broken = corpus.cases[0].model_copy(update={"expect": Expect(status="abstained")})
     monkeypatch.setattr(
         cli, "load_corpus", lambda directory: corpus.model_copy(update={"cases": [broken]})
