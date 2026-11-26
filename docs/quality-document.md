@@ -48,6 +48,13 @@ Ratings are judgments, not measurements: coverage is not measured yet (quality g
 
 ## Notes
 
+- 2026-11-26: feat-016 renewed its four-layer gate at 084e0c6 on main 7028f09,
+  preserving completed hosted feat-015 and architecture docs. Combined checks:
+  137 offline tests, 130 isolated integration tests, nine UI e2e, 14 architecture
+  rules and strict mypy over 112 source files. Frozen corpus/reports and runtime
+  retrieval code remain unchanged. Ratings remain B/A/B/A/B; sprint correctness B,
+  completeness A, cleanliness A, continuity B (parallel bookkeeping), overall B.
+  Optional unconfigured framework checks report SKIP, not verification.
 - 2026-11-24: Renamed feat-016 passed a fresh four-layer gate at 90a0164 after
   reconciling published main. Full checks pass: 128 offline tests, 130 isolated
   integration tests, nine UI e2e, 14 architecture rules and strict mypy over 111

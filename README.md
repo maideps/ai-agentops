@@ -75,8 +75,8 @@ topics and access-negative cases. Select it with `--dataset`; the default v1 cor
 and ranking are unchanged. The [paired comparison](benchmarks/retrieval/stress-v2/REPORT.md)
 records stress Recall@3 0.7639 and MRR 0.7361 versus v1 1.0/1.0, with zero forbidden
 hits in both. Neither corpus measures held-out real-world quality.
-Four answerable stress questions retrieve no relevant chunks, and four more retrieve
-only part of the judged evidence.
+Of 24 answerable stress questions, four retrieve no relevant chunks and four more
+retrieve only part of the judged evidence.
 
 ## Quick Start
 

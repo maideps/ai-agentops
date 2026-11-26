@@ -3,7 +3,7 @@
 ## Current Objective
 
 - Goal: Land retrieval stress as feat-016 on published main 7028f09, preserving completed hosted feat-015 and architecture docs.
-- Current status: feat-001 through feat-016 passing; no active feature. Renew feat-016 verification on the newly combined tree before publication.
+- Current status: feat-001 through feat-016 passing; no active feature. Fresh feat-016 gate passed all four layers at 084e0c6 on the combined tree.
 - Branch: feat-016-retrieval-stress, in the already owned retrieval worktree. The original checkout is untouched.
 
 ## Completed This Session
@@ -31,7 +31,8 @@
 - Frozen 28-case corpus and paired reports remain byte-identical to ba9a3c7. No ranking, CLI, source or original v1 artifact changes.
 - Retrieval tests move to testsuite/acceptance/feat_016. New state began planned, without copied evidence, and passed its fresh four-layer gate at 90a0164 through verify-feature.
 - Preserve main's sessions 019 and 020 exactly; original retrieval development moves to 021 and the paused landing note to 022.
-- Historical retrieval gate/results are recorded in progress/021-2026-11-24.md. Pre-pause combined checks passed: 128 offline tests, 130 isolated integration tests, nine UI e2e, 14 architecture rules and strict mypy over 111 sources. The feat-016 gate passed all four layers at 90a0164, with bound state/trail. New combined verification is pending after main advanced. Optional framework-only e2e, multi-repo and disabled quality reported SKIP.
+- Historical retrieval gate/results are recorded in progress/021-2026-11-24.md. Pre-pause combined checks passed: 128 offline tests, 130 isolated integration tests, nine UI e2e, 14 architecture rules and strict mypy over 111 sources. The earlier feat-016 gate passed at 90a0164. Optional framework-only e2e, multi-repo and disabled quality reported SKIP.
+- Resumed combined verification PASS: 137 offline tests, 130 isolated integration tests, nine UI e2e, 14 architecture rules and strict mypy over 112 sources. Fresh feat-016 gate PASS at committed 084e0c6 with bound state/trail. See progress/023-2026-11-26.md. Main's product, hosted state, sessions 019/020 and architecture docs are unchanged.
 - Use the isolated agentops_feat015_test database and actual GITHUB_SHA. No new hosted calls or source/corpus tuning.
 
 ## Decisions
