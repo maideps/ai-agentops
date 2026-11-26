@@ -47,8 +47,11 @@ The default run is the single workflow. An experimental `specialists` orchestrat
 `packages/llm` allowlists Gemini Flash-Lite and reads the key supplied by trusted configuration.
 Mock/replay selection is unchanged. Before every budgeted call, the adapter atomically reserves
 the registered maximum input window plus `max_output_tokens`, priced from LiteLLM's bundled map.
-Reservations are retained after success, errors or cancellation; retries are disabled. The
-evaluation CLI additionally shares one total reservation cap across all runs and both designs.
+Reservations are retained after success, errors or cancellation. SDK retries are disabled; the
+adapter itself retries an HTTP 503 or connection error at most twice, reserving again for every
+attempt, and a reply cut at `max_output_tokens` (default 1,024) fails as `OUTPUT_TRUNCATED`
+(feat-015). The evaluation CLI additionally shares one total reservation cap across all runs and
+both designs.
 Reported usage cost and reserved cost are separate fields; missing/out-of-bound usage is an
 explicit error, not zero-cost success. These counters are process-local; they do not implement
 the spec's persistent account-wide budget. See D-016 for external pricing assumptions.
