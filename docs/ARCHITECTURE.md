@@ -38,6 +38,13 @@ These directories are created by the feature that first needs them, not up front
 
 The default run is the single workflow. An experimental `specialists` orchestration replaces its plan/authorize/execute steps with two subgraphs, Research (document search only) and Data Analyst (sales summary only), followed by a deterministic `aggregate_evidence` step; reporting, citation policy, approvals and limits are shared. The benchmark in `benchmarks/orchestration/v1/` keeps the single workflow as the default.
 
+The shared reporting step adds policy-citation guidance only for document IDs that survived
+the existing context limit (feat-018). Relevant policy-backed findings are requested to
+cite those passages; unsupported policy claims/citations are explicitly discouraged.
+The conditional template is included in `prompt_version` for both orchestrations.
+Context selection and deterministic citation enforcement are unchanged: this guidance
+does not prove model compliance or semantic support.
+
 ## Tracing and Evaluation (D-011)
 
 `packages/telemetry` configures OpenTelemetry with every exporter behind a redaction layer; spans carry ids, counts and codes, never prompt or document text, and share the run's trace id. The workflow reads only through the tool gateway, so role permissions and the policy log cover every tool call. `packages/evals` runs the versioned corpus in `datasets/evals/` in mock mode and records dataset version, git commit, model, prompt version and policy version.

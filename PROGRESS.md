@@ -11,10 +11,10 @@ After adding or updating a session note, regenerate this file with `node scripts
 - Primary startup command: `./init.sh`
 - Primary verification command: `make check` (make-free equivalent: `npm run check`)
 - Active feature: none
-- Passing features (17): feat-001 — M0.1 Environment and application skeleton, feat-002 — M0.2 Synthetic data and persistence, feat-003 — M1.1 Model provider port and mock, feat-004 — M1.2 First vertical-slice graph, feat-005 — M2.1 MCP server and policy gateway, feat-006 — M2.2 Idempotency and fault recovery, feat-007 — M3.1 Observability, security evaluation and feedback, feat-008 — M4.1 Three-specialist comparison, feat-009 — M5.1 Demo and portfolio evidence, feat-010 — Phase 2: tenant-isolated run checkpoints, feat-011 — Phase 2: HTTP approvals and run resume, feat-012 — Phase 2: hosted-model live run, feat-013 — Phase 2: retrieval relevance baseline, feat-014 — Phase 2: hosted planning knows the available sales quarters, feat-015 — Phase 2: hosted-call reliability, feat-016 — Phase 2: retrieval stress corpus and baseline comparison, feat-017 — Phase 2: live evaluation scores answers, not mock trajectories
+- Passing features (18): feat-001 — M0.1 Environment and application skeleton, feat-002 — M0.2 Synthetic data and persistence, feat-003 — M1.1 Model provider port and mock, feat-004 — M1.2 First vertical-slice graph, feat-005 — M2.1 MCP server and policy gateway, feat-006 — M2.2 Idempotency and fault recovery, feat-007 — M3.1 Observability, security evaluation and feedback, feat-008 — M4.1 Three-specialist comparison, feat-009 — M5.1 Demo and portfolio evidence, feat-010 — Phase 2: tenant-isolated run checkpoints, feat-011 — Phase 2: HTTP approvals and run resume, feat-012 — Phase 2: hosted-model live run, feat-013 — Phase 2: retrieval relevance baseline, feat-014 — Phase 2: hosted planning knows the available sales quarters, feat-015 — Phase 2: hosted-call reliability, feat-016 — Phase 2: retrieval stress corpus and baseline comparison, feat-017 — Phase 2: live evaluation scores answers, not mock trajectories, feat-018 — Phase 2: policy-aware report citation guidance
 - Failing/blocked features: none
 - Planned features (0): none
-- Last evidence: feat-017 — Phase 2: live evaluation scores answers, not mock trajectories — All verification layers passed via node scripts/framework-check.mjs verify-feature (2026-11-26T15:21:33.386Z)
+- Last evidence: feat-018 — Phase 2: policy-aware report citation guidance — All verification layers passed via node scripts/framework-check.mjs verify-feature (SKIP reported in: Layer 3: System confirmation) (2026-11-26T15:40:41.996Z)
 
 ## Session Index
 
@@ -42,4 +42,5 @@ After adding or updating a session note, regenerate this file with `node scripts
 - [Session 022 — 2026-11-24 — Reconcile retrieval stress as feat-016 before the pause](progress/022-2026-11-24.md)
 - [Session 023 — 2026-11-26 — Resume feat-016 landing on completed hosted reliability](progress/023-2026-11-26.md)
 - [Session 024 — 2026-11-26 — feat-017 live evaluation scores answers](progress/024-2026-11-26.md)
+- [Session 025 — 2026-11-26 — feat-018 policy-aware report citation guidance](progress/025-2026-11-26.md)
 <!-- END GENERATED PROGRESS -->
