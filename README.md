@@ -69,6 +69,15 @@ Phase 1 complete (M0.1 to M5.1: feat-001 to feat-009). What works today:
 
 There is no endpoint to list runs, and the UI has no live mode or approval screen. See [`docs/known-limitations.md`](docs/known-limitations.md).
 
+The optional [retrieval stress corpus](docs/retrieval-baseline.md#stress-corpus-v2)
+(feat-016) adds 28 synthetic questions: paraphrases, multi-chunk answers, distracting
+topics and access-negative cases. Select it with `--dataset`; the default v1 corpus
+and ranking are unchanged. The [paired comparison](benchmarks/retrieval/stress-v2/REPORT.md)
+records stress Recall@3 0.7639 and MRR 0.7361 versus v1 1.0/1.0, with zero forbidden
+hits in both. Neither corpus measures held-out real-world quality.
+Of 24 answerable stress questions, four retrieve no relevant chunks and four more
+retrieve only part of the judged evidence.
+
 ## Quick Start
 
 Prerequisites: Python 3.13, [uv](https://docs.astral.sh/uv/), Docker, Node.js ≥ 18 (development harness and the demo UI) and Git.
@@ -143,6 +152,7 @@ Features are declared in [`feature_list.json`](feature_list.json); their state i
 | feat-013 | Phase 2 | Read-only retrieval-relevance baseline, independent of hosted-model support |
 | feat-014 | Phase 2 | Planning states the tenant's sales quarters; corpus v1.1.0 tasks name their period |
 | feat-015 | Phase 2 | Bounded, budget-reserved retries for transient provider failures; 1,024-token output |
+| feat-016 | Phase 2 | Versioned retrieval stress queries and a same-index v1 comparison |
 
 ## Documentation
 

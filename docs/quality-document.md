@@ -15,6 +15,7 @@ Rate each module on a scale of A (excellent) / B (good) / C (acceptable) / D (ne
 | packages/agents/agentops_agents (graph, tools, policy, run detail, CLI) | A | A | B | A | B |
 | packages/retrieval/agentops_retrieval (hashing embedder, indexing, search, CLI) | B | A | B | A | B |
 | packages/retrieval/agentops_retrieval.benchmark + datasets/retrieval/v1 | B | A | B | A | B |
+| datasets/retrieval/stress-v2 + testsuite/acceptance/feat_016 | B | A | B | A | B |
 | packages/tools/agentops_tools (read tools, gateway, approvals, registry, recovery, ticket service, MCP server, CLI) | A | A | B | A | B |
 | packages/telemetry/agentops_telemetry (tracing, redaction, Langfuse export) | A | A | B | A | B |
 | packages/evals/agentops_evals + datasets/evals/v1 (corpus, runner, scenarios, faults, benchmark) | A | A | B | A | B |
@@ -47,6 +48,34 @@ Ratings are judgments, not measurements: coverage is not measured yet (quality g
 
 ## Notes
 
+- 2026-11-26: feat-016 renewed its four-layer gate at 084e0c6 on main 7028f09,
+  preserving completed hosted feat-015 and architecture docs. Combined checks:
+  137 offline tests, 130 isolated integration tests, nine UI e2e, 14 architecture
+  rules and strict mypy over 112 source files. Frozen corpus/reports and runtime
+  retrieval code remain unchanged. Ratings remain B/A/B/A/B; sprint correctness B,
+  completeness A, cleanliness A, continuity B (parallel bookkeeping), overall B.
+  Optional unconfigured framework checks report SKIP, not verification.
+- 2026-11-24: Renamed feat-016 passed a fresh four-layer gate at 90a0164 after
+  reconciling published main. Full checks pass: 128 offline tests, 130 isolated
+  integration tests, nine UI e2e, 14 architecture rules and strict mypy over 111
+  sources. Retrieval test contents and frozen corpus/reports are unchanged; only
+  identity/path and shared documentation are reconciled. Hosted feat-015
+  declaration/state and feat-014 implementation/evidence are preserved exactly.
+  Module ratings remain B/A/B/A/B. Optional unconfigured framework checks are SKIP.
+- 2026-11-24: Retrieval stress (originally feat-015, renamed feat-016 with owner
+  approval at landing) passed its original four-layer gate at cb5aafb. Adds a separately
+  versioned synthetic stress corpus, paired reports/comparison and actual
+  CLI acceptance, reusing unchanged retrieval code. Coverage B: both dataset selections,
+  reproducibility, access-negative metrics and partially inaccessible multi-chunk
+  judgments are exercised; no coverage percentage or real-world quality is claimed.
+  Type safety A uses strict mypy; documentation B describes manual judgment intent,
+  paired reproduction and limitations. Fourteen focused benchmark tests, 124 offline
+  tests and nine UI e2e pass; mypy checks 110 source files. Corpus/code d6f0c3b:
+  stress Recall@3 0.7639, MRR 0.7361 versus v1 1.0/1.0; four complete misses and four
+  partial retrievals, both runs zero forbidden hits. No ranking/source/v1 changes.
+  Optional unconfigured framework layers are SKIP. Sprint: correctness B (two
+  natural-language judgment fixes before measurement), completeness A, cleanliness A,
+  continuity B (documented init/parallel-landing constraints), overall B.
 - 2026-11-19: harness adopted (D-001).
 - 2026-11-24: feat-013 passed verify-feature at commit bae0993 in its independent lane,
   then passed a fresh combined-tree gate at ab39535 after integrating completed feat-012.

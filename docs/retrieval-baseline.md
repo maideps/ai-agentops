@@ -78,3 +78,60 @@ to that database before running integration tests or the feature gate.
 Set `GITHUB_SHA` to `git rev-parse HEAD` for legacy evaluation provenance tests: their
 existing fallback assumes `.git` is a directory and does not resolve worktree pointer files.
 That evaluation code is intentionally not changed in this independent lane.
+
+## Stress corpus v2
+
+feat-016 adds `datasets/retrieval/stress-v2/queries.json`, version
+`retrieval-stress-v2.0.0`, without changing the embedder, ranking, source documents,
+default corpus or scoring. All 28 cases use k=3. Their questions are distinct from v1.
+
+| Family (case-id prefix) | Cases | Judgment intent |
+|---|---|---|
+| paraphrase | 8 | Restate eight questions with less direct vocabulary; unused/worn footwear share one source paragraph |
+| multi | 8 | Require two or three relevant chunks, sometimes across documents |
+| distractor | 8 | Include plausible competing topics; judge evidence answering the question, not every mentioned topic |
+| no-evidence | 4 | Role/tenant restrictions leave no accessible positive judgment; scores remain null |
+
+Judgments were read against the seven existing synthetic source documents before the
+passing CLI acceptance run. They were not changed after viewing scores. The multi
+questions cover remedy/pricing, footwear/refund documentation, discount/price exceptions,
+company/returns, stove pricing/board reconsideration, audit/duration, supplier entry/delays
+and the supplier lifecycle. The board case requires an administrator. The company/returns
+case needs both public and internal evidence; a viewer can read only part of its judgment,
+so the acceptance test confirms that invalid role change fails instead of becoming a miss.
+
+For distractors, explicit background exclusions are not extra positive judgments. For
+example, the harvest-check question mentions vendor-entry forms and late-delivery review,
+but asks only for the seasonal qualification. The current lexical ranker does not
+understand negation; competing words may therefore outrank the intended source.
+
+Seed/index one isolated database once, then run both corpora with the same committed SHA,
+read-only analytics connection and unchanged index:
+
+```bash
+uv run python -m agentops_retrieval benchmark \
+  --git-sha "$(git rev-parse HEAD)" \
+  --out benchmarks/retrieval/stress-v2/baseline.json
+uv run python -m agentops_retrieval benchmark \
+  --dataset datasets/retrieval/stress-v2/queries.json \
+  --git-sha "$(git rev-parse HEAD)" \
+  --out benchmarks/retrieval/stress-v2/results.json
+```
+
+In PowerShell use `--git-sha (git rev-parse HEAD)` on one line per command.
+Development tests use the separate `agentops_feat015_test` database for all three
+`AGENTOPS_TEST_*` URLs, plus actual `GITHUB_SHA` for legacy worktree provenance.
+No hosted call is needed. Do not seed another agent's database.
+
+The [paired comparison](../benchmarks/retrieval/stress-v2/REPORT.md) was recorded at
+corpus/code commit `d6f0c3bace40b8cda82c39c76fd1a4f7a13e00de`: v1 Recall@3/MRR
+1.0/1.0; stress Recall@3 0.7639, MRR 0.7361; zero forbidden hits in both. Four stress
+answerable cases miss completely and four retrieve only part of the required evidence.
+The queries and judgments were not changed after seeing these results.
+
+Mean Recall@3 and
+MRR still exclude the four access-negative queries; MRR can hide missing secondary chunks,
+so inspect per-query Recall for multi questions. Unequal corpora have different task
+distributions: a score difference is not a ranking regression or a causal quality gain.
+These agent-curated synthetic judgments are not independent held-out or real-world data,
+and neither report measures abstention. Do not tune ranking or a threshold on these cases.

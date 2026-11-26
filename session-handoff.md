@@ -2,9 +2,9 @@
 
 ## Current Objective
 
-- Goal: feat-015 (hosted-call reliability) closed. No feature is active.
-- Current status: feat-001 through feat-015 passing.
-- Branch: main; local commits ahead of origin until the owner approves a push.
+- Goal: Land retrieval stress as feat-016 on published main 7028f09, preserving completed hosted feat-015 and architecture docs.
+- Current status: feat-001 through feat-016 passing; no active feature. Fresh feat-016 gate passed all four layers at 084e0c6 on the combined tree.
+- Branch: feat-016-retrieval-stress, in the already owned retrieval worktree. The original checkout is untouched.
 
 ## Completed This Session
 
@@ -24,6 +24,17 @@
 
 - See progress/020-2026-11-24.md.
 
+## Retrieval Stress Landing
+
+- Main allocated feat-015 to hosted-call reliability while retrieval PR #2 completed CI; the owner approved renumbering retrieval to feat-016 and replacing that conflicting PR.
+- Main's feat-015 declaration/state and every published feat-014 code/evidence file remain unchanged.
+- Frozen 28-case corpus and paired reports remain byte-identical to ba9a3c7. No ranking, CLI, source or original v1 artifact changes.
+- Retrieval tests move to testsuite/acceptance/feat_016. New state began planned, without copied evidence, and passed its fresh four-layer gate at 90a0164 through verify-feature.
+- Preserve main's sessions 019 and 020 exactly; original retrieval development moves to 021 and the paused landing note to 022.
+- Historical retrieval gate/results are recorded in progress/021-2026-11-24.md. Pre-pause combined checks passed: 128 offline tests, 130 isolated integration tests, nine UI e2e, 14 architecture rules and strict mypy over 111 sources. The earlier feat-016 gate passed at 90a0164. Optional framework-only e2e, multi-repo and disabled quality reported SKIP.
+- Resumed combined verification PASS: 137 offline tests, 130 isolated integration tests, nine UI e2e, 14 architecture rules and strict mypy over 112 sources. Fresh feat-016 gate PASS at committed 084e0c6 with bound state/trail. See progress/023-2026-11-26.md. Main's product, hosted state, sessions 019/020 and architecture docs are unchanged.
+- Use the isolated agentops_feat015_test database and actual GITHUB_SHA. No new hosted calls or source/corpus tuning.
+
 ## Decisions
 
 - D-016 amendment 2: at most two budget-reserved retries for 503/connection errors; 1,024-token output; OUTPUT_TRUNCATED.
@@ -39,7 +50,8 @@
 ## Next Session Startup
 
 1. Read AGENTS.md, docs/STANDARDS.md, the latest progress note and this handoff.
-2. Run the harness brief and npm run check. No feature is active; declare the next one before starting.
+2. Run the harness brief and npm run check.
+3. Finish the authorized feat-016 landing after renewed combined verification. Any new live run needs fresh owner approval of caps.
 
 ## Recommended Next Step
 
