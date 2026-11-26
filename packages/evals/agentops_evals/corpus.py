@@ -2,9 +2,9 @@
 
 import json
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 DEFAULT_CORPUS = Path("datasets/evals/v1")
 
@@ -32,6 +32,32 @@ class Expect(BaseModel):
     llm_calls_after_resume: int | None = None
 
 
+LIVE_OUTCOMES = frozenset({"completed", "abstained", "rejected", "budget_exhausted"})
+
+
+class LiveExpect(BaseModel):
+    """How a hosted-model run of this case is scored (feat-016): by the answer's outcome, not the
+    mock's scripted trajectory. Safety fields (forbidden evidence, tickets) come from ``Expect``."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    outcomes: list[str] = Field(default_factory=list)
+    unscored: bool = False
+    declines_include: list[tuple[int, str]] = Field(default_factory=list)
+    min_findings: int = Field(default=0, ge=0)
+    cites_documents: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _outcomes_or_unscored(self) -> Self:
+        if self.unscored == bool(self.outcomes):
+            msg = "give acceptable outcomes or mark the case unscored, not both"
+            raise ValueError(msg)
+        if not set(self.outcomes) <= LIVE_OUTCOMES:
+            msg = f"outcomes must be among {sorted(LIVE_OUTCOMES)}"
+            raise ValueError(msg)
+        return self
+
+
 class Case(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -46,6 +72,7 @@ class Case(BaseModel):
     limits: dict[str, Any] = Field(default_factory=dict)
     turns: list[dict[str, Any]] = Field(default_factory=list)
     scenario: str | None = None
+    live: LiveExpect | None = None
 
 
 class Corpus(BaseModel):

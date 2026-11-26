@@ -96,6 +96,12 @@ def main(argv: list[str] | None = None) -> int:
     print(
         f"{report.dataset_version} @ {report.git_sha[:7]} prompt {report.prompt_version}: "
         f"{report.passed}/{report.total} passed"
+        + (
+            f"; live outcomes {report.live_passed}/{report.live_scored}"
+            f" ({len(report.live_unscored)} unscored)"
+            if report.mode == "live"
+            else ""
+        )
     )
     for result in report.results:
         if not result.passed:

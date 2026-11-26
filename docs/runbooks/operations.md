@@ -68,6 +68,8 @@ most twice (feat-015), and each attempt reserves again, so a cap that covers eve
 external assumptions, and these counters do not survive a process restart.
 
 The corpus writes every result (including failures) and exits 1 when any expectation fails.
+In live mode each workflow case is also scored by its `live` expectation (D-018): the summary line
+prints `live outcomes X/Y (N unscored)` and each result records its error codes and abstain reason.
 The live benchmark writes `results-live.json` and `REPORT.md` under
 `benchmarks/orchestration/v1/live/` by default, leaving mock artifacts unchanged, and also
 exits 1 on failed cases. JSON records dataset, commit, model, prompt version, reported usage

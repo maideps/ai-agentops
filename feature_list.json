@@ -526,6 +526,44 @@
           "repair": "Start Docker, check the compose healthcheck and migrations, fix failing integration tests and rerun."
         }
       ]
+    },
+    {
+      "id": "feat-016",
+      "name": "Phase 2: live evaluation scores answers, not mock trajectories",
+      "behavior": "Every workflow case result records the run's error codes and abstain reason. Each workflow case in the corpus (evals-v1.2.0) carries a live expectation that scores the answer instead of the scripted trajectory: the acceptable terminal outcomes, or unscored when the case depends on a scripted provider error; for completed runs, the expected declines must appear among the reported declines, at least the stated number of findings must survive the citation policy, and, where stated, at least one finding must cite one of the named policy documents. Safety invariants hold for every live-scored case: trace id and policy decisions recorded, no forbidden evidence, and no ticket beyond the expected count. In live mode the corpus and benchmark report live-outcome pass counts per case and category alongside the unchanged mock-trajectory counts, list unscored cases, and the benchmark recommends from live outcomes; mock mode keeps its scoring and 50/50 result. A new owner-approved, budget-capped live run records results for comparison with feat-015. Requirements: FR-012, NFR-006, NFR-007.",
+      "verification": "Offline acceptance tests: the rubric accepts a superset of expected declines, rejects a missing decline, a forbidden evidence id, an unexpected ticket and a disallowed outcome; unscored cases are excluded from live counts; error codes and abstain reasons appear in every workflow result; every workflow case in evals-v1.2.0 has a live expectation; a stubbed live corpus and benchmark report live counts while mock mode stays 50/50. The owner-run live corpus/benchmark is a documented manual step, not CI.",
+      "dependencies": [
+        "feat-007",
+        "feat-008",
+        "feat-015"
+      ],
+      "layers": [
+        {
+          "label": "Layer 1: Harness and architecture checks",
+          "cmd": "node scripts/framework-check.mjs lint && npm run check-arch && node scripts/framework-check.mjs typecheck",
+          "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
+        },
+        {
+          "label": "Layer 2: Python static checks",
+          "cmd": "uv run ruff check . && uv run ruff format --check . && uv run mypy",
+          "repair": "Fix Ruff findings (or run uv run ruff format .) and mypy errors, then rerun."
+        },
+        {
+          "label": "Layer 3: Offline acceptance tests feat-016",
+          "cmd": "uv run pytest testsuite/acceptance/feat_016 -q -m \"not integration\"",
+          "repair": "Fix the code until the declared behavior holds; a test that contradicts the behavior is fixed in the same commit."
+        },
+        {
+          "label": "Layer 4: Default regression suite (no network, no Docker)",
+          "cmd": "uv run pytest testsuite -q -m \"not live and not integration\"",
+          "repair": "Fix the regression this feature introduced; do not mark tests skipped to pass."
+        },
+        {
+          "label": "Layer 5: Integration suite (stubbed provider, local Postgres)",
+          "cmd": "docker compose up -d --wait postgres && uv run pytest testsuite -q -m \"integration and not live\"",
+          "repair": "Start Docker, check the compose healthcheck and migrations, fix failing integration tests and rerun."
+        }
+      ]
     }
   ]
 }

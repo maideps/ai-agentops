@@ -336,3 +336,27 @@ prohibited. The default output limit is 1,024 tokens (reservation USD 0.3171328 
 and a reply stopped at that limit fails as `OUTPUT_TRUNCATED` after its usage is costed.
 Evaluation reports record retries per case and in total. Worst-case ceilings now triple with
 retries; command caps bound actual reservations either way.
+
+### D-018: Live evaluation scores outcomes; mock expectations stay as they are
+
+**Date:** 2026-11-26
+**Status:** accepted
+**Context:** After feat-015, 22 of 42 live workflows completed with cited reports, yet the corpus
+stayed at 11/50: most expectations describe the mock's scripted trajectory (an exact number of
+findings, a deliberately invalid tool call, a scripted rate limit), which a capable model does
+not reproduce. Failed live cases also did not record their error codes.
+**Decision:** Every workflow case result records its error codes and abstain reason. Each
+workflow case in `evals-v1.2.0` has a `live` block, used only in live mode: acceptable terminal
+outcomes (or `unscored` for `budget-02`, which needs a scripted provider error); for completed
+runs, expected declines must be included (a superset passes), at least `min_findings` findings
+must survive the citation policy, and multi-source cases must cite one of the named policy
+documents. Safety invariants always apply: trace id and policy decisions recorded, no forbidden
+evidence, no ticket beyond the expected count. Cases that only script model misbehaviour
+(`tools-*`, `missing-03`, `missing-04`) expect a completed answer; injection and borderline
+cases accept completed or abstained. Reports show live-outcome counts beside the unchanged
+mock-trajectory counts, and the live benchmark recommends from live outcomes. Mock scoring and
+its 50/50 result are unchanged.
+**Consequences:** Live pass rates become meaningful for answer correctness at outcome level;
+they still do not grade prose quality or every required citation. The rubric was derived
+from each case's existing expectation by explicit rules and reviewed case by case; changing it
+means a new dataset version.

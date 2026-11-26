@@ -15,14 +15,14 @@ from pathlib import Path
 from typing import Any, Literal
 
 import psycopg
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from agentops_agents.state import RunDetail, RunLimits, TaskRequest
 from agentops_agents.workflow import Orchestration, RunDependencies, prompt_version, run_task
 from agentops_core.aio import run as run_async
 from agentops_core.llm import LLMGateway
 from agentops_evals.corpus import Case, Corpus
-from agentops_evals.runner import _score_workflow, git_sha
+from agentops_evals.runner import _score_workflow, git_sha, score_live
 from agentops_evals.scenarios import CountingProvider, Env
 from agentops_llm.hosted import GEMINI_FLASH_LITE
 from agentops_llm.litellm_provider import LiteLLMProvider
@@ -46,6 +46,9 @@ LIMITATIONS = [
 class Aggregate(BaseModel):
     cases: int
     task_success: int
+    # feat-016, live mode: runs scored by outcome, and how many passed.
+    live_scored: int = 0
+    live_success: int = 0
     task_success_rate: float
     supported_finding_rate: float
     mean_llm_calls: float
@@ -71,6 +74,8 @@ class CaseRun(BaseModel):
     cost_usd: float = 0.0
     reserved_usd: float = 0.0
     retries: int = 0
+    errors: list[str] = Field(default_factory=list)
+    live_success: bool | None = None
 
 
 class CaseRef(BaseModel):
@@ -174,6 +179,11 @@ def _run(
     tickets = env.tickets(case.tenant_id, run_id)
     failures = _score_workflow(expect, detail, provider.calls, tickets, trace_id)
     findings = [d for d in detail.policy_decisions if d.subject.startswith("finding:")]
+    live_success = (
+        not score_live(case.live, case.expect, detail, tickets, trace_id)
+        if live_provider is not None and case.live is not None and not case.live.unscored
+        else None
+    )
     return CaseRun(
         case_id=case.id,
         orchestration=orchestration,
@@ -189,6 +199,8 @@ def _run(
         cost_usd=live_provider.spent_usd(run_id) if live_provider else 0.0,
         reserved_usd=live_provider.reserved_usd(run_id) if live_provider else 0.0,
         retries=live_provider.retries(run_id) if live_provider else 0,
+        errors=[e.code for e in detail.errors],
+        live_success=live_success,
     )
 
 
@@ -209,24 +221,34 @@ def _aggregate(runs: list[CaseRun]) -> Aggregate:
         latency_ms_p50=round(statistics.median(latencies), 1),
         latency_ms_p95=round(latencies[min(len(latencies) - 1, int(0.95 * len(latencies)))], 1),
         cost_usd_total=sum(r.cost_usd for r in runs),
+        live_scored=sum(r.live_success is not None for r in runs),
+        live_success=sum(bool(r.live_success) for r in runs),
     )
 
 
 def recommend(
-    single: Aggregate, specialists: Aggregate
+    single: Aggregate, specialists: Aggregate, *, live: bool = False
 ) -> tuple[Literal["keep_single_workflow", "adopt_specialists"], str]:
     """Adopt the specialists only if they reach strictly more expected outcomes; ties and losses
-    keep the simpler design (spec M4.1)."""
-    if specialists.task_success > single.task_success:
+    keep the simpler design (spec M4.1). Live runs compare live outcomes (feat-016)."""
+    ours, theirs = (
+        (single.live_success, specialists.live_success)
+        if live
+        else (single.task_success, specialists.task_success)
+    )
+    total_single = single.live_scored if live else single.cases
+    total_spec = specialists.live_scored if live else specialists.cases
+    kind = "live outcomes" if live else "expected outcomes"
+    if theirs > ours:
         return (
             "adopt_specialists",
-            f"specialists reached {specialists.task_success}/{specialists.cases} expected "
-            f"outcomes vs {single.task_success}/{single.cases} for the single workflow",
+            f"specialists reached {theirs}/{total_spec} {kind} "
+            f"vs {ours}/{total_single} for the single workflow",
         )
     return (
         "keep_single_workflow",
-        f"specialists reached {specialists.task_success}/{specialists.cases} expected outcomes "
-        f"vs {single.task_success}/{single.cases}, so they do not measurably win; they cost "
+        f"specialists reached {theirs}/{total_spec} {kind} "
+        f"vs {ours}/{total_single}, so they do not measurably win; they cost "
         f"{specialists.mean_llm_calls:.2f} model calls and {specialists.mean_tokens:.0f} tokens "
         f"per run vs {single.mean_llm_calls:.2f} and {single.mean_tokens:.0f}",
     )
@@ -249,7 +271,9 @@ def run_benchmark(
     aggregates = {
         orch: _aggregate([r for r in runs if r.orchestration == orch]) for orch in ORCHESTRATIONS
     }
-    recommendation, rationale = recommend(aggregates["single"], aggregates["specialists"])
+    recommendation, rationale = recommend(
+        aggregates["single"], aggregates["specialists"], live=live_provider is not None
+    )
     return BenchmarkReport(
         benchmark_version=BENCHMARK_VERSION,
         dataset_version=corpus.dataset_version,
@@ -289,8 +313,21 @@ def run_benchmark(
 def _markdown(report: BenchmarkReport) -> str:
     single, spec = report.aggregates["single"], report.aggregates["specialists"]
     rows = [
+        *(
+            [
+                (
+                    "Live outcome success (feat-016 rubric)",
+                    f"{single.live_success}/{single.live_scored}",
+                    f"{spec.live_success}/{spec.live_scored}",
+                )
+            ]
+            if report.mode == "live"
+            else []
+        ),
         (
-            "Task success (expected outcome reached)",
+            "Task success (expected outcome reached)"
+            if report.mode == "mock"
+            else "Mock-trajectory expectations met",
             f"{single.task_success}/{single.cases}",
             f"{spec.task_success}/{spec.cases}",
         ),
@@ -321,14 +358,18 @@ def _markdown(report: BenchmarkReport) -> str:
         ),
         ("Reported usage cost (USD)", f"{single.cost_usd_total:.6f}", f"{spec.cost_usd_total:.6f}"),
     ]
+
+    def outcome(run: CaseRun) -> bool | None:
+        return run.live_success if report.mode == "live" else run.success
+
     differing = [
-        (a.case_id, a.success, b.success)
+        (a.case_id, bool(outcome(a)), bool(outcome(b)))
         for a, b in zip(
             [r for r in report.runs if r.orchestration == "single"],
             [r for r in report.runs if r.orchestration == "specialists"],
             strict=True,
         )
-        if a.success != b.success
+        if outcome(a) is not None and outcome(a) != outcome(b)
     ]
     lines = [
         "# Orchestration benchmark: single workflow vs. specialists",

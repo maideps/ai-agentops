@@ -20,7 +20,7 @@ from agentops_agents.workflow import RunDependencies, prompt_version, run_task
 from agentops_core.aio import run as run_async
 from agentops_core.llm import LLMGateway
 from agentops_core.policy import POLICY_VERSION
-from agentops_evals.corpus import Case, Corpus, Expect
+from agentops_evals.corpus import Case, Corpus, Expect, LiveExpect
 from agentops_evals.scenarios import SCENARIOS, CountingProvider, Env
 from agentops_llm.hosted import GEMINI_FLASH_LITE
 from agentops_llm.litellm_provider import LiteLLMProvider
@@ -41,6 +41,9 @@ class CaseResult(BaseModel):
     trace_id: str
     status: str | None = None
     observed: dict[str, Any] = Field(default_factory=dict)
+    # Live mode only (feat-016): None when not live-scored (mock mode, scenario or unscored).
+    live_passed: bool | None = None
+    live_failures: list[str] = Field(default_factory=list)
 
 
 class EvalReport(BaseModel):
@@ -61,6 +64,10 @@ class EvalReport(BaseModel):
     cost_usd_total: float = 0.0
     reserved_usd_total: float = 0.0
     retries_total: int = 0
+    live_scored: int = 0
+    live_passed: int = 0
+    live_unscored: list[str] = Field(default_factory=list)
+    live_by_category: dict[str, dict[str, int]] = Field(default_factory=dict)
     limitations: list[str] = Field(default_factory=list)
 
 
@@ -171,6 +178,44 @@ def _score_workflow(
     return failures
 
 
+def score_live(
+    live: LiveExpect, expect: Expect, detail: RunDetail, tickets: int, trace_id: str
+) -> list[str]:
+    """feat-016: score a hosted run by its outcome; safety invariants always apply."""
+    failures: list[str] = []
+
+    def check(ok: bool, message: str) -> None:
+        if not ok:
+            failures.append(message)
+
+    check(detail.trace_id == trace_id, f"trace id {detail.trace_id} != {trace_id}")
+    check(bool(detail.policy_decisions), "no policy decision recorded")
+    for prefix in expect.forbidden_evidence_prefixes:
+        leaked = [e.id for e in detail.evidence if e.id.startswith(prefix)]
+        check(not leaked, f"forbidden evidence {leaked}")
+    allowed_tickets = expect.tickets or 0
+    check(tickets <= allowed_tickets, f"tickets {tickets} > {allowed_tickets}")
+    status = detail.status.value
+    check(status in live.outcomes, f"status {status} not in {live.outcomes}")
+    if status == "completed":
+        got = (
+            {(r.product_id, r.region) for r in detail.analytics.declines}
+            if detail.analytics
+            else set()
+        )
+        missing = [list(d) for d in live.declines_include if tuple(d) not in got]
+        check(not missing, f"declines missing {missing}")
+        findings = detail.report.findings if detail.report else []
+        check(len(findings) >= live.min_findings, f"findings {len(findings)} < {live.min_findings}")
+        if live.cites_documents:
+            cited = {c.split("#", 1)[0] for f in findings for c in f.citations}
+            check(
+                bool(cited & set(live.cites_documents)),
+                f"no finding cites any of {live.cites_documents}",
+            )
+    return failures
+
+
 def _score_scenario(expect: Expect, observed: dict[str, Any]) -> list[str]:
     failures = []
     for name in ("reason", "outcome", "tickets", "executions", "status", "llm_calls_after_resume"):
@@ -192,6 +237,9 @@ def run_case(
             tickets = env.tickets(case.tenant_id, run_id)
             failures = _score_workflow(case.expect, detail, calls, tickets, trace_id)
             status: str | None = detail.status.value
+            live_failures: list[str] | None = None
+            if live_provider is not None and case.live is not None and not case.live.unscored:
+                live_failures = score_live(case.live, case.expect, detail, tickets, trace_id)
             observed: dict[str, Any] = {
                 "llm_calls": calls,
                 "tickets": tickets,
@@ -199,8 +247,11 @@ def run_case(
                 "cost_usd": live_provider.spent_usd(run_id) if live_provider else 0.0,
                 "reserved_usd": live_provider.reserved_usd(run_id) if live_provider else 0.0,
                 "retries": live_provider.retries(run_id) if live_provider else 0,
+                "errors": [e.code for e in detail.errors],
+                "abstain_reason": detail.abstain_reason,
             }
         else:
+            live_failures = None
             ctx = CallContext(tenant_id=case.tenant_id, user_id=case.user_id, run_id=run_id)
             observed = SCENARIOS[str(case.scenario)](env, ctx)
             observed["model_mode"] = "mock"
@@ -217,6 +268,8 @@ def run_case(
         trace_id=trace_id,
         status=status,
         observed=observed,
+        live_passed=None if live_failures is None else not live_failures,
+        live_failures=live_failures or [],
     )
 
 
@@ -240,6 +293,17 @@ def run_corpus(
         bucket["total"] += 1
         bucket["passed"] += int(result.passed)
     passed = sum(r.passed for r in results)
+    live_by_category: dict[str, dict[str, int]] = {}
+    for result in results:
+        if result.live_passed is not None:
+            bucket = live_by_category.setdefault(result.category, {"total": 0, "passed": 0})
+            bucket["total"] += 1
+            bucket["passed"] += int(result.live_passed)
+    unscored = (
+        [c.id for c in corpus.cases if c.kind == "workflow" and (c.live is None or c.live.unscored)]
+        if live_provider is not None
+        else []
+    )
     return EvalReport(
         dataset_version=corpus.dataset_version,
         git_sha=git_sha(),
@@ -258,6 +322,10 @@ def run_corpus(
         cost_usd_total=sum(r.observed.get("cost_usd", 0.0) for r in results),
         reserved_usd_total=sum(r.observed.get("reserved_usd", 0.0) for r in results),
         retries_total=sum(int(r.observed.get("retries", 0)) for r in results),
+        live_scored=sum(r.live_passed is not None for r in results),
+        live_passed=sum(bool(r.live_passed) for r in results),
+        live_unscored=[cid for cid in unscored if only is None or cid in only],
+        live_by_category=live_by_category,
         limitations=[
             "Live workflow calls only; gateway/reliability scenarios remain deterministic mocks.",
             "Expectations include scripted model errors and tool trajectories; live failures "
