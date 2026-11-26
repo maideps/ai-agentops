@@ -135,3 +135,53 @@ so inspect per-query Recall for multi questions. Unequal corpora have different 
 distributions: a score difference is not a ranking regression or a causal quality gain.
 These agent-curated synthetic judgments are not independent held-out or real-world data,
 and neither report measures abstention. Do not tune ranking or a threshold on these cases.
+
+## Offline BM25 comparison
+
+feat-020 adds `compare`, a benchmark-only alternative to `benchmark`. Production
+`search_documents`, the hashing embedder, frozen datasets and historical reports are
+unchanged. One generic BM25 candidate is fixed before recording measurements:
+`k1=1.2`, `b=0.75`, with the existing `tokens` function (lower-case alphanumeric
+words, stopword removal, simple trailing-plural stripping). Unique query terms
+contribute once; there is no query expansion, synonym list or parameter search.
+
+For each query, BM25 scores **all and only** the caller-permitted chunks. Document
+frequencies, N and average chunk length are computed from that same permitted catalog,
+so inaccessible chunks cannot influence candidate statistics. For term t:
+`idf(t) = ln(1 + (N - df(t) + 0.5) / (df(t) + 0.5))`; each term contributes
+`idf(t) * tf(t) * (k1 + 1) / (tf(t) + k1 * (1 - b + b * length / average_length))`.
+Larger scores rank first, tied by chunk id. Zero-overlap candidates are retained;
+an empty catalog returns no candidates. Neither is an abstention decision.
+
+The unchanged vector baseline and BM25 execute in one repeatable-read, read-only
+transaction through the analytics login. Invalid/inaccessible relevance judgments
+fail before a report is written. JSON embeds the existing baseline report and pairs
+candidate results by case id, sharing metric definitions and answerable-query
+denominators. BM25 `score` is separate from the baseline's cosine `distance`.
+Every candidate result fingerprints the full permitted catalog as SHA-256 of UTF-8
+compact JSON containing sorted `[chunk_id, text_sha256]` pairs. No retrieved text is
+written; dataset version/hash and supplied git SHA remain in the baseline report.
+Exit codes match `benchmark`: 0 successful measurement, 1 any forbidden hit in either
+ranker, 2 configuration/dataset/database/output errors. Low relevance is not a fake
+pass/fail threshold.
+
+Seed and index one **isolated** database as above, commit the implementation, then
+use the analytics login for both frozen corpora. In PowerShell:
+
+```powershell
+uv run python -m agentops_retrieval compare --git-sha (git rev-parse HEAD) --out benchmarks/retrieval/bm25-v1/control.json
+uv run python -m agentops_retrieval compare --dataset datasets/retrieval/stress-v2/queries.json --git-sha (git rev-parse HEAD) --out benchmarks/retrieval/bm25-v1/stress.json
+```
+
+Tests use `agentops_feat020_test` for all three `AGENTOPS_TEST_*` URLs, not a shared
+database. No model calls, downloads, new dependencies or paid inference are needed.
+Report per-query regressions as well as improvements before considering next steps.
+These corpora are tiny, agent-curated and already inspected: do not tune parameters,
+claim semantic/end-to-end quality or adopt a production ranker from this comparison.
+A production decision needs separately approved, independently judged held-out evidence.
+
+The [recorded comparison](../benchmarks/retrieval/bm25-v1/REPORT.md) at `2268b1d`
+preserves v1 Recall@3/MRR at 1.0/1.0 and measures stress BM25 at 0.8264/0.7986
+against hashing at 0.7639/0.7361, with zero forbidden hits. Recall regresses on
+`paraphrase-cooking` and `multi-audit-duration`; rank-only regressions are also
+listed. Production adoption is explicitly deferred, not inferred from better averages.

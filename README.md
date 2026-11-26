@@ -87,6 +87,16 @@ hits in both. Neither corpus measures held-out real-world quality.
 Of 24 answerable stress questions, four retrieve no relevant chunks and four more
 retrieve only part of the judged evidence.
 
+An offline comparison command (feat-020) measures the unchanged vector retriever
+against fixed BM25 lexical scoring on either frozen corpus. It uses only permitted
+chunks in one read-only database snapshot and records both rankers' metrics, distinct
+scores/distances and source-catalog fingerprints, without changing production search
+or calling a model. See the
+[comparison procedure](docs/retrieval-baseline.md#offline-bm25-comparison).
+The [recorded experiment](benchmarks/retrieval/bm25-v1/REPORT.md) keeps v1 at 1.0/1.0
+and raises stress Recall@3/MRR to 0.8264/0.7986, but introduces individual regressions.
+BM25 is not adopted; independent held-out evidence is still needed.
+
 ## Quick Start
 
 Prerequisites: Python 3.13, [uv](https://docs.astral.sh/uv/), Docker, Node.js ≥ 18 (development harness and the demo UI) and Git.
@@ -165,6 +175,7 @@ Features are declared in [`feature_list.json`](feature_list.json); their state i
 | feat-017 | Phase 2 | Live evaluation scores outcomes (evals-v1.2.0) and records error codes per case |
 | feat-018 | Phase 2 | Context-aware policy citation guidance in both report paths; offline verification |
 | feat-019 | Phase 2 | Paced live calls and bounded, budget-reserved retries for rate limits |
+| feat-020 | Phase 2 | Offline, permission-filtered BM25 comparison; production retrieval unchanged |
 | feat-021 | Phase 2 | Live evaluation stops early when the provider's daily quota runs out |
 
 ## Documentation

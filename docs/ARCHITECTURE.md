@@ -88,6 +88,14 @@ unscored samples; this nearest-neighbor benchmark does not measure abstention. T
 supplies the git SHA (or CI supplies GITHUB_SHA), avoiding an infrastructure dependency on
 the application-level evaluation runner. No provider or policy/write path is added.
 
+The optional `compare` command (feat-020) pairs that baseline with benchmark-only
+BM25 (`k1=1.2`, `b=0.75`, existing word tokenization). Both run within a repeatable-read,
+read-only transaction. Candidate statistics and scoring see only the principal's
+permitted catalog through the existing typed reads. Reports distinguish vector
+distances from BM25 scores and fingerprint each full permitted catalog. Production
+search and frozen judgments are unchanged; these synthetic experiments do not justify
+adoption, parameter tuning or a relevance threshold.
+
 ## Enforced Rules
 
 Product rules live in `.harness/arch-rules.json` (ids `arch-101` and up) and run on every `npm run check-arch`:

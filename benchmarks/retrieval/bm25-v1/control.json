@@ -1,0 +1,976 @@
+{
+  "git_sha": "2268b1d2a7e72089edbc57352ec4a6d0fa5bdae8",
+  "candidate": "bm25-v1",
+  "parameters": {
+    "k1": 1.2,
+    "b": 0.75
+  },
+  "baseline": {
+    "dataset_version": "retrieval-v1.0.0",
+    "dataset_sha256": "1113360cfec3cf0818dea9f67dc07b7f276596bf7c66f1b3ca005df716ca3a3c",
+    "git_sha": "2268b1d2a7e72089edbc57352ec4a6d0fa5bdae8",
+    "embedding_model": "hashing-v1-256",
+    "aggregate": {
+      "queries": 16,
+      "answerable_queries": 12,
+      "no_accessible_evidence_queries": 4,
+      "mean_recall_at_k": 1.0,
+      "mrr": 1.0,
+      "forbidden_hits": 0
+    },
+    "results": [
+      {
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "forbidden_hits": [],
+        "case_id": "receipt-rule",
+        "tenant_id": "demo-a",
+        "user_id": "user-a-analyst",
+        "query": "EMEA receipt requirement reduced repeat purchases of trail running shoes",
+        "k": 3,
+        "relevant_chunk_ids": [
+          "doc-a-returns-policy#1"
+        ],
+        "hits": [
+          {
+            "chunk_id": "doc-a-returns-policy#1",
+            "document_id": "doc-a-returns-policy",
+            "text_sha256": "ecbee2d0a79ba4e1dca0e0e8f6c6ca16b4947a17c2665358aae0ee821dad61b5",
+            "distance": 0.4166666741169377
+          },
+          {
+            "chunk_id": "doc-a-press-kit#0",
+            "document_id": "doc-a-press-kit",
+            "text_sha256": "bc5601dc96ce7c0397a780c9b0ca62b5e452f0d1f2817f24e036c176faac8ca4",
+            "distance": 0.7574643827402037
+          },
+          {
+            "chunk_id": "doc-a-returns-policy#0",
+            "document_id": "doc-a-returns-policy",
+            "text_sha256": "4ce3afa9c9b2fbefe1ad1eeb7d7255ce211fd1ee8f68095b37ef9a347cfdd6fa",
+            "distance": 0.7763931998361541
+          }
+        ]
+      },
+      {
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "forbidden_hits": [],
+        "case_id": "unused-footwear",
+        "tenant_id": "demo-a",
+        "user_id": "user-a-analyst",
+        "query": "Unused footwear refund within 30 days, worn outsole refund percentage",
+        "k": 3,
+        "relevant_chunk_ids": [
+          "doc-a-returns-policy#0"
+        ],
+        "hits": [
+          {
+            "chunk_id": "doc-a-returns-policy#0",
+            "document_id": "doc-a-returns-policy",
+            "text_sha256": "4ce3afa9c9b2fbefe1ad1eeb7d7255ce211fd1ee8f68095b37ef9a347cfdd6fa",
+            "distance": 0.4781578261281568
+          },
+          {
+            "chunk_id": "doc-a-pricing-guidelines#0",
+            "document_id": "doc-a-pricing-guidelines",
+            "text_sha256": "a882435f6d6eb8850286fab455abfc6e275f0799e6ae302e6120a1459a454acb",
+            "distance": 0.9314796758486354
+          },
+          {
+            "chunk_id": "doc-a-press-kit#0",
+            "document_id": "doc-a-press-kit",
+            "text_sha256": "bc5601dc96ce7c0397a780c9b0ca62b5e452f0d1f2817f24e036c176faac8ca4",
+            "distance": 1.0
+          }
+        ]
+      },
+      {
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "forbidden_hits": [],
+        "case_id": "seam-seal",
+        "tenant_id": "demo-a",
+        "user_id": "user-a-analyst",
+        "query": "Rain jacket broken seam seal replaced in first year",
+        "k": 3,
+        "relevant_chunk_ids": [
+          "doc-a-returns-policy#2"
+        ],
+        "hits": [
+          {
+            "chunk_id": "doc-a-returns-policy#2",
+            "document_id": "doc-a-returns-policy",
+            "text_sha256": "9752a985878b420c4e7b37c69533420fa471efbd59cbef3b4c16197e01de0552",
+            "distance": 0.1471970776967665
+          },
+          {
+            "chunk_id": "doc-a-pricing-guidelines#1",
+            "document_id": "doc-a-pricing-guidelines",
+            "text_sha256": "3b9176d010221507f19c3161f90f55ca70e63a4f9e3f8b9a7ad7937cc275ca47",
+            "distance": 0.7775445113900543
+          },
+          {
+            "chunk_id": "doc-a-press-kit#1",
+            "document_id": "doc-a-press-kit",
+            "text_sha256": "39e7c30f1b60298074c6c9637c04a62791a56571e8f9ad538c4ddac529933714",
+            "distance": 1.0
+          }
+        ]
+      },
+      {
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "forbidden_hits": [],
+        "case_id": "discount-approval",
+        "tenant_id": "demo-a",
+        "user_id": "user-a-analyst",
+        "query": "Pricing committee approval for discounts above ten percent",
+        "k": 3,
+        "relevant_chunk_ids": [
+          "doc-a-pricing-guidelines#0"
+        ],
+        "hits": [
+          {
+            "chunk_id": "doc-a-pricing-guidelines#0",
+            "document_id": "doc-a-pricing-guidelines",
+            "text_sha256": "a882435f6d6eb8850286fab455abfc6e275f0799e6ae302e6120a1459a454acb",
+            "distance": 0.42858627863665366
+          },
+          {
+            "chunk_id": "doc-a-pricing-guidelines#1",
+            "document_id": "doc-a-pricing-guidelines",
+            "text_sha256": "3b9176d010221507f19c3161f90f55ca70e63a4f9e3f8b9a7ad7937cc275ca47",
+            "distance": 0.7072381274301491
+          },
+          {
+            "chunk_id": "doc-a-press-kit#1",
+            "document_id": "doc-a-press-kit",
+            "text_sha256": "39e7c30f1b60298074c6c9637c04a62791a56571e8f9ad538c4ddac529933714",
+            "distance": 0.8110177628325997
+          }
+        ]
+      },
+      {
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "forbidden_hits": [],
+        "case_id": "freight-price-rise",
+        "tenant_id": "demo-a",
+        "user_id": "user-a-analyst",
+        "query": "NA rain jacket price rise fifteen percent freight costs committee exception",
+        "k": 3,
+        "relevant_chunk_ids": [
+          "doc-a-pricing-guidelines#1"
+        ],
+        "hits": [
+          {
+            "chunk_id": "doc-a-pricing-guidelines#1",
+            "document_id": "doc-a-pricing-guidelines",
+            "text_sha256": "3b9176d010221507f19c3161f90f55ca70e63a4f9e3f8b9a7ad7937cc275ca47",
+            "distance": 0.3870354832298061
+          },
+          {
+            "chunk_id": "doc-a-pricing-guidelines#0",
+            "document_id": "doc-a-pricing-guidelines",
+            "text_sha256": "a882435f6d6eb8850286fab455abfc6e275f0799e6ae302e6120a1459a454acb",
+            "distance": 0.7693797429625391
+          },
+          {
+            "chunk_id": "doc-a-returns-policy#2",
+            "document_id": "doc-a-returns-policy",
+            "text_sha256": "9752a985878b420c4e7b37c69533420fa471efbd59cbef3b4c16197e01de0552",
+            "distance": 0.818181811408547
+          }
+        ]
+      },
+      {
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "forbidden_hits": [],
+        "case_id": "stove-pricing",
+        "tenant_id": "demo-a",
+        "user_id": "user-a-analyst",
+        "query": "Camping stoves global list price every region",
+        "k": 3,
+        "relevant_chunk_ids": [
+          "doc-a-pricing-guidelines#2"
+        ],
+        "hits": [
+          {
+            "chunk_id": "doc-a-pricing-guidelines#2",
+            "document_id": "doc-a-pricing-guidelines",
+            "text_sha256": "f6d2542d9ea2bc63f7a60d0b7afec43b70dcbe67d63f9b355272762a0c867aa0",
+            "distance": 0.07417985486581635
+          },
+          {
+            "chunk_id": "doc-a-returns-policy#1",
+            "document_id": "doc-a-returns-policy",
+            "text_sha256": "ecbee2d0a79ba4e1dca0e0e8f6c6ca16b4947a17c2665358aae0ee821dad61b5",
+            "distance": 0.8979379282168014
+          },
+          {
+            "chunk_id": "doc-a-press-kit#0",
+            "document_id": "doc-a-press-kit",
+            "text_sha256": "bc5601dc96ce7c0397a780c9b0ca62b5e452f0d1f2817f24e036c176faac8ca4",
+            "distance": 0.9009852520054398
+          }
+        ]
+      },
+      {
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "forbidden_hits": [],
+        "case_id": "public-company",
+        "tenant_id": "demo-a",
+        "user_id": "user-a-viewer",
+        "query": "Acme Outdoor Retail running hiking camping gear EMEA North America",
+        "k": 3,
+        "relevant_chunk_ids": [
+          "doc-a-press-kit#0"
+        ],
+        "hits": [
+          {
+            "chunk_id": "doc-a-press-kit#0",
+            "document_id": "doc-a-press-kit",
+            "text_sha256": "bc5601dc96ce7c0397a780c9b0ca62b5e452f0d1f2817f24e036c176faac8ca4",
+            "distance": 0.23303508231806314
+          },
+          {
+            "chunk_id": "doc-a-press-kit#1",
+            "document_id": "doc-a-press-kit",
+            "text_sha256": "39e7c30f1b60298074c6c9637c04a62791a56571e8f9ad538c4ddac529933714",
+            "distance": 1.0
+          }
+        ]
+      },
+      {
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "forbidden_hits": [],
+        "case_id": "board-stockists",
+        "tenant_id": "demo-a",
+        "user_id": "user-a-admin",
+        "query": "Board closing two NA camping stove stockists supplier dispute",
+        "k": 3,
+        "relevant_chunk_ids": [
+          "doc-a-board-notes#0"
+        ],
+        "hits": [
+          {
+            "chunk_id": "doc-a-board-notes#0",
+            "document_id": "doc-a-board-notes",
+            "text_sha256": "899fde64aa0413f55d61fb60dd6fb82bf0057fc86a2afdf3f42be5672b335392",
+            "distance": 0.25464405146955615
+          },
+          {
+            "chunk_id": "doc-a-board-notes#1",
+            "document_id": "doc-a-board-notes",
+            "text_sha256": "6b30644297a13b32c99c36447cce0327b74cf849b55f0b0485361f29f42f83b3",
+            "distance": 0.6666666567325386
+          },
+          {
+            "chunk_id": "doc-a-pricing-guidelines#2",
+            "document_id": "doc-a-pricing-guidelines",
+            "text_sha256": "f6d2542d9ea2bc63f7a60d0b7afec43b70dcbe67d63f9b355272762a0c867aa0",
+            "distance": 0.874011838403684
+          }
+        ]
+      },
+      {
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "forbidden_hits": [],
+        "case_id": "harvest-audit",
+        "tenant_id": "demo-b",
+        "user_id": "user-b-analyst",
+        "query": "Olive oil supplier harvest quality audit re-audit orders",
+        "k": 3,
+        "relevant_chunk_ids": [
+          "doc-b-supplier-policy#0"
+        ],
+        "hits": [
+          {
+            "chunk_id": "doc-b-supplier-policy#0",
+            "document_id": "doc-b-supplier-policy",
+            "text_sha256": "8f26e7f4d7fdd6fc477445352b14090856937324f7adb7ad850fc67fa05f2c70",
+            "distance": 0.23467092609631868
+          },
+          {
+            "chunk_id": "doc-b-supplier-policy#1",
+            "document_id": "doc-b-supplier-policy",
+            "text_sha256": "7cffafe07f1b57fae7b84e493ea65cfde987caf48a0359a26217d99698567672",
+            "distance": 0.4535265773153945
+          },
+          {
+            "chunk_id": "doc-b-supplier-onboarding#0",
+            "document_id": "doc-b-supplier-onboarding",
+            "text_sha256": "847f48fc743edea56a53880bd669638733fcfbb320821fe718bfe3be2712d621",
+            "distance": 0.8234079234776105
+          }
+        ]
+      },
+      {
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "forbidden_hits": [],
+        "case_id": "apac-orders",
+        "tenant_id": "demo-b",
+        "user_id": "user-b-analyst",
+        "query": "APAC olive oil audit failed orders paused six weeks 2026 Q3",
+        "k": 3,
+        "relevant_chunk_ids": [
+          "doc-b-supplier-policy#1"
+        ],
+        "hits": [
+          {
+            "chunk_id": "doc-b-supplier-policy#1",
+            "document_id": "doc-b-supplier-policy",
+            "text_sha256": "7cffafe07f1b57fae7b84e493ea65cfde987caf48a0359a26217d99698567672",
+            "distance": 0.09546602249000524
+          },
+          {
+            "chunk_id": "doc-b-supplier-policy#0",
+            "document_id": "doc-b-supplier-policy",
+            "text_sha256": "8f26e7f4d7fdd6fc477445352b14090856937324f7adb7ad850fc67fa05f2c70",
+            "distance": 0.536917481456434
+          },
+          {
+            "chunk_id": "doc-b-supplier-onboarding#0",
+            "document_id": "doc-b-supplier-onboarding",
+            "text_sha256": "847f48fc743edea56a53880bd669638733fcfbb320821fe718bfe3be2712d621",
+            "distance": 0.9075499697714393
+          }
+        ]
+      },
+      {
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "forbidden_hits": [],
+        "case_id": "supplier-onboarding",
+        "tenant_id": "demo-b",
+        "user_id": "user-b-analyst",
+        "query": "New supplier food safety questionnaire site visit first order",
+        "k": 3,
+        "relevant_chunk_ids": [
+          "doc-b-supplier-onboarding#0"
+        ],
+        "hits": [
+          {
+            "chunk_id": "doc-b-supplier-onboarding#0",
+            "document_id": "doc-b-supplier-onboarding",
+            "text_sha256": "847f48fc743edea56a53880bd669638733fcfbb320821fe718bfe3be2712d621",
+            "distance": 0.07549969771439313
+          },
+          {
+            "chunk_id": "doc-b-supplier-policy#1",
+            "document_id": "doc-b-supplier-policy",
+            "text_sha256": "7cffafe07f1b57fae7b84e493ea65cfde987caf48a0359a26217d99698567672",
+            "distance": 0.6984886642292054
+          },
+          {
+            "chunk_id": "doc-b-supplier-policy#0",
+            "document_id": "doc-b-supplier-policy",
+            "text_sha256": "8f26e7f4d7fdd6fc477445352b14090856937324f7adb7ad850fc67fa05f2c70",
+            "distance": 0.7722027548073407
+          }
+        ]
+      },
+      {
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "forbidden_hits": [],
+        "case_id": "missed-deliveries",
+        "tenant_id": "demo-b",
+        "user_id": "user-b-analyst",
+        "query": "Suppliers miss two delivery windows quarter reviewed procurement",
+        "k": 3,
+        "relevant_chunk_ids": [
+          "doc-b-supplier-onboarding#2"
+        ],
+        "hits": [
+          {
+            "chunk_id": "doc-b-supplier-onboarding#2",
+            "document_id": "doc-b-supplier-onboarding",
+            "text_sha256": "3b8fc4f2e6259c5654b3b81d7d77296ebf24e48477ee3b60b5f5568e1146d6f8",
+            "distance": 0.0
+          },
+          {
+            "chunk_id": "doc-b-supplier-policy#1",
+            "document_id": "doc-b-supplier-policy",
+            "text_sha256": "7cffafe07f1b57fae7b84e493ea65cfde987caf48a0359a26217d99698567672",
+            "distance": 0.8933996421626935
+          },
+          {
+            "chunk_id": "doc-b-supplier-policy#0",
+            "document_id": "doc-b-supplier-policy",
+            "text_sha256": "8f26e7f4d7fdd6fc477445352b14090856937324f7adb7ad850fc67fa05f2c70",
+            "distance": 1.0
+          }
+        ]
+      },
+      {
+        "recall_at_k": null,
+        "reciprocal_rank": null,
+        "forbidden_hits": [],
+        "case_id": "viewer-no-receipt-access",
+        "tenant_id": "demo-a",
+        "user_id": "user-a-viewer",
+        "query": "EMEA receipt return rule for trail running shoes",
+        "k": 3,
+        "relevant_chunk_ids": [],
+        "hits": [
+          {
+            "chunk_id": "doc-a-press-kit#0",
+            "document_id": "doc-a-press-kit",
+            "text_sha256": "bc5601dc96ce7c0397a780c9b0ca62b5e452f0d1f2817f24e036c176faac8ca4",
+            "distance": 0.908330152184257
+          },
+          {
+            "chunk_id": "doc-a-press-kit#1",
+            "document_id": "doc-a-press-kit",
+            "text_sha256": "39e7c30f1b60298074c6c9637c04a62791a56571e8f9ad538c4ddac529933714",
+            "distance": 1.0
+          }
+        ]
+      },
+      {
+        "recall_at_k": null,
+        "reciprocal_rank": null,
+        "forbidden_hits": [],
+        "case_id": "analyst-no-board-access",
+        "tenant_id": "demo-a",
+        "user_id": "user-a-analyst",
+        "query": "Restricted board stockist closures supplier dispute",
+        "k": 3,
+        "relevant_chunk_ids": [],
+        "hits": [
+          {
+            "chunk_id": "doc-a-press-kit#0",
+            "document_id": "doc-a-press-kit",
+            "text_sha256": "bc5601dc96ce7c0397a780c9b0ca62b5e452f0d1f2817f24e036c176faac8ca4",
+            "distance": 1.0
+          },
+          {
+            "chunk_id": "doc-a-press-kit#1",
+            "document_id": "doc-a-press-kit",
+            "text_sha256": "39e7c30f1b60298074c6c9637c04a62791a56571e8f9ad538c4ddac529933714",
+            "distance": 1.0
+          },
+          {
+            "chunk_id": "doc-a-pricing-guidelines#0",
+            "document_id": "doc-a-pricing-guidelines",
+            "text_sha256": "a882435f6d6eb8850286fab455abfc6e275f0799e6ae302e6120a1459a454acb",
+            "distance": 1.0
+          }
+        ]
+      },
+      {
+        "recall_at_k": null,
+        "reciprocal_rank": null,
+        "forbidden_hits": [],
+        "case_id": "tenant-a-no-singapore-evidence",
+        "tenant_id": "demo-a",
+        "user_id": "user-a-admin",
+        "query": "Globex Singapore distribution center 2027 expansion budget",
+        "k": 3,
+        "relevant_chunk_ids": [],
+        "hits": [
+          {
+            "chunk_id": "doc-a-board-notes#0",
+            "document_id": "doc-a-board-notes",
+            "text_sha256": "899fde64aa0413f55d61fb60dd6fb82bf0057fc86a2afdf3f42be5672b335392",
+            "distance": 1.0
+          },
+          {
+            "chunk_id": "doc-a-board-notes#1",
+            "document_id": "doc-a-board-notes",
+            "text_sha256": "6b30644297a13b32c99c36447cce0327b74cf849b55f0b0485361f29f42f83b3",
+            "distance": 1.0
+          },
+          {
+            "chunk_id": "doc-a-press-kit#0",
+            "document_id": "doc-a-press-kit",
+            "text_sha256": "bc5601dc96ce7c0397a780c9b0ca62b5e452f0d1f2817f24e036c176faac8ca4",
+            "distance": 1.0
+          }
+        ]
+      },
+      {
+        "recall_at_k": null,
+        "reciprocal_rank": null,
+        "forbidden_hits": [],
+        "case_id": "tenant-b-no-emea-evidence",
+        "tenant_id": "demo-b",
+        "user_id": "user-b-analyst",
+        "query": "Acme EMEA receipt rule reduced trail shoe repeat purchases",
+        "k": 3,
+        "relevant_chunk_ids": [],
+        "hits": [
+          {
+            "chunk_id": "doc-b-supplier-onboarding#1",
+            "document_id": "doc-b-supplier-onboarding",
+            "text_sha256": "b02bedec9dca6b7cbcdf7cff895bf9360ad0691949e788d2a696434e271fe8d7",
+            "distance": 0.8241457830393141
+          },
+          {
+            "chunk_id": "doc-b-supplier-onboarding#2",
+            "document_id": "doc-b-supplier-onboarding",
+            "text_sha256": "3b8fc4f2e6259c5654b3b81d7d77296ebf24e48477ee3b60b5f5568e1146d6f8",
+            "distance": 1.0
+          },
+          {
+            "chunk_id": "doc-b-supplier-policy#0",
+            "document_id": "doc-b-supplier-policy",
+            "text_sha256": "8f26e7f4d7fdd6fc477445352b14090856937324f7adb7ad850fc67fa05f2c70",
+            "distance": 1.0759324175477518
+          }
+        ]
+      }
+    ],
+    "limitations": [
+      "Small curated synthetic corpus with vocabulary overlap, not held-out real-world retrieval or end-to-end answer quality.",
+      "Recall@k and MRR are macro-averages over queries with accessible relevant chunks. No-accessible-evidence queries are excluded, not scored as perfect.",
+      "Nearest-neighbor retrieval always returns candidates when available; this benchmark does not measure abstention or add a relevance threshold.",
+      "Only chunk ids, source hashes and distances are recorded, not retrieved text."
+    ]
+  },
+  "candidate_aggregate": {
+    "queries": 16,
+    "answerable_queries": 12,
+    "no_accessible_evidence_queries": 4,
+    "mean_recall_at_k": 1.0,
+    "mrr": 1.0,
+    "forbidden_hits": 0
+  },
+  "results": [
+    {
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "forbidden_hits": [],
+      "case_id": "receipt-rule",
+      "catalog_sha256": "4f01dd409485fc6f69d8daba7912f08f3572ecf161f104feb2db648f76c1f5eb",
+      "hits": [
+        {
+          "chunk_id": "doc-a-returns-policy#1",
+          "document_id": "doc-a-returns-policy",
+          "text_sha256": "ecbee2d0a79ba4e1dca0e0e8f6c6ca16b4947a17c2665358aae0ee821dad61b5",
+          "score": 10.373340293043492
+        },
+        {
+          "chunk_id": "doc-a-returns-policy#0",
+          "document_id": "doc-a-returns-policy",
+          "text_sha256": "4ce3afa9c9b2fbefe1ad1eeb7d7255ce211fd1ee8f68095b37ef9a347cfdd6fa",
+          "score": 4.126669764028764
+        },
+        {
+          "chunk_id": "doc-a-press-kit#0",
+          "document_id": "doc-a-press-kit",
+          "text_sha256": "bc5601dc96ce7c0397a780c9b0ca62b5e452f0d1f2817f24e036c176faac8ca4",
+          "score": 2.0707063256294136
+        }
+      ]
+    },
+    {
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "forbidden_hits": [],
+      "case_id": "unused-footwear",
+      "catalog_sha256": "4f01dd409485fc6f69d8daba7912f08f3572ecf161f104feb2db648f76c1f5eb",
+      "hits": [
+        {
+          "chunk_id": "doc-a-returns-policy#0",
+          "document_id": "doc-a-returns-policy",
+          "text_sha256": "4ce3afa9c9b2fbefe1ad1eeb7d7255ce211fd1ee8f68095b37ef9a347cfdd6fa",
+          "score": 10.371267929097412
+        },
+        {
+          "chunk_id": "doc-a-pricing-guidelines#0",
+          "document_id": "doc-a-pricing-guidelines",
+          "text_sha256": "a882435f6d6eb8850286fab455abfc6e275f0799e6ae302e6120a1459a454acb",
+          "score": 1.1918950456119979
+        },
+        {
+          "chunk_id": "doc-a-press-kit#0",
+          "document_id": "doc-a-press-kit",
+          "text_sha256": "bc5601dc96ce7c0397a780c9b0ca62b5e452f0d1f2817f24e036c176faac8ca4",
+          "score": 0.0
+        }
+      ]
+    },
+    {
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "forbidden_hits": [],
+      "case_id": "seam-seal",
+      "catalog_sha256": "4f01dd409485fc6f69d8daba7912f08f3572ecf161f104feb2db648f76c1f5eb",
+      "hits": [
+        {
+          "chunk_id": "doc-a-returns-policy#2",
+          "document_id": "doc-a-returns-policy",
+          "text_sha256": "9752a985878b420c4e7b37c69533420fa471efbd59cbef3b4c16197e01de0552",
+          "score": 14.726905990782647
+        },
+        {
+          "chunk_id": "doc-a-pricing-guidelines#1",
+          "document_id": "doc-a-pricing-guidelines",
+          "text_sha256": "3b9176d010221507f19c3161f90f55ca70e63a4f9e3f8b9a7ad7937cc275ca47",
+          "score": 2.1554789684197027
+        },
+        {
+          "chunk_id": "doc-a-press-kit#0",
+          "document_id": "doc-a-press-kit",
+          "text_sha256": "bc5601dc96ce7c0397a780c9b0ca62b5e452f0d1f2817f24e036c176faac8ca4",
+          "score": 0.0
+        }
+      ]
+    },
+    {
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "forbidden_hits": [],
+      "case_id": "discount-approval",
+      "catalog_sha256": "4f01dd409485fc6f69d8daba7912f08f3572ecf161f104feb2db648f76c1f5eb",
+      "hits": [
+        {
+          "chunk_id": "doc-a-pricing-guidelines#0",
+          "document_id": "doc-a-pricing-guidelines",
+          "text_sha256": "a882435f6d6eb8850286fab455abfc6e275f0799e6ae302e6120a1459a454acb",
+          "score": 8.620624954717519
+        },
+        {
+          "chunk_id": "doc-a-pricing-guidelines#1",
+          "document_id": "doc-a-pricing-guidelines",
+          "text_sha256": "3b9176d010221507f19c3161f90f55ca70e63a4f9e3f8b9a7ad7937cc275ca47",
+          "score": 3.431564644157584
+        },
+        {
+          "chunk_id": "doc-a-returns-policy#0",
+          "document_id": "doc-a-returns-policy",
+          "text_sha256": "4ce3afa9c9b2fbefe1ad1eeb7d7255ce211fd1ee8f68095b37ef9a347cfdd6fa",
+          "score": 0.814135560602165
+        }
+      ]
+    },
+    {
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "forbidden_hits": [],
+      "case_id": "freight-price-rise",
+      "catalog_sha256": "4f01dd409485fc6f69d8daba7912f08f3572ecf161f104feb2db648f76c1f5eb",
+      "hits": [
+        {
+          "chunk_id": "doc-a-pricing-guidelines#1",
+          "document_id": "doc-a-pricing-guidelines",
+          "text_sha256": "3b9176d010221507f19c3161f90f55ca70e63a4f9e3f8b9a7ad7937cc275ca47",
+          "score": 11.33407755668645
+        },
+        {
+          "chunk_id": "doc-a-pricing-guidelines#0",
+          "document_id": "doc-a-pricing-guidelines",
+          "text_sha256": "a882435f6d6eb8850286fab455abfc6e275f0799e6ae302e6120a1459a454acb",
+          "score": 3.662288294893315
+        },
+        {
+          "chunk_id": "doc-a-returns-policy#2",
+          "document_id": "doc-a-returns-policy",
+          "text_sha256": "9752a985878b420c4e7b37c69533420fa471efbd59cbef3b4c16197e01de0552",
+          "score": 2.8340731342536274
+        }
+      ]
+    },
+    {
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "forbidden_hits": [],
+      "case_id": "stove-pricing",
+      "catalog_sha256": "4f01dd409485fc6f69d8daba7912f08f3572ecf161f104feb2db648f76c1f5eb",
+      "hits": [
+        {
+          "chunk_id": "doc-a-pricing-guidelines#2",
+          "document_id": "doc-a-pricing-guidelines",
+          "text_sha256": "f6d2542d9ea2bc63f7a60d0b7afec43b70dcbe67d63f9b355272762a0c867aa0",
+          "score": 10.168486199633172
+        },
+        {
+          "chunk_id": "doc-a-pricing-guidelines#0",
+          "document_id": "doc-a-pricing-guidelines",
+          "text_sha256": "a882435f6d6eb8850286fab455abfc6e275f0799e6ae302e6120a1459a454acb",
+          "score": 2.4270916702526564
+        },
+        {
+          "chunk_id": "doc-a-pricing-guidelines#1",
+          "document_id": "doc-a-pricing-guidelines",
+          "text_sha256": "3b9176d010221507f19c3161f90f55ca70e63a4f9e3f8b9a7ad7937cc275ca47",
+          "score": 1.5892835852127396
+        }
+      ]
+    },
+    {
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "forbidden_hits": [],
+      "case_id": "public-company",
+      "catalog_sha256": "aba8f7430099d34c86402456c7eb53c7e8ca3a264dd1c33006f1f5e86003f7b3",
+      "hits": [
+        {
+          "chunk_id": "doc-a-press-kit#0",
+          "document_id": "doc-a-press-kit",
+          "text_sha256": "bc5601dc96ce7c0397a780c9b0ca62b5e452f0d1f2817f24e036c176faac8ca4",
+          "score": 5.5308116998047465
+        },
+        {
+          "chunk_id": "doc-a-press-kit#1",
+          "document_id": "doc-a-press-kit",
+          "text_sha256": "39e7c30f1b60298074c6c9637c04a62791a56571e8f9ad538c4ddac529933714",
+          "score": 0.0
+        }
+      ]
+    },
+    {
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "forbidden_hits": [],
+      "case_id": "board-stockists",
+      "catalog_sha256": "11531ceeef3a2a7ffef8475f30c72b6fba5fb9e7404602e65cdaf1724b2afe07",
+      "hits": [
+        {
+          "chunk_id": "doc-a-board-notes#0",
+          "document_id": "doc-a-board-notes",
+          "text_sha256": "899fde64aa0413f55d61fb60dd6fb82bf0057fc86a2afdf3f42be5672b335392",
+          "score": 13.096685444707285
+        },
+        {
+          "chunk_id": "doc-a-board-notes#1",
+          "document_id": "doc-a-board-notes",
+          "text_sha256": "6b30644297a13b32c99c36447cce0327b74cf849b55f0b0485361f29f42f83b3",
+          "score": 5.228011203893731
+        },
+        {
+          "chunk_id": "doc-a-pricing-guidelines#2",
+          "document_id": "doc-a-pricing-guidelines",
+          "text_sha256": "f6d2542d9ea2bc63f7a60d0b7afec43b70dcbe67d63f9b355272762a0c867aa0",
+          "score": 3.3141865527018703
+        }
+      ]
+    },
+    {
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "forbidden_hits": [],
+      "case_id": "harvest-audit",
+      "catalog_sha256": "d4e5274e9746e043899aecefdf2c737748dc59333921b004a27914fddda24dc3",
+      "hits": [
+        {
+          "chunk_id": "doc-b-supplier-policy#0",
+          "document_id": "doc-b-supplier-policy",
+          "text_sha256": "8f26e7f4d7fdd6fc477445352b14090856937324f7adb7ad850fc67fa05f2c70",
+          "score": 8.039410994808552
+        },
+        {
+          "chunk_id": "doc-b-supplier-policy#1",
+          "document_id": "doc-b-supplier-policy",
+          "text_sha256": "7cffafe07f1b57fae7b84e493ea65cfde987caf48a0359a26217d99698567672",
+          "score": 3.789262510732875
+        },
+        {
+          "chunk_id": "doc-b-supplier-onboarding#0",
+          "document_id": "doc-b-supplier-onboarding",
+          "text_sha256": "847f48fc743edea56a53880bd669638733fcfbb320821fe718bfe3be2712d621",
+          "score": 0.9590311782940526
+        }
+      ]
+    },
+    {
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "forbidden_hits": [],
+      "case_id": "apac-orders",
+      "catalog_sha256": "d4e5274e9746e043899aecefdf2c737748dc59333921b004a27914fddda24dc3",
+      "hits": [
+        {
+          "chunk_id": "doc-b-supplier-policy#1",
+          "document_id": "doc-b-supplier-policy",
+          "text_sha256": "7cffafe07f1b57fae7b84e493ea65cfde987caf48a0359a26217d99698567672",
+          "score": 13.5618222887021
+        },
+        {
+          "chunk_id": "doc-b-supplier-policy#0",
+          "document_id": "doc-b-supplier-policy",
+          "text_sha256": "8f26e7f4d7fdd6fc477445352b14090856937324f7adb7ad850fc67fa05f2c70",
+          "score": 4.5031734350995
+        },
+        {
+          "chunk_id": "doc-b-supplier-onboarding#0",
+          "document_id": "doc-b-supplier-onboarding",
+          "text_sha256": "847f48fc743edea56a53880bd669638733fcfbb320821fe718bfe3be2712d621",
+          "score": 0.6252907308372851
+        }
+      ]
+    },
+    {
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "forbidden_hits": [],
+      "case_id": "supplier-onboarding",
+      "catalog_sha256": "d4e5274e9746e043899aecefdf2c737748dc59333921b004a27914fddda24dc3",
+      "hits": [
+        {
+          "chunk_id": "doc-b-supplier-onboarding#0",
+          "document_id": "doc-b-supplier-onboarding",
+          "text_sha256": "847f48fc743edea56a53880bd669638733fcfbb320821fe718bfe3be2712d621",
+          "score": 12.216727826219365
+        },
+        {
+          "chunk_id": "doc-b-supplier-policy#1",
+          "document_id": "doc-b-supplier-policy",
+          "text_sha256": "7cffafe07f1b57fae7b84e493ea65cfde987caf48a0359a26217d99698567672",
+          "score": 0.9071605015834369
+        },
+        {
+          "chunk_id": "doc-b-supplier-policy#0",
+          "document_id": "doc-b-supplier-policy",
+          "text_sha256": "8f26e7f4d7fdd6fc477445352b14090856937324f7adb7ad850fc67fa05f2c70",
+          "score": 0.8186090426436219
+        }
+      ]
+    },
+    {
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "forbidden_hits": [],
+      "case_id": "missed-deliveries",
+      "catalog_sha256": "d4e5274e9746e043899aecefdf2c737748dc59333921b004a27914fddda24dc3",
+      "hits": [
+        {
+          "chunk_id": "doc-b-supplier-onboarding#2",
+          "document_id": "doc-b-supplier-onboarding",
+          "text_sha256": "3b8fc4f2e6259c5654b3b81d7d77296ebf24e48477ee3b60b5f5568e1146d6f8",
+          "score": 12.678889498353993
+        },
+        {
+          "chunk_id": "doc-b-supplier-onboarding#0",
+          "document_id": "doc-b-supplier-onboarding",
+          "text_sha256": "847f48fc743edea56a53880bd669638733fcfbb320821fe718bfe3be2712d621",
+          "score": 0.3337404474567674
+        },
+        {
+          "chunk_id": "doc-b-supplier-policy#1",
+          "document_id": "doc-b-supplier-policy",
+          "text_sha256": "7cffafe07f1b57fae7b84e493ea65cfde987caf48a0359a26217d99698567672",
+          "score": 0.3156895819092259
+        }
+      ]
+    },
+    {
+      "recall_at_k": null,
+      "reciprocal_rank": null,
+      "forbidden_hits": [],
+      "case_id": "viewer-no-receipt-access",
+      "catalog_sha256": "aba8f7430099d34c86402456c7eb53c7e8ca3a264dd1c33006f1f5e86003f7b3",
+      "hits": [
+        {
+          "chunk_id": "doc-a-press-kit#0",
+          "document_id": "doc-a-press-kit",
+          "text_sha256": "bc5601dc96ce7c0397a780c9b0ca62b5e452f0d1f2817f24e036c176faac8ca4",
+          "score": 1.106162339960949
+        },
+        {
+          "chunk_id": "doc-a-press-kit#1",
+          "document_id": "doc-a-press-kit",
+          "text_sha256": "39e7c30f1b60298074c6c9637c04a62791a56571e8f9ad538c4ddac529933714",
+          "score": 0.0
+        }
+      ]
+    },
+    {
+      "recall_at_k": null,
+      "reciprocal_rank": null,
+      "forbidden_hits": [],
+      "case_id": "analyst-no-board-access",
+      "catalog_sha256": "4f01dd409485fc6f69d8daba7912f08f3572ecf161f104feb2db648f76c1f5eb",
+      "hits": [
+        {
+          "chunk_id": "doc-a-press-kit#0",
+          "document_id": "doc-a-press-kit",
+          "text_sha256": "bc5601dc96ce7c0397a780c9b0ca62b5e452f0d1f2817f24e036c176faac8ca4",
+          "score": 0.0
+        },
+        {
+          "chunk_id": "doc-a-press-kit#1",
+          "document_id": "doc-a-press-kit",
+          "text_sha256": "39e7c30f1b60298074c6c9637c04a62791a56571e8f9ad538c4ddac529933714",
+          "score": 0.0
+        },
+        {
+          "chunk_id": "doc-a-pricing-guidelines#0",
+          "document_id": "doc-a-pricing-guidelines",
+          "text_sha256": "a882435f6d6eb8850286fab455abfc6e275f0799e6ae302e6120a1459a454acb",
+          "score": 0.0
+        }
+      ]
+    },
+    {
+      "recall_at_k": null,
+      "reciprocal_rank": null,
+      "forbidden_hits": [],
+      "case_id": "tenant-a-no-singapore-evidence",
+      "catalog_sha256": "11531ceeef3a2a7ffef8475f30c72b6fba5fb9e7404602e65cdaf1724b2afe07",
+      "hits": [
+        {
+          "chunk_id": "doc-a-board-notes#0",
+          "document_id": "doc-a-board-notes",
+          "text_sha256": "899fde64aa0413f55d61fb60dd6fb82bf0057fc86a2afdf3f42be5672b335392",
+          "score": 0.0
+        },
+        {
+          "chunk_id": "doc-a-board-notes#1",
+          "document_id": "doc-a-board-notes",
+          "text_sha256": "6b30644297a13b32c99c36447cce0327b74cf849b55f0b0485361f29f42f83b3",
+          "score": 0.0
+        },
+        {
+          "chunk_id": "doc-a-press-kit#0",
+          "document_id": "doc-a-press-kit",
+          "text_sha256": "bc5601dc96ce7c0397a780c9b0ca62b5e452f0d1f2817f24e036c176faac8ca4",
+          "score": 0.0
+        }
+      ]
+    },
+    {
+      "recall_at_k": null,
+      "reciprocal_rank": null,
+      "forbidden_hits": [],
+      "case_id": "tenant-b-no-emea-evidence",
+      "catalog_sha256": "d4e5274e9746e043899aecefdf2c737748dc59333921b004a27914fddda24dc3",
+      "hits": [
+        {
+          "chunk_id": "doc-b-supplier-onboarding#0",
+          "document_id": "doc-b-supplier-onboarding",
+          "text_sha256": "847f48fc743edea56a53880bd669638733fcfbb320821fe718bfe3be2712d621",
+          "score": 0.0
+        },
+        {
+          "chunk_id": "doc-b-supplier-onboarding#1",
+          "document_id": "doc-b-supplier-onboarding",
+          "text_sha256": "b02bedec9dca6b7cbcdf7cff895bf9360ad0691949e788d2a696434e271fe8d7",
+          "score": 0.0
+        },
+        {
+          "chunk_id": "doc-b-supplier-onboarding#2",
+          "document_id": "doc-b-supplier-onboarding",
+          "text_sha256": "3b8fc4f2e6259c5654b3b81d7d77296ebf24e48477ee3b60b5f5568e1146d6f8",
+          "score": 0.0
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Exploratory comparison on already inspected, tiny agent-curated synthetic corpora; not held-out quality, end-to-end answer quality or grounds for production adoption.",
+    "BM25 uses existing hashing tokenization, unique query terms, fixed k1=1.2 and b=0.75; no parameter tuning, synonyms, stemming changes or score threshold.",
+    "Both rankers use one repeatable-read, read-only snapshot. BM25 scores all permitted chunks with statistics computed only from that principal's catalog.",
+    "BM25 scores (larger is better) are not vector distances (smaller is better). Zero-overlap candidates are retained, so this does not measure abstention.",
+    "Catalog hashes cover sorted permitted chunk ids/source hashes, not retrieved text. No model calls, downloads, writes, production ranking or judgment changes.",
+    "Full-catalog Python scoring is an experiment for the small seed, not a scalable production implementation or a latency benchmark."
+  ]
+}

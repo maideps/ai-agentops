@@ -306,6 +306,11 @@ A transaction reserves one row with `INSERT ... ON CONFLICT`, a worker claims it
   It forbids invented policy claims and unsupported citations. This is model guidance,
   not semantic entailment enforcement; without included documents the base prompt is unchanged.
 - Benchmark baseline vector retrieval first; defer hybrid search and reranking until retrieval metrics show an issue.
+- feat-020 adds only an offline BM25 comparison, not a production ranker change:
+  fixed parameters and existing tokenization, caller-permitted corpus statistics,
+  one read-only repeatable-read snapshot, paired relevance/access metrics and
+  source-catalog provenance. Frozen synthetic judgments are exploratory evidence,
+  not held-out grounds for tuning or adoption.
 
 ## 9. Safety, security, threat model
 

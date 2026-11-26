@@ -1,6 +1,7 @@
 """Measure the existing retrieval baseline on versioned synthetic judgments, without LLMs."""
 
 import hashlib
+from collections.abc import Sequence
 from pathlib import Path
 from statistics import fmean
 from typing import Self
@@ -59,7 +60,13 @@ class Hit(_Model):
     distance: float
 
 
-class QueryResult(_Model):
+class RetrievalMetrics(_Model):
+    recall_at_k: float | None
+    reciprocal_rank: float | None
+    forbidden_hits: list[str]
+
+
+class QueryResult(RetrievalMetrics):
     case_id: str
     tenant_id: str
     user_id: str
@@ -67,9 +74,6 @@ class QueryResult(_Model):
     k: int
     relevant_chunk_ids: list[str]
     hits: list[Hit]
-    recall_at_k: float | None
-    reciprocal_rank: float | None
-    forbidden_hits: list[str]
 
 
 class Aggregate(_Model):
@@ -102,9 +106,7 @@ def score(
     allowed_document_ids: set[str] | None = None,
 ) -> QueryResult:
     ranked = hits[: case.k]
-    relevant = set(case.relevant_chunk_ids)
-    retrieved = {hit.id for hit in ranked}
-    first = next((rank for rank, hit in enumerate(ranked, 1) if hit.id in relevant), None)
+    recall, reciprocal_rank = relevance_metrics(case, [hit.id for hit in ranked])
     return QueryResult(
         case_id=case.id,
         tenant_id=case.tenant_id,
@@ -121,8 +123,8 @@ def score(
             )
             for hit in ranked
         ],
-        recall_at_k=len(relevant & retrieved) / len(relevant) if relevant else None,
-        reciprocal_rank=(1 / first if first else 0.0) if relevant else None,
+        recall_at_k=recall,
+        reciprocal_rank=reciprocal_rank,
         forbidden_hits=[
             hit.id
             for hit in ranked
@@ -132,7 +134,18 @@ def score(
     )
 
 
-def summarize(results: list[QueryResult]) -> Aggregate:
+def relevance_metrics(
+    case: RetrievalCase, chunk_ids: Sequence[str]
+) -> tuple[float | None, float | None]:
+    ranked = chunk_ids[: case.k]
+    relevant = set(case.relevant_chunk_ids)
+    if not relevant:
+        return None, None
+    first = next((rank for rank, chunk_id in enumerate(ranked, 1) if chunk_id in relevant), None)
+    return len(relevant & set(ranked)) / len(relevant), 1 / first if first else 0.0
+
+
+def summarize(results: Sequence[RetrievalMetrics]) -> Aggregate:
     recalls = [r.recall_at_k for r in results if r.recall_at_k is not None]
     ranks = [r.reciprocal_rank for r in results if r.reciprocal_rank is not None]
     return Aggregate(
