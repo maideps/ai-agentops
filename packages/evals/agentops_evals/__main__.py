@@ -49,6 +49,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--live", action="store_true")
     parser.add_argument("--budget-usd", type=float)
     parser.add_argument(
+        "--stop-after-rate-limited",
+        type=int,
+        default=3,
+        help="live only: stop after this many consecutive rate-limited cases (0 = never)",
+    )
+    parser.add_argument(
         "--min-call-interval",
         type=float,
         default=0.0,
@@ -64,6 +70,8 @@ def main(argv: list[str] | None = None) -> int:
             parser.error("--live requires a finite positive --budget-usd")
         if args.command == "run" and args.out is None:
             parser.error("--live run requires --out to preserve failures and usage")
+        if args.stop_after_rate_limited < 0:
+            parser.error("--stop-after-rate-limited must be >= 0")
         if not math.isfinite(args.min_call_interval) or args.min_call_interval < 0:
             parser.error("--min-call-interval must be a finite number of seconds >= 0")
         try:
@@ -90,6 +98,7 @@ def main(argv: list[str] | None = None) -> int:
             analytics_dsn=analytics,
             app_dsn=app,
             live_provider=live_provider,
+            stop_after_rate_limited=args.stop_after_rate_limited,
         )
         out_dir = args.out_dir or Path(
             "benchmarks/orchestration/v1/live" if args.live else "benchmarks/orchestration/v1"
@@ -97,12 +106,20 @@ def main(argv: list[str] | None = None) -> int:
         json_path, md_path = write_benchmark(bench, out_dir)
         print(f"{bench.recommendation}: {bench.rationale}")
         print(f"wrote {json_path} and {md_path}")
-        return int(args.live and any(not run.success for run in bench.runs))
+        if bench.stopped_early:
+            print(
+                f"STOPPED EARLY: {bench.stopped_early} after {bench.stopped_after}; "
+                f"{len(bench.not_run)} cases not run"
+            )
+        return int(
+            args.live and (bool(bench.stopped_early) or any(not run.success for run in bench.runs))
+        )
     report = run_corpus(
         load_corpus(args.corpus),
         analytics_dsn=analytics,
         app_dsn=app,
         live_provider=live_provider,
+        stop_after_rate_limited=args.stop_after_rate_limited,
     )
     if args.out:
         args.out.write_bytes((report.model_dump_json(indent=2) + "\n").encode("utf-8"))
@@ -119,7 +136,12 @@ def main(argv: list[str] | None = None) -> int:
     for result in report.results:
         if not result.passed:
             print(f"FAIL {result.case_id} trace={result.trace_id}: {'; '.join(result.failures)}")
-    return 0 if report.failed == 0 else 1
+    if report.stopped_early:
+        print(
+            f"STOPPED EARLY: {report.stopped_early} after {report.stopped_after}; "
+            f"{len(report.not_run)} workflow cases not run"
+        )
+    return 0 if report.failed == 0 and not report.stopped_early else 1
 
 
 if __name__ == "__main__":

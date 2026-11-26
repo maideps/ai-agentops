@@ -343,6 +343,14 @@ longer Retry-After (the case fails as `RATE_LIMITED`). Each attempt still reserv
 and is never refunded. Live evaluation commands also accept `--min-call-interval` (default 0),
 which spaces the start of consecutive attempts so a run can stay under the provider's per-minute
 quota. Timeouts, authentication, invalid requests and budget refusals remain unretried.
+**Amendment 4 (2026-11-26, feat-021, owner-approved):** A combined live run exhausted the
+free-tier daily quota after ten cases and retried every remaining case for 28 minutes. A 429
+whose provider message names a per-day quota now fails once as `QUOTA_EXHAUSTED` (the message is
+matched, never recorded). Live corpus and benchmark commands stop dispatching workflow cases after
+the first `QUOTA_EXHAUSTED`, or after `--stop-after-rate-limited` consecutive rate-limited cases
+(default 3, 0 disables); scenarios still run, reports list the cases not run and why, and the
+command exits non-zero. The benchmark checks the rule after both designs ran a case, so the
+comparison stays paired.
 
 ### D-018: Live evaluation scores outcomes; mock expectations stay as they are
 

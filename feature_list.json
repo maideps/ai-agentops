@@ -665,6 +665,43 @@
           "repair": "Start Docker, check the compose healthcheck and migrations, fix failing integration tests and rerun."
         }
       ]
+    },
+    {
+      "id": "feat-021",
+      "name": "Phase 2: live evaluation stops when the provider quota runs out",
+      "behavior": "A rate-limited provider reply whose message names a per-day quota fails as QUOTA_EXHAUSTED and is never retried; the provider message itself is still never recorded. Live corpus and benchmark commands stop dispatching further workflow cases after the first QUOTA_EXHAUSTED result, or after --stop-after-rate-limited consecutive workflow cases (default 3, 0 disables) end with RATE_LIMITED or QUOTA_EXHAUSTED. Deterministic scenario cases still run. Reports list the workflow cases that were not run, record why and after which case the run stopped, exclude not-run cases from pass counts, and the command exits non-zero; the summary line states the stop. Mock mode never stops early and default CI makes no network calls. Requirements: FR-011, NFR-009.",
+      "verification": "Offline acceptance tests with stubbed completions: a per-day 429 fails once as QUOTA_EXHAUSTED while a per-minute 429 is still retried; the corpus stops after the first QUOTA_EXHAUSTED and after three consecutive rate-limited cases, runs remaining scenarios, lists not-run cases and the stop reason, and exits non-zero; --stop-after-rate-limited 0 disables the streak rule; the benchmark stops the same way; mock mode is unaffected.",
+      "dependencies": [
+        "feat-017",
+        "feat-019"
+      ],
+      "layers": [
+        {
+          "label": "Layer 1: Harness and architecture checks",
+          "cmd": "node scripts/framework-check.mjs lint && npm run check-arch && node scripts/framework-check.mjs typecheck",
+          "repair": "Fix the harness lint, arch-rule (file:line) or feature-schema error and rerun."
+        },
+        {
+          "label": "Layer 2: Python static checks",
+          "cmd": "uv run ruff check . && uv run ruff format --check . && uv run mypy",
+          "repair": "Fix Ruff findings (or run uv run ruff format .) and mypy errors, then rerun."
+        },
+        {
+          "label": "Layer 3: Offline acceptance tests feat-021",
+          "cmd": "uv run pytest testsuite/acceptance/feat_021 -q -m \"not integration\"",
+          "repair": "Fix the code until the declared behavior holds; a test that contradicts the behavior is fixed in the same commit."
+        },
+        {
+          "label": "Layer 4: Default regression suite (no network, no Docker)",
+          "cmd": "uv run pytest testsuite -q -m \"not live and not integration\"",
+          "repair": "Fix the regression this feature introduced; do not mark tests skipped to pass."
+        },
+        {
+          "label": "Layer 5: Integration suite (stubbed provider, local Postgres)",
+          "cmd": "docker compose up -d --wait postgres && uv run pytest testsuite -q -m \"integration and not live\"",
+          "repair": "Start Docker, check the compose healthcheck and migrations, fix failing integration tests and rerun."
+        }
+      ]
     }
   ]
 }

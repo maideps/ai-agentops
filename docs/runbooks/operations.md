@@ -67,7 +67,10 @@ most twice (feat-015), and each attempt reserves again, so a cap that covers eve
 (about USD 78.33 corpus, USD 156.66 benchmark) can still stop late cases after many retries.
 Rate limits (429) share those two retries and honor a Retry-After of up to 60 seconds
 (feat-019). On the free tier, add `--min-call-interval <seconds>` to either live command to space
-model calls, for example 4 seconds to stay near 15 requests per minute. Use a provider-side account cap too: SDK prices/ceilings are
+model calls, for example 4 seconds to stay near 15 requests per minute. When the daily quota runs
+out (`QUOTA_EXHAUSTED`), or after three consecutive rate-limited cases, a live command stops early,
+prints `STOPPED EARLY`, lists the cases not run in its report and exits 1 (feat-021); rerun after
+the quota resets. `--stop-after-rate-limited 0` disables the streak rule. Use a provider-side account cap too: SDK prices/ceilings are
 external assumptions, and these counters do not survive a process restart.
 
 The corpus writes every result (including failures) and exits 1 when any expectation fails.

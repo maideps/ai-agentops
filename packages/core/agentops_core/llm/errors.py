@@ -18,6 +18,8 @@ class LLMErrorCode(StrEnum):
     INVALID_RESPONSE = "INVALID_RESPONSE"
     # feat-015: the reply stopped at max_output_tokens, so structured output is incomplete.
     OUTPUT_TRUNCATED = "OUTPUT_TRUNCATED"
+    # feat-021: a rate limit on a per-day quota; waiting seconds cannot help, so never retried.
+    QUOTA_EXHAUSTED = "QUOTA_EXHAUSTED"
 
 
 _RETRYABLE = frozenset({LLMErrorCode.RATE_LIMITED, LLMErrorCode.TIMEOUT})

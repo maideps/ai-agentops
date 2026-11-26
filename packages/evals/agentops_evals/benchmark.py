@@ -22,7 +22,7 @@ from agentops_agents.workflow import Orchestration, RunDependencies, prompt_vers
 from agentops_core.aio import run as run_async
 from agentops_core.llm import LLMGateway
 from agentops_evals.corpus import Case, Corpus
-from agentops_evals.runner import _score_workflow, git_sha, score_live
+from agentops_evals.runner import LiveStop, _score_workflow, git_sha, score_live
 from agentops_evals.scenarios import CountingProvider, Env
 from agentops_llm.hosted import GEMINI_FLASH_LITE
 from agentops_llm.litellm_provider import LiteLLMProvider
@@ -100,6 +100,10 @@ class BenchmarkReport(BaseModel):
     rationale: str
     hosted_model_numbers: dict[str, float] | None = None
     limitations: list[str]
+    # feat-021: a live batch that stopped early, why, after which case, and what never ran.
+    stopped_early: str | None = None
+    stopped_after: str | None = None
+    not_run: list[str] = Field(default_factory=list)
 
     def deterministic_view(self) -> dict[str, Any]:
         """Everything except timing, timestamps and the commit: what must reproduce."""
@@ -260,14 +264,26 @@ def run_benchmark(
     analytics_dsn: str,
     app_dsn: str,
     live_provider: LiteLLMProvider | None = None,
+    stop_after_rate_limited: int = 3,
 ) -> BenchmarkReport:
     env = Env(analytics_dsn, app_dsn)
     batch = uuid.uuid4().hex[:6]
-    cases = [c for c in corpus.cases if c.kind == "workflow"]
+    workflow_cases = [c for c in corpus.cases if c.kind == "workflow"]
     started = datetime.now(UTC).isoformat()
-    runs = [
-        _run(env, case, orch, batch, live_provider) for case in cases for orch in ORCHESTRATIONS
-    ]
+    stop = LiveStop(stop_after_rate_limited)
+    runs: list[CaseRun] = []
+    cases: list[Case] = []
+    not_run: list[str] = []
+    for case in workflow_cases:
+        if stop.reason:
+            not_run.append(case.id)
+            continue
+        # Both designs run each case before the stop is checked, so the comparison stays paired.
+        pair = [_run(env, case, orch, batch, live_provider) for orch in ORCHESTRATIONS]
+        runs.extend(pair)
+        cases.append(case)
+        if live_provider is not None:
+            stop.observe(case.id, [list(run.errors) for run in pair])
     aggregates = {
         orch: _aggregate([r for r in runs if r.orchestration == orch]) for orch in ORCHESTRATIONS
     }
@@ -283,6 +299,9 @@ def run_benchmark(
         model=GEMINI_FLASH_LITE if live_provider is not None else MOCK_MODEL,
         prompt_versions={orch: prompt_version(orch) for orch in ORCHESTRATIONS},
         sample_size=len(cases),
+        stopped_early=stop.reason,
+        stopped_after=stop.case_id,
+        not_run=not_run,
         started_at=started,
         cases=[CaseRef(case_id=c.id, category=c.category) for c in cases],
         runs=runs,
@@ -386,6 +405,14 @@ def _markdown(report: BenchmarkReport) -> str:
         f"- Prompt versions: single {report.prompt_versions['single']},"
         f" specialists {report.prompt_versions['specialists']}",
         f"- Sample size: {report.sample_size} workflow cases, each run once per orchestration",
+        *(
+            [
+                f"- Stopped early: {report.stopped_early} (after {report.stopped_after});"
+                f" {len(report.not_run)} cases not run: {', '.join(report.not_run)}"
+            ]
+            if report.stopped_early
+            else []
+        ),
         "",
         "| Metric | Single workflow | Specialists |",
         "|---|---|---|",

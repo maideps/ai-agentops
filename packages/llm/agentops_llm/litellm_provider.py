@@ -6,6 +6,7 @@ Never selected unless LLM_MODE and ENABLE_LIVE_LLM opt in (see ``selection``).
 import asyncio
 import json
 import math
+import re
 import threading
 import time
 from collections.abc import Awaitable, Callable, Sequence
@@ -72,6 +73,15 @@ def _is_transient(exc: BaseException) -> bool:
     if isinstance(exc, llx.Timeout):
         return False
     return isinstance(exc, (llx.ServiceUnavailableError, llx.APIConnectionError))
+
+
+# feat-021: Gemini names the exhausted quota, e.g. "GenerateRequestsPerDayPerProjectPerModel".
+_DAILY_QUOTA = re.compile(r"per\s*day", re.IGNORECASE)
+
+
+def _is_daily_quota(exc: BaseException) -> bool:
+    """A 429 on a per-day quota. Only matched, never recorded: messages can echo request data."""
+    return isinstance(exc, llx.RateLimitError) and bool(_DAILY_QUOTA.search(str(exc)))
 
 
 # feat-019: a provider's Retry-After beyond this is not waited for; the case fails instead.
@@ -222,6 +232,12 @@ class LiteLLMProvider:
                 # The budget cannot cover another attempt: report the provider failure.
                 raise last from refused
             except (openai.APIError, llx.BudgetExceededError) as exc:
+                if _is_daily_quota(exc):
+                    raise LLMError(
+                        LLMErrorCode.QUOTA_EXHAUSTED,
+                        "provider error RateLimitError (daily quota)",
+                        provider=provider,
+                    ) from None
                 last = _to_llm_error(exc, provider)
                 delay = self._retry_delay(exc, attempt)
                 if delay is None:

@@ -16,6 +16,14 @@ def _litellm_error(code: LLMErrorCode, model: str) -> Exception:
     match code:
         case LLMErrorCode.RATE_LIMITED:
             return llx.RateLimitError(message=text, llm_provider="stub", model=model)
+        case LLMErrorCode.QUOTA_EXHAUSTED:
+            # The shape of Gemini's free-tier daily limit, quota id included.
+            return llx.RateLimitError(
+                message="Quota exceeded; quotaId: "
+                "GenerateRequestsPerDayPerProjectPerModel-FreeTier",
+                llm_provider="stub",
+                model=model,
+            )
         case LLMErrorCode.AUTH_FAILED:
             return llx.AuthenticationError(message=text, llm_provider="stub", model=model)
         case LLMErrorCode.TIMEOUT:

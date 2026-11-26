@@ -57,7 +57,7 @@ the registered maximum input window plus `max_output_tokens`, priced from LiteLL
 Reservations are retained after success, errors or cancellation. SDK retries are disabled; the
 adapter itself retries an HTTP 503, connection error or rate limit (429, honoring a Retry-After of
 up to 60 s) at most twice, reserving again for every attempt, can space calls by a minimum
-interval (feat-019), and a reply cut at `max_output_tokens` (default 1,024) fails as `OUTPUT_TRUNCATED`
+interval (feat-019), fails a per-day quota 429 at once as `QUOTA_EXHAUSTED` (feat-021), and a reply cut at `max_output_tokens` (default 1,024) fails as `OUTPUT_TRUNCATED`
 (feat-015). The evaluation CLI additionally shares one total reservation cap across all runs and
 both designs.
 Reported usage cost and reserved cost are separate fields; missing/out-of-bound usage is an

@@ -64,11 +64,45 @@ class EvalReport(BaseModel):
     cost_usd_total: float = 0.0
     reserved_usd_total: float = 0.0
     retries_total: int = 0
+    # feat-021: a live batch that stopped early, why, after which case, and what never ran.
+    stopped_early: str | None = None
+    stopped_after: str | None = None
+    not_run: list[str] = Field(default_factory=list)
     live_scored: int = 0
     live_passed: int = 0
     live_unscored: list[str] = Field(default_factory=list)
     live_by_category: dict[str, dict[str, int]] = Field(default_factory=dict)
     limitations: list[str] = Field(default_factory=list)
+
+
+RATE_LIMIT_CODES = frozenset({"RATE_LIMITED", "QUOTA_EXHAUSTED"})
+
+
+class LiveStop:
+    """feat-021: decide when a live batch should stop dispatching workflow cases.
+
+    Stop after the first QUOTA_EXHAUSTED, or after ``after`` consecutive cases whose runs all
+    ended rate-limited (0 disables the streak rule)."""
+
+    def __init__(self, after: int) -> None:
+        if after < 0:
+            msg = "stop_after_rate_limited must be >= 0"
+            raise ValueError(msg)
+        self.after = after
+        self.streak = 0
+        self.reason: str | None = None
+        self.case_id: str | None = None
+
+    def observe(self, case_id: str, errors_per_run: list[list[str]]) -> None:
+        if any("QUOTA_EXHAUSTED" in errors for errors in errors_per_run):
+            self.reason, self.case_id = "QUOTA_EXHAUSTED", case_id
+            return
+        if errors_per_run and all(RATE_LIMIT_CODES & set(errors) for errors in errors_per_run):
+            self.streak += 1
+        else:
+            self.streak = 0
+        if self.after and self.streak >= self.after:
+            self.reason, self.case_id = f"RATE_LIMITED in {self.streak} consecutive cases", case_id
 
 
 def git_sha(root: Path = Path()) -> str:
@@ -280,13 +314,24 @@ def run_corpus(
     app_dsn: str,
     only: set[str] | None = None,
     live_provider: LiteLLMProvider | None = None,
+    stop_after_rate_limited: int = 3,
 ) -> EvalReport:
     env = Env(analytics_dsn, app_dsn)
     batch = uuid.uuid4().hex[:8]  # run ids stay unique across repeated evaluations
     started = datetime.now(UTC).isoformat()
-    results = [
-        run_case(env, c, batch, live_provider) for c in corpus.cases if only is None or c.id in only
-    ]
+    stop = LiveStop(stop_after_rate_limited)
+    results: list[CaseResult] = []
+    not_run: list[str] = []
+    for case in corpus.cases:
+        if only is not None and case.id not in only:
+            continue
+        if case.kind == "workflow" and stop.reason:
+            not_run.append(case.id)
+            continue
+        result = run_case(env, case, batch, live_provider)
+        results.append(result)
+        if live_provider is not None and case.kind == "workflow" and not stop.reason:
+            stop.observe(case.id, [list(result.observed.get("errors", []))])
     by_category: dict[str, dict[str, int]] = {}
     for result in results:
         bucket = by_category.setdefault(result.category, {"total": 0, "passed": 0})
@@ -299,8 +344,13 @@ def run_corpus(
             bucket = live_by_category.setdefault(result.category, {"total": 0, "passed": 0})
             bucket["total"] += 1
             bucket["passed"] += int(result.live_passed)
+    ran = {r.case_id for r in results}
     unscored = (
-        [c.id for c in corpus.cases if c.kind == "workflow" and (c.live is None or c.live.unscored)]
+        [
+            c.id
+            for c in corpus.cases
+            if c.kind == "workflow" and c.id in ran and (c.live is None or c.live.unscored)
+        ]
         if live_provider is not None
         else []
     )
@@ -322,6 +372,9 @@ def run_corpus(
         cost_usd_total=sum(r.observed.get("cost_usd", 0.0) for r in results),
         reserved_usd_total=sum(r.observed.get("reserved_usd", 0.0) for r in results),
         retries_total=sum(int(r.observed.get("retries", 0)) for r in results),
+        stopped_early=stop.reason,
+        stopped_after=stop.case_id,
+        not_run=not_run,
         live_scored=sum(r.live_passed is not None for r in results),
         live_passed=sum(bool(r.live_passed) for r in results),
         live_unscored=[cid for cid in unscored if only is None or cid in only],
