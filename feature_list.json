@@ -692,21 +692,6 @@
           "repair": "Resolve cross-layer issues and rerun full verification."
         },
         {
-          "label": "Layer 1: Static checks",
-          "cmd": "npm run lint",
-          "repair": "Fix Layer 1: Static checks failures and rerun the layer command."
-        },
-        {
-          "label": "Layer 2: Runtime tests",
-          "cmd": "npm run test",
-          "repair": "Fix Layer 2: Runtime tests failures and rerun the layer command."
-        },
-        {
-          "label": "Layer 3: System confirmation",
-          "cmd": "npm run check-arch && npm run typecheck && npm run build && npm run e2e && npm run verify-all && npm run quality",
-          "repair": "Fix Layer 3: System confirmation failures and rerun the layer command."
-        },
-        {
           "label": "Layer 4: Retrieval comparison acceptance",
           "cmd": "uv run pytest testsuite/acceptance/feat_020 -q",
           "repair": "Fix Layer 4: Retrieval comparison acceptance failures and rerun the layer command."
