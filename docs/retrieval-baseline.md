@@ -179,3 +179,9 @@ Report per-query regressions as well as improvements before considering next ste
 These corpora are tiny, agent-curated and already inspected: do not tune parameters,
 claim semantic/end-to-end quality or adopt a production ranker from this comparison.
 A production decision needs separately approved, independently judged held-out evidence.
+
+The [recorded comparison](../benchmarks/retrieval/bm25-v1/REPORT.md) at `2268b1d`
+preserves v1 Recall@3/MRR at 1.0/1.0 and measures stress BM25 at 0.8264/0.7986
+against hashing at 0.7639/0.7361, with zero forbidden hits. Recall regresses on
+`paraphrase-cooking` and `multi-audit-duration`; rank-only regressions are also
+listed. Production adoption is explicitly deferred, not inferred from better averages.

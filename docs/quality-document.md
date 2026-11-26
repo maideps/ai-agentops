@@ -63,6 +63,10 @@ Ratings are judgments, not measurements: coverage is not measured yet (quality g
   unchanged. Comparison, benchmark metrics/CLI and new acceptance module ratings:
   coverage B, type safety A, documentation B, architecture A, performance B
   (judgments, not measured coverage/latency). No hosted calls or quality claims.
+  At committed implementation `2268b1d`, paired v1 Recall@3/MRR stays 1.0/1.0;
+  stress BM25 is 0.8264/0.7986 versus hashing 0.7639/0.7361, with zero forbidden
+  hits. Individual recall and rank regressions are retained in the report.
+  Production adoption is deferred pending independent held-out evidence.
 - 2026-11-26: feat-018 adds conditional policy-citation guidance in the shared
   report node and includes its template in prompt provenance. Module ratings:
   workflow coverage B for the new prompt behavior, type safety A, documentation B,
